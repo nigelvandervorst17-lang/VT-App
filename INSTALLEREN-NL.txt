@@ -1,0 +1,23 @@
+MME Group — VT NDO Inspectie
+
+BESTANDEN PUBLICEREN
+1. Pak het ZIP-bestand uit.
+2. Maak een repository via https://github.com/new (bijvoorbeeld vt-ndo-app).
+3. Upload ALLE bestanden uit deze map naar de hoofdmap: index.html, mme-logo.png, manifest.webmanifest, icon-192.png, icon-512.png.
+4. In GitHub: Settings > Pages > Deploy from a branch > main > /(root) > Save.
+5. Wacht op de HTTPS-website-URL.
+6. Open de URL in Safari op je iPhone > Deel > Zet op beginscherm > Voeg toe.
+
+BEREKENEN
+- Calculator > kies gelijke of ongelijke lasbenen > voer z1 en eventueel z2 in mm in.
+- De berekening wordt direct bijgewerkt. Voor gelijke benen: a=z/√2. Voor ongelijke benen: a=(z1*z2)/√(z1²+z2²).
+- Optioneel kun je een gemeten a-maat invoeren om het verschil te zien.
+
+INSPECTIES
+- Nieuwe inspectie > vul minimaal project, lasnummer en datum in.
+- Vul metingen in, voeg maximaal 5 foto's toe, schrijf opmerkingen en tik Inspectie opslaan.
+- Rapporten > zoek inspectie > Rapport TXT of exporteer een JSON-back-up.
+
+VEILIGHEID EN PRIVACY
+Dit is een prototype zonder login, centrale database, synchronisatie of toegangsbeheer. Records worden lokaal in de browser opgeslagen en kunnen verloren gaan; exporteer regelmatig een back-up. Een openbare GitHub Pages-site is publiek bereikbaar. Gebruik geen vertrouwelijke klantgegevens zonder aanvullende beveiliging.
+De calculator is alleen een geometrische berekening voor ideale hoeklassen, geen automatische normatieve goed-/afkeur. Laat formules en acceptatiecriteria deskundig valideren vóór professioneel gebruik.
