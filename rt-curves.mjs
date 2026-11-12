@@ -1,0 +1,367 @@
+/* Research-only digitized curves. Check provenance and reuse rights. */
+export const curves = {
+  "version": "2026.11.13-research",
+  "restriction": "Research-only, no practical radiation exposure authorization. Original chart readout is NOT independently validated.",
+  "gamma": {
+    "Se-75": {
+      "datasetId": "waygate-se75-20261104-vector-unvalidated",
+      "sourceTitle": "Waygate/AGFA Radiographic Film Systems — exposure diagrams printed p16",
+      "sourceUrl": "https://dam.bakerhughes.com/m/15e84aab13c9d73d/original/Radiographic-Film-Systems-Brochure_EN_LR.pdf",
+      "sourceLocal": "AGFA Structurix films.pdf, page 9",
+      "status": "vector_digitized_unverified",
+      "material": "Fe",
+      "screens": "Pb",
+      "density": 2.0,
+      "referenceDistanceMm": 1000,
+      "unit": "Ci·h",
+      "minThicknessMm": 5,
+      "maxThicknessMm": 40,
+      "curves": {
+        "D4": [
+          {
+            "mm": 5,
+            "ci_h": 10.8
+          },
+          {
+            "mm": 10,
+            "ci_h": 15.4
+          },
+          {
+            "mm": 15,
+            "ci_h": 21.9
+          },
+          {
+            "mm": 20,
+            "ci_h": 31.1
+          },
+          {
+            "mm": 25,
+            "ci_h": 44.2
+          },
+          {
+            "mm": 30,
+            "ci_h": 62.9
+          },
+          {
+            "mm": 35,
+            "ci_h": 89.3
+          },
+          {
+            "mm": 40,
+            "ci_h": 127.0
+          }
+        ],
+        "D5": [
+          {
+            "mm": 5,
+            "ci_h": 5.65
+          },
+          {
+            "mm": 10,
+            "ci_h": 8.07
+          },
+          {
+            "mm": 15,
+            "ci_h": 11.5
+          },
+          {
+            "mm": 20,
+            "ci_h": 16.4
+          },
+          {
+            "mm": 25,
+            "ci_h": 23.4
+          },
+          {
+            "mm": 30,
+            "ci_h": 33.4
+          },
+          {
+            "mm": 35,
+            "ci_h": 47.6
+          },
+          {
+            "mm": 40,
+            "ci_h": 67.9
+          }
+        ],
+        "D7": [
+          {
+            "mm": 5,
+            "ci_h": 4.16
+          },
+          {
+            "mm": 10,
+            "ci_h": 5.92
+          },
+          {
+            "mm": 15,
+            "ci_h": 8.43
+          },
+          {
+            "mm": 20,
+            "ci_h": 12.0
+          },
+          {
+            "mm": 25,
+            "ci_h": 17.1
+          },
+          {
+            "mm": 30,
+            "ci_h": 24.3
+          },
+          {
+            "mm": 35,
+            "ci_h": 34.6
+          },
+          {
+            "mm": 40,
+            "ci_h": 49.3
+          }
+        ]
+      }
+    },
+    "Ir-192": {
+      "datasetId": "waygate-ir192-20261113-vector-unvalidated",
+      "sourceTitle": "Waygate/AGFA Radiographic Film Systems — exposure diagrams printed p16",
+      "sourceUrl": "https://dam.bakerhughes.com/m/15e84aab13c9d73d/original/Radiographic-Film-Systems-Brochure_EN_LR.pdf",
+      "sourceLocal": "AGFA Structurix films.pdf, page 9",
+      "status": "vector_digitized_unverified",
+      "material": "Fe",
+      "screens": "Pb",
+      "density": 2.0,
+      "referenceDistanceMm": 1000,
+      "unit": "Ci·h",
+      "minThicknessMm": 10,
+      "maxThicknessMm": 90,
+      "curves": {
+        "D4": [
+          {
+            "mm": 10,
+            "ci_h": 5.269
+          },
+          {
+            "mm": 20,
+            "ci_h": 9.439
+          },
+          {
+            "mm": 30,
+            "ci_h": 16.908
+          },
+          {
+            "mm": 40,
+            "ci_h": 30.287
+          },
+          {
+            "mm": 50,
+            "ci_h": 54.254
+          },
+          {
+            "mm": 60,
+            "ci_h": 97.186
+          },
+          {
+            "mm": 70,
+            "ci_h": 174.091
+          },
+          {
+            "mm": 80,
+            "ci_h": 311.853
+          },
+          {
+            "mm": 90,
+            "ci_h": 558.629
+          }
+        ],
+        "D5": [
+          {
+            "mm": 10,
+            "ci_h": 2.627
+          },
+          {
+            "mm": 20,
+            "ci_h": 4.706
+          },
+          {
+            "mm": 30,
+            "ci_h": 8.429
+          },
+          {
+            "mm": 40,
+            "ci_h": 15.099
+          },
+          {
+            "mm": 50,
+            "ci_h": 27.047
+          },
+          {
+            "mm": 60,
+            "ci_h": 48.45
+          },
+          {
+            "mm": 70,
+            "ci_h": 86.79
+          },
+          {
+            "mm": 80,
+            "ci_h": 155.467
+          },
+          {
+            "mm": 90,
+            "ci_h": 278.49
+          }
+        ],
+        "D7": [
+          {
+            "mm": 10,
+            "ci_h": 1.694
+          },
+          {
+            "mm": 20,
+            "ci_h": 3.036
+          },
+          {
+            "mm": 30,
+            "ci_h": 5.44
+          },
+          {
+            "mm": 40,
+            "ci_h": 9.747
+          },
+          {
+            "mm": 50,
+            "ci_h": 17.465
+          },
+          {
+            "mm": 60,
+            "ci_h": 31.294
+          },
+          {
+            "mm": 70,
+            "ci_h": 56.074
+          },
+          {
+            "mm": 80,
+            "ci_h": 100.474
+          },
+          {
+            "mm": 90,
+            "ci_h": 180.032
+          }
+        ]
+      }
+    }
+  },
+  "xray": {
+    "Andrex SMART 225": {
+      "datasetId": "andrex-smart225-vector-20261112-unvalidated",
+      "sourceTitle": "ANDREX SMART 225 — supplied original exposure chart",
+      "sourceLocal": "Belichtingsgrafiek SMART 225b.pdf, page 1",
+      "status": "vector_digitized_unverified",
+      "material": "Fe",
+      "screens": "Pb 0.027 mm",
+      "film": "D5",
+      "density": 2.5,
+      "referenceDistanceMm": 800,
+      "unit": "mA·min",
+      "curves": [
+        {
+          "kv": 100,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 0.02848,
+          "maxThicknessMm": 9.24242,
+          "log10MamPerMm": 0.1675137444,
+          "log10MamIntercept": 0.2579468814,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 120,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 0.0,
+          "maxThicknessMm": 14.0404,
+          "log10MamPerMm": 0.1116155041,
+          "log10MamIntercept": 0.2390531996,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 140,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 1.07276,
+          "maxThicknessMm": 18.0303,
+          "log10MamPerMm": 0.1062080261,
+          "log10MamIntercept": -0.1132098323,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 160,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 3.28283,
+          "maxThicknessMm": 22.57576,
+          "log10MamPerMm": 0.0931598371,
+          "log10MamIntercept": -0.3058277481,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 180,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 5.40404,
+          "maxThicknessMm": 26.41414,
+          "log10MamPerMm": 0.0857565159,
+          "log10MamIntercept": -0.4634316771,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 200,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 7.27273,
+          "maxThicknessMm": 29.79798,
+          "log10MamPerMm": 0.0801846715,
+          "log10MamIntercept": -0.5831612472,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 210,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 8.33333,
+          "maxThicknessMm": 32.27273,
+          "log10MamPerMm": 0.0756329459,
+          "log10MamIntercept": -0.6302745488,
+          "minMam": 1,
+          "maxMam": 64
+        },
+        {
+          "kv": 225,
+          "film": "D5",
+          "density": 2.5,
+          "referenceDistanceMm": 800,
+          "minThicknessMm": 8.96946,
+          "maxThicknessMm": 40.0,
+          "log10MamPerMm": 0.0577551237,
+          "log10MamIntercept": -0.5173057101,
+          "minMam": 1,
+          "maxMam": 64
+        }
+      ]
+    }
+  }
+};
