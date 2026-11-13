@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Basic RT PRO — Radiografie",
-  "short_name": "Basic RT PRO",
-  "description": "Research-only RT calculator 2.5.1 with ISO/ASME IQI reference lookups and theoretical film placement maps",
+  "name": "Basic RT PRO 3.4 — filmrespons + Waygate (privétest)",
+  "short_name": "RT PRO 3.4",
+  "description": "Onderzoeksversie voor AGFA-filmrespons, Se-75/Ir-192, X-ray, IQI en Tools. Geen vrijgegeven RT-belichtingstijden.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

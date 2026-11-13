@@ -1,3 +1,4 @@
+import {densityCorrectionFactor,FILM_RESPONSE} from './film-response.mjs';
 /**
  * BASIC RT PRO 2.0 — RESEARCH MODE ONLY.
  * This module NEVER authorizes an exposure. Every curve requires source-condition match.
@@ -80,13 +81,34 @@ export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,acti
   const ds=db?.gamma?.[isotope];
   if(!ds) return {ok:false,error:ERROR.NO_CURVE};
   if(!ds.curves?.[film]) return {ok:false,error:ERROR.FILM};
-  if(!finite(density)||Math.abs(density-ds.density)>1e-8) return {ok:false,error:ERROR.DENSITY,requiredDensity:ds.density};
-  if(thicknessMm<ds.minThicknessMm||thicknessMm>ds.maxThicknessMm) return {ok:false,error:ERROR.RANGE,lower:ds.minThicknessMm,upper:ds.maxThicknessMm};
-  const ciHours=interpolateLog(ds.curves[film],thicknessMm);
+  const densityModel=densityCorrectionFactor({film,isotope,density,baseDensity:ds.density});
+  if(!densityModel.ok)return {ok:false,error:ERROR.DENSITY,requiredDensity:ds.density,minDensity:FILM_RESPONSE.minDensity,maxDensity:FILM_RESPONSE.maxDensity};
+  // A comparison series (if explicitly present) is scoped to the exact isotope+film,
+  // with its own range and provenance. No extrapolation or silent OEM-curve fallback.
+  const comparison=ds.comparisonSeries?.[film];
+  const minimum=comparison?.minThicknessMm ?? ds.minThicknessMm;
+  const maximum=comparison?.maxThicknessMm ?? ds.maxThicknessMm;
+  if(thicknessMm<minimum||thicknessMm>maximum) return {ok:false,error:ERROR.RANGE,lower:minimum,upper:maximum};
+  const points=comparison?.points ?? ds.curves[film];
+  const ciHours=interpolateLog(points,thicknessMm);
   if(!finite(ciHours)||ciHours<=0) return {ok:false,error:ERROR.NO_CURVE};
-  const minutes=ciHours*60/activityCi*(distanceMm/ds.referenceDistanceMm)**2;
+  const minutes=ciHours*60/activityCi*(distanceMm/ds.referenceDistanceMm)**2 * densityModel.factor;
   if(!finite(minutes)||minutes<=0||minutes>1e9) return {ok:false,error:ERROR.INVALID};
-  return {ok:true,minutes,exposure:ciHours,exposureUnit:'Ci·h',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,sourceUrl:ds.sourceUrl,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,status:ds.status};
+  return {
+    ok:true,minutes,exposure:ciHours,exposureUnit:'Ci·h',
+    datasetId:comparison?.datasetId ?? ds.datasetId,
+    sourceTitle:comparison?.sourceTitle ?? ds.sourceTitle,
+    sourceUrl:comparison ? undefined : ds.sourceUrl,
+    referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,
+    densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,
+    filmFactorDerived:Boolean(ds.derivedFilms?.[film]),
+    status:(comparison?.status ?? ds.status)+(density!==ds.density?'; film_density_model_unvalidated':'')+(ds.derivedFilms?.[film]?'; film_factor_derived_unverified':''),
+    comparisonOnly:Boolean(comparison),
+    method:comparison?.method,
+    benchmarkReferenceActivityCi:comparison?.referenceActivityCi,
+    benchmarkReferenceDistanceMm:comparison?.referenceDistanceMm,
+    benchmarkMinMm:comparison?.minThicknessMm,benchmarkMaxMm:comparison?.maxThicknessMm
+  };
 }
 export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,material='Fe'},db){
   if(!inputValid(thicknessMm,distanceMm)||!finite(ma)||ma<=0||ma>1000) return {ok:false,error:ERROR.INVALID};
@@ -95,16 +117,17 @@ export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,m
   if(!ds) return {ok:false,error:ERROR.MODEL};
   if(ds.enabled===false || !Array.isArray(ds.curves) || ds.curves.length===0) return {ok:false,error:ERROR.NO_CURVE};
   if(film!==ds.film) return {ok:false,error:ERROR.FILM,requiredFilm:ds.film};
-  if(!finite(density)||Math.abs(density-ds.density)>1e-8) return {ok:false,error:ERROR.DENSITY,requiredDensity:ds.density};
+  const densityModel=densityCorrectionFactor({film,density,baseDensity:ds.density});
+  if(!densityModel.ok)return {ok:false,error:ERROR.DENSITY,requiredDensity:ds.density,minDensity:FILM_RESPONSE.minDensity,maxDensity:FILM_RESPONSE.maxDensity};
   if(!finite(kv)||!Number.isInteger(kv)) return {ok:false,error:ERROR.KV};
   const line=ds.curves.find(x=>x.kv===kv);
   if(!line) return {ok:false,error:ERROR.KV,availableKv:ds.curves.map(c=>c.kv)};
   if(thicknessMm<line.minThicknessMm||thicknessMm>line.maxThicknessMm) return {ok:false,error:ERROR.RANGE,lower:line.minThicknessMm,upper:line.maxThicknessMm};
   const mam=Math.pow(10,thicknessMm*line.log10MamPerMm+line.log10MamIntercept);
   if(!finite(mam)||mam<line.minMam-1e-7||mam>line.maxMam+1e-7) return {ok:false,error:ERROR.CHART_LIMIT};
-  const minutes=(mam/ma)*(distanceMm/ds.referenceDistanceMm)**2;
+  const minutes=(mam/ma)*(distanceMm/ds.referenceDistanceMm)**2 * densityModel.factor;
   if(!finite(minutes)||minutes<=0||minutes>1e9) return {ok:false,error:ERROR.INVALID};
-  return {ok:true,minutes,exposure:mam,exposureUnit:'mA·min',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,screens:ds.screens,status:ds.status};
+  return {ok:true,minutes,exposure:mam,exposureUnit:'mA·min',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,screens:ds.screens,status:ds.status+(density!==ds.density?'; 200kv_film_response_applied_to_equipment_unvalidated':'')};
 }
 export function hms(minutes){
   if(!finite(minutes)||minutes<=0) return '—';

@@ -46,3 +46,6 @@ Nieuwe numerieke data zijn uitsluitend *pixelgebaseerde approximaties* van vijf 
 - De filmplanner is een geometrische plaatsingshulpmiddel en **niet** een methode voor de normatieve minimumaantallen belichtingen of de werkelijke filmbeelddekking. Bij ISO MME 6A/6B en ASME MME6 is de omtrek-planner bewust geblokkeerd.
 - De eigen schetsen (SVG in app, ringdiagram in PDF) zijn alleen indicatief. Alle oude gamma-/X-ray-rekenmodules ongewijzigd.
 - Concept-PDF is als commentaar/samenvatting opgesteld. Formele goedkeuring RT Level3 is noodzakelijk.
+
+## 2.8 uitbreiding (13 november 2026)
+Automatische curve-assistent hergebruikt de reeds gedigitaliseerde gamma/Andrex/YXLON-gegevens zonder wijziging van formules. Voor COMET EVO 225DS zijn vijf lijnen van het officiële productblad (versie 05, p.2) op grove, visuele basis als kruisingen met y=1 en y=100 mA.min benaderd. Deze handmatige aflezingen hebben onvoldoende nauwkeurigheidsvalidatie en mogen niet als OEM-waarden worden gepresenteerd. De overige COMET modellen blijven alleen naslag of handmatige onderzoeksaflezing. Geen veldvrijgave.
