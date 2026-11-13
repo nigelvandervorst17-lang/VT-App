@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#061628">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Basic RT PRO">
+<meta name="description" content="Basic RT PRO — transparante radiografische onderzoeksberekeningen, bronverval en grafiekherkomst.">
+<title>Basic RT PRO 2.5.1 · IQI &amp; filmplan</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="app-shell">
+<header class="top-header">
+  <div class="brand"><div class="brand-icon" aria-hidden="true"><img src="./brand-logo.png" width="52" height="52" alt="" loading="eager" decoding="async"></div><div class="brand-copy"><strong>BASIC <span>RT</span> PRO</strong><small data-i18n="brandTag">INDUSTRIËLE RADIOGRAFIE</small></div></div>
+  <label class="lang-control"><span class="sr-only" data-i18n="language">Taal</span><select id="language" aria-label="Language / Taal / Język"><option value="nl">🇳🇱 NL</option><option value="en">🇬🇧 EN</option><option value="pl">🇵🇱 PL</option></select></label>
+</header>
+<main>
+<div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
+<section class="screen is-active" data-screen="calc" id="screen-calc">
+  <div class="section-heading"><div><p class="overline" data-i18n="workspace">WERKBLAD</p><h1 data-i18n="mainTitle">Belichting berekenen</h1><p class="subtitle" data-i18n="mainSub">Een onderzoeksberekening op basis van traceerbare grafieken.</p></div></div>
+  <div class="mode-switch" role="group" aria-label="Gamma / X-ray"><button type="button" id="modeGamma" class="mode-btn active" aria-pressed="true"><span class="mode-symbol">☢</span><span>Gamma</span></button><button type="button" id="modeXray" class="mode-btn" aria-pressed="false"><span class="mode-symbol">ϟ</span><span>X-ray</span></button></div>
+  <div id="gammaFields">
+    <div class="group-label"><span class="step">1</span><h2 data-i18n="chooseIsotope">Kies de isotoop</h2></div>
+    <div class="choice-row" role="radiogroup" aria-label="Gamma isotope"><label class="choice"><input type="radio" name="isotope" value="Se-75" checked><span>Se-75</span></label><label class="choice"><input type="radio" name="isotope" value="Ir-192"><span>Ir-192</span></label></div>
+  </div>
+  <div id="xrayFields" hidden>
+    <div class="group-label"><span class="step">1</span><h2 data-i18n="chooseXray">Kies de röntgenbuis</h2></div>
+    <div class="fields-grid"><div class="field-card"><label for="xrayBrand" data-i18n="brand">Merk</label><select id="xrayBrand"><option value="Andrex">Andrex</option><option value="YXLON">YXLON</option><option value="COMET">COMET</option><option value="ICM">ICM</option></select></div><div class="field-card"><label for="xrayModel" data-i18n="model">Model</label><select id="xrayModel"><option value="Andrex SMART 225">SMART 225</option></select></div><div class="field-card"><label for="kv">kV</label><select id="kv"><option>100</option><option>120</option><option>140</option><option>160</option><option>180</option><option selected>200</option><option>210</option><option>225</option></select></div><div class="field-card"><label for="ma">mA</label><div class="input-with-unit"><input id="ma" type="text" inputmode="decimal" value="5" autocomplete="off"><span>mA</span></div></div></div>
+    <div class="mini-note" data-i18n="xrayNote">Kies een exact apparaat en controleer de grafiekcondities. De nieuwe YXLON-curves zijn digitaal uit afbeeldingen afgeleid en NIET gevalideerd. SMART 200PC: uitsluitend naslag.</div>
+    <div class="xray-chart-panel" aria-label="Grafiekgegevens">
+      <strong id="xrayCurveStatus">ONDERZOEKSGRAFIEK — NIET GEVALIDEERD VOOR OPNAMES</strong>
+      <p id="xraySourceCaption" class="small-muted"></p>
+      <img id="xraySourceChart" class="xray-source-image" alt="Bijbehorende belichtingsgrafiek" loading="lazy" hidden>
+      <p class="small-muted">Dikte = doorstraalde dikte Fe volgens gekozen RT-techniek; bij dubbelwandige opnames kan deze afwijken van de nominale wanddikte. Gebruik geen curve buiten het gemarkeerde bereik.</p>
+    </div>
+  </div>
+  <div class="group-label"><span class="step">2</span><h2 data-i18n="enterData">Vul de gegevens in</h2></div>
+  <div class="fields-grid">
+    <div class="field-card"><label for="thickness" data-i18n="steel">Staaldikte</label><div class="input-with-unit"><input id="thickness" type="text" inputmode="decimal" value="25" autocomplete="off"><span>mm</span></div></div>
+    <div class="field-card"><label for="film" data-i18n="film">Filmtype</label><select id="film"><option>D4</option><option>D5</option><option>D7</option></select></div>
+    <div class="field-card"><label for="distance" id="distanceLabel" data-i18n="distanceGamma">Bron-filmafstand</label><div class="input-with-unit"><input id="distance" type="text" inputmode="decimal" value="500" autocomplete="off"><span>mm</span></div></div>
+    <div class="field-card"><label for="density" data-i18n="density">Filmzwarting (D)</label><select id="density"><option value="2.0" selected>2,0</option><option value="2.5">2,5</option><option value="2.8">2,8</option><option value="3.0">3,0</option><option value="3.2">3,2</option><option value="3.5">3,5</option><option value="3.9">3,9</option></select></div>
+  </div>
+  <div class="activity-card" id="activityCard"><div class="activity-top"><label for="manualCi" class="activity-title"><span aria-hidden="true">☢</span> <span data-i18n="activity">Activiteit (Ci)</span></label><div class="mini-toggle" role="radiogroup" aria-label="Activity input"><label><input type="radio" name="activityMode" value="manual" checked><span data-i18n="manual">Handmatig</span></label><label><input type="radio" name="activityMode" value="certificate"><span data-i18n="certificate">Certificaat</span></label></div></div>
+    <div id="manualCiWrap"><div class="input-with-unit ci-input"><input id="manualCi" aria-label="Ci" type="text" inputmode="decimal" value="36" autocomplete="off" placeholder="36,5"><span>Ci</span></div></div>
+    <div id="certificateWrap" hidden><div class="cert-grid"><div class="inner-field"><label for="certCi" data-i18n="certificateCi">Certificaatwaarde (Ci)</label><input id="certCi" type="text" inputmode="decimal" value="36" placeholder="36,5"></div><div class="inner-field"><label for="certDate" data-i18n="certificateDate">Certificaatdatum</label><input id="certDate" type="date"></div><div class="inner-field"><label for="referenceDate" data-i18n="calcDate">Berekeningsdatum</label><input id="referenceDate" type="date"></div></div><div class="activity-now" id="activityNow" aria-live="polite">—</div><p class="small-muted" data-i18n="certDisclaimer">Controleer de bron, de activiteit en de datum met het originele certificaat.</p></div>
+  </div>
+
+  <section class="iqi-entry" id="iqiPanel" aria-labelledby="iqiTitle">
+    <div class="group-label"><span class="step">3</span><h2 id="iqiTitle" data-i18n="iqiTitle">IQI / zichtbare draad</h2></div>
+    <p class="small-muted" data-i18n="iqiIntro">Kies de werkelijke opnametechniek en IQI-positie. De eis is onafhankelijk van de geschatte belichtingstijd.</p>
+    <div class="fields-grid iqi-grid">
+      <div class="field-card"><label for="iqiClass" data-i18n="iqiClass">Opnameklasse</label><select id="iqiClass"><option value="" data-i18n="iqiChoose">Kies…</option><option value="A" data-i18n="iqiClassA">Klasse A</option><option value="B" data-i18n="iqiClassB">Klasse B</option></select></div>
+      <div class="field-card"><label for="iqiTechnique" data-i18n="iqiTechnique">Opnametechniek</label><select id="iqiTechnique"><option value="" data-i18n="iqiChoose">Kies…</option><option value="sw">SWSI</option><option value="dwsi">DWSI</option><option value="dwdi">DWDI</option></select></div>
+      <div class="field-card"><label for="iqiSide" data-i18n="iqiSide">IQI-positie</label><select id="iqiSide"><option value="" data-i18n="iqiChoose">Kies…</option><option value="source" data-i18n="iqiSource">Bronzijde</option><option value="film" data-i18n="iqiFilm">Filmzijde</option></select></div>
+      <div class="field-card" id="iqiPenetratedWrap" hidden><label for="iqiPenetrated" data-i18n="iqiPenetrated">Doorstraalde dikte w (mm)</label><div class="input-with-unit"><input id="iqiPenetrated" type="text" inputmode="decimal" autocomplete="off" placeholder="50"><span>mm</span></div></div>
+    </div>
+    <p class="small-muted" id="iqiThicknessHelp" data-i18n="iqiThicknessHelp">SWSI: nominale wanddikte t uit het veld hierboven. Dubbelwandig: vul de werkelijk doorstraalde dikte w in, rekening houdend met de stralingshoek.</p>
+  </section>
+  <button class="calculate-button" id="calculate" type="button"><span aria-hidden="true">▦</span><span data-i18n="calculate">ONDERZOEKSBEREKENING</span></button>
+  <div class="result-card" id="resultCard" aria-live="polite" aria-atomic="true"><div class="result-kicker" id="resultKicker" data-i18n="noResult">Nog geen berekening</div><div class="result-time" id="resultTime">—</div><div class="result-reason" id="resultReason" data-i18n="enterFirst">Vul de gegevens in en kies berekenen.</div><div class="result-provenance" id="resultProvenance" hidden></div></div>
+  <div class="iqi-result panel" id="iqiResult" role="status" aria-live="polite">
+    <div class="iqi-result-heading"><span aria-hidden="true">◉</span> <strong data-i18n="iqiResultTitle">IQI-draadeis bij deze opname</strong></div>
+    <div class="iqi-wire" id="iqiWire">—</div>
+    <p id="iqiExplain" class="small-muted" data-i18n="iqiSelectFirst">Selecteer opnameklasse, techniek en IQI-positie.</p>
+    <p id="iqiRef" class="iqi-source"></p>
+    <p id="iqiCaution" class="small-muted" data-i18n="iqiCaution">Controlehulpmiddel: bevestig de eis met je geldige procedure en norm. De zichtbaarheid op de film moet daadwerkelijk worden vastgesteld.</p>
+  </div>
+  <button class="outline-button" type="button" data-proc-open>Open IQI &amp; filmverdeling / procedure</button>
+  <div class="alert-info"><span class="info-circle" aria-hidden="true">i</span><span data-i18n="infoText">De uitkomst is een niet-gevalideerde grafiekschatting. Geen instructie om een bron of röntgenbuis te bedienen.</span></div>
+  <div class="result-actions"><button class="ghost-button" id="saveResult" type="button" disabled data-i18n="saveRecord">Bewaar onderzoeksrecord</button><button class="ghost-button" id="printRecord" type="button" disabled data-i18n="printRecord">Afdrukken / PDF</button></div>
+</section>
+<section class="screen" data-screen="sources" id="screen-sources" hidden><div class="section-heading"><p class="overline" data-i18n="tools">GEREEDSCHAP</p><h1 data-i18n="sources">Bronnen & verval</h1><p class="subtitle" data-i18n="sourcesSub">Controleer de activiteit van een gamma-bron aan de hand van het certificaat.</p></div><div class="panel"><div class="row-title"><span data-i18n="sourceCurrent">Gekozen isotoop</span><strong id="sourceIso">Se-75</strong></div><div class="row-title"><span data-i18n="halfLife">Halveringstijd</span><strong id="sourceHalfLife">119,78 d</strong></div><div class="row-title"><span data-i18n="sourceActivity">Huidige invoer</span><strong id="sourceActiveCi">36 Ci</strong></div><div class="divider"></div><p class="small-muted" data-i18n="sourcesNote">Het bronverval is een afzonderlijke wiskundige berekening; het bewijst geen juiste filmzwarting of beeldkwaliteit.</p><button class="outline-button" type="button" id="toCertificate" data-i18n="editCertificate">Certificaatgegevens invullen</button></div><div class="panel" id="decayPanel">
+  <h2 data-i18n="decayTitle">Bronverval op certificaatdatum</h2>
+  <p class="small-muted" data-i18n="decayExplanation">Wiskundige prognose; gebruik de activiteit op de juiste referentiedatum. Controleer het originele broncertificaat.</p>
+  <div class="row-title"><span data-i18n="sourceUnit">Activiteit (Ci / GBq / TBq)</span><strong id="sourceUnits">—</strong></div>
+  <div id="decayGraph" class="decay-graph" aria-label="Radioactive decay chart" role="img"></div>
+  <div id="decayTable" class="decay-table-wrap"></div>
+  <p class="small-muted" id="decayNote" role="status"></p>
+</div>
+<div class="panel" id="geometryPanel">
+  <h2 data-i18n="geometryTitle">Geometrische onscherpte (Ug)</h2>
+  <p class="small-muted" data-i18n="geometryExplanation">Afzonderlijke geometrische controle: Ug = bronafmeting × object-filmafstand / bron-objectafstand. Geen normvrijgave.</p>
+  <div class="fields-grid">
+    <div class="field-card"><label for="geoSource" data-i18n="geoSource">Bron- of focusafmeting (mm)</label><input id="geoSource" type="text" inputmode="decimal" value="2"></div>
+    <div class="field-card"><label for="geoOFD" data-i18n="geoOFD">Object-filmafstand (mm)</label><input id="geoOFD" type="text" inputmode="decimal" value="20"></div>
+    <div class="field-card"><label for="geoSOD" data-i18n="geoSOD">Bron-objectafstand (mm)</label><input id="geoSOD" type="text" inputmode="decimal" value="480"></div>
+  </div>
+  <div class="row-title"><span data-i18n="geoResult">Berekende Ug</span><strong id="geoResult">—</strong></div>
+  <p class="small-muted" data-i18n="geoDisclaimer">Dit is géén beoordeling tegen ISO/ASME-limieten. Controleer de toepasselijke procedure en werkelijke geometrie.</p>
+</div>
+<div class="panel"><h2 data-i18n="sourceChecks">Controle vóór berekening</h2><div class="checkline" data-i18n="sourceCheck1">Isotoop en serienummer vergelijken met het originele certificaat.</div><div class="checkline" data-i18n="sourceCheck2">Certificaatdatum, eenheid en activiteit controleren.</div><div class="checkline" data-i18n="sourceCheck3">SFD / FFD en de juiste opnamegeometrie bevestigen.</div><div class="checkline" data-i18n="sourceCheck4">Film, Pb-schermen en ontwikkelproces matchen met de grafiek.</div></div></section>
+<section class="screen" data-screen="curves" id="screen-curves" hidden><div class="section-heading"><p class="overline" data-i18n="traceable">HERLEIDBAAR</p><h1 data-i18n="curves">Grafieken & dekking</h1><p class="subtitle" data-i18n="curvesSub">Welke onderzoeksgegevens zijn beschikbaar — en waar blokkeren we?</p></div><div class="panel" id="curveList"></div><div class="panel"><h2 data-i18n="curvePreview">Grafiekvoorbeeld</h2><div class="mini-toggle curve-toggle"><label><input type="radio" name="curvePreview" value="Se-75" checked><span>Se-75</span></label><label><input type="radio" name="curvePreview" value="Ir-192"><span>Ir-192</span></label></div><div id="curveSVG" class="curve-svg"></div><p class="small-muted" data-i18n="curveDisclaimer">Gegenereerd uit gedigitaliseerde onderzoeksdata; geen onafhankelijke validatie.</p></div><div class="panel"><h2 data-i18n="licenseHeading">Herkomst & rechten</h2><p class="small-muted" data-i18n="licenseText">De data zijn afgeleid van fabrikantsdocumenten. Controleer toestemming voor publiek hergebruik; dit is geen OEM-goedkeuring.</p><a href="./PROVENANCE.md" target="_blank" rel="noopener" data-i18n="provenanceFile">Bekijk herkomstbestand</a></div></section>
+
+
+<section class="screen" data-screen="procedure" id="screen-procedure" hidden>
+ <div class="section-heading"><p class="overline">RT LEVEL 3 · CONCEPT / WERKHULP</p><h1>IQI &amp; filmverdeling</h1>
+ <p class="subtitle">Kies een norm en een opnametechniek. Bekijk de vereiste draad en een theoretische filmindeling. Geen vrijgegeven werkprocedure.</p></div>
+ <div class="panel procedure-panel">
+  <h2>1. Welke procedure geldt?</h2>
+  <div class="fields-grid">
+   <div class="field-card"><label for="procNorm">Norm / materiaal</label><select id="procNorm"><option value="iso">ISO 17636-1 · lassen</option><option value="asme">ASME V · stalen gietstukken</option></select></div>
+   <div class="field-card" id="procClassWrap"><label for="procClass">ISO opnameklasse</label><select id="procClass"><option value="B">Klasse B</option><option value="A">Klasse A</option></select></div>
+   <div class="field-card" id="procMaterialWrap"><label for="procMaterial">Materiaal</label><select id="procMaterial"><option value="steel">Staal / Fe</option><option value="titanium">Titanium / Ti</option><option value="nickel">Nikkel / legering (controleren)</option></select></div>
+   <div class="field-card"><label for="procMme">MME techniek</label><select id="procMme"><option value="1">1 · vlak / langslas SWSI</option><option value="2" selected>2 · panoramisch SWSI</option><option value="3">3 · excentrisch SWSI</option><option value="4">4 · DWSI</option><option value="5">5 · langslas DWSI</option><option value="6">6 · DWDI ASME</option><option value="6A">6A · ellips ISO</option><option value="6B">6B · superimposed ISO</option><option value="7">7 · SWSI buitenbron</option><option value="8">8 · set-in SWSI</option><option value="9">9 · set-on SWSI</option><option value="10">10 · set-in SWSI</option><option value="11">11 · set-on SWSI</option><option value="12">12 · set-in DWSI</option></select></div>
+   <div class="field-card" id="procTechniqueWrap"><label for="procTechnique">Stralingsgeometrie</label><select id="procTechnique"><option value="sw">SWSI · enkelwandig / enkelbeeld</option><option value="dwsi">DWSI · dubbelwandig / enkelbeeld</option><option value="dwdi">DWDI · dubbelwandig / dubbelbeeld</option></select></div>
+   <div class="field-card"><label for="procSide">IQI-positie</label><select id="procSide"><option value="source">Bronzijde</option><option value="film">Filmzijde</option></select></div>
+   <div class="field-card"><label for="procT">Nominale enkelwandige dikte t (mm)</label><input id="procT" inputmode="decimal" type="text" value="10"></div>
+   <div class="field-card"><label for="procW">Werkelijk doorstraalde dikte w (mm)</label><input id="procW" inputmode="decimal" type="text" value="20"></div>
+  </div>
+  <p class="small-muted" id="procMetalScope"></p>
+  <div id="procIqiOutput" class="procedure-answer" aria-live="polite"></div>
+ </div>
+ <div class="panel procedure-panel">
+  <h2>2. Om de hoeveel cm moet ik film plakken — waar ligt het middelpunt?</h2>
+  <p class="small-muted">Voer de bruikbare filmlengte en de grootte van het werkstuk in. De app toont per film het begin, het MIDDELPUNT en het eind in cm vanaf het 0-punt. Voor rondlassen meten we over de buitenomtrek (niet dwars door de buis).</p>
+  <div class="fields-grid">
+   <div class="field-card"><label for="procShape">Objectgeometrie / lasverloop</label><select id="procShape"><option value="ring">Rondlas / omtrek</option><option value="straight">Rechte las / langslas</option></select></div>
+   <div class="field-card" id="procODWrap"><label for="procOD">Buitendiameter De (mm)</label><input id="procOD" type="text" inputmode="decimal" value="219,1"></div>
+   <div class="field-card" id="procLengthWrap" hidden><label for="procLength">Te inspecteren lengte (mm)</label><input id="procLength" type="text" inputmode="decimal" value="1000"></div>
+   <div class="field-card"><label for="procFilmLen">Bruikbare film-/beeldlengte (mm)</label><input id="procFilmLen" inputmode="decimal" type="text" value="240"></div>
+   <div class="field-card"><label for="procOverlap">Geplande overlap (mm)</label><input id="procOverlap" inputmode="decimal" type="text" value="10"></div>
+   <div class="field-card" id="procSfdWrap"><label for="procSfd">SFD (mm) · nodig voor MME 1/5</label><input id="procSfd" inputmode="decimal" type="text" value="700"></div>
+  </div>
+  <div id="procSketch" class="proc-sketch" role="img" aria-label="Schets filmplaatsing"></div>
+  <div id="procFilmOutput" class="procedure-answer" aria-live="polite"></div>
+  <button id="procExport" class="outline-button" type="button">Exporteer filmposities als CSV (CONCEPT)</button>
+  <p class="small-muted proc-red">Een theoretische filmverdeling is GEEN bepaling van het minimale aantal exposures. Bij ISO MME 3/4/7 gelden aparte nomogrammen, bij 6A/6B andere opname-eisen. Controleer de resultaten altijd aan de praktijkgeometrie en de getekende filmmap.</p>
+ </div>
+ <div class="panel procedure-panel">
+  <h2>3. Controle vóór RT</h2>
+  <p class="checkline">Correcte procedure, revisie, objectsoort, klasse en acceptatie-eisen geselecteerd</p>
+  <p class="checkline">Buitendiameter, enkelwandige dikte en doorstraalde dikte gecontroleerd</p>
+  <p class="checkline">IQI-positie, materiaal en vereiste zichtbare draad bevestigd</p>
+  <p class="checkline">Overlappen, markeringen, registratie en volledige dekking op film aangetoond</p>
+  <p class="checkline">Minimaal aantal exposures apart bepaald met normgrafieken, geometrie en SFD</p>
+  <p class="checkline">Stralingsveiligheid volgens bedrijfsvoorschrift en wettelijke regels</p>
+  <p class="small-muted">Bronnen: MM 00102 E r04; MM 18100 E r22; MM 11400 E r23. Een ASME-gietstukprocedure is geen ASME-lasprocedure. Alle uitkomsten vereisen RT Level 3-controle en formele vrijgave.</p>
+  <a class="outline-button proc-pdf-link" href="./RT_IQI_Filmverdeling_Concept_Procedure.pdf" target="_blank" rel="noopener">Open conceptwerkinstructie (PDF)</a>
+  <button type="button" id="procBack" class="outline-button">Terug naar rekenen</button>
+ </div>
+</section>
+<section class="screen" data-screen="refs" id="screen-refs" hidden>
+ <div class="section-heading"><p class="overline" data-ref-key="over">PRAKTIJKHULPMIDDELEN</p><h1 data-ref-key="heading">Tabellen & naslag</h1><p class="subtitle" data-ref-key="sub">Originele bronnen, geen vrijgave voor belichting.</p></div>
+ <div class="panel ref-panel"><h2>Nieuwe RT-procedurehulp</h2><p>Welke IQI-draad en hoe verdeel je de films langs een las? ISO-lassen en ASME-gietstukken apart.</p><button class="outline-button" type="button" data-proc-open>Open IQI &amp; filmverdeling</button></div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="pipe">Buismaten · NPS / Schedule</h2>
+  <div class="fields-grid"><div class="field-card"><label for="refNps" data-ref-key="nps">Nominale maat</label><select id="refNps"></select></div><div class="field-card"><label for="refSch" data-ref-key="sch">Schedule</label><select id="refSch"></select></div></div>
+  <p id="refPipeResult" class="ref-result" aria-live="polite">—</p>
+  <button class="outline-button" type="button" id="refApply" data-ref-key="useWall">Wanddikte overnemen</button><button class="outline-button" type="button" id="refApplyProc">Gebruik Ø en wanddikte in filmplan</button>
+  <p class="small-muted" data-ref-key="pipeNote"></p>
+ </div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="density">Zwartingsfactor · historische tabel</h2>
+  <div class="fields-grid"><div class="field-card"><label for="refAchieved" data-ref-key="achieved">Bereikte zwarting</label><select id="refAchieved"></select></div><div class="field-card"><label for="refTarget" data-ref-key="target">Vereiste zwarting</label><select id="refTarget"></select></div></div>
+  <p id="refDensityResult" class="ref-result" aria-live="polite">—</p>
+  <p class="small-muted ref-warning" data-ref-key="densityNote"></p>
+ </div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="film">AGFA STRUCTURIX · filmklassen</h2>
+  <div class="reference-table-wrap"><table class="reference-table" id="refFilmTable"><thead></thead><tbody></tbody></table></div>
+  <p class="small-muted" data-ref-key="filmNote"></p>
+ </div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="diagrams">Originele belichtingsgrafieken</h2>
+  <label for="refDiagram" class="ref-label" data-ref-key="diagramLabel">Kies grafiek</label><select class="ref-select" id="refDiagram"></select>
+  <strong class="ref-image-name" id="refDiagramTitle">—</strong><p id="refDiagramConditions" class="ref-conditions"></p>
+  <a id="refDiagramOpen" href="./assets/smart-225b.webp" target="_blank" rel="noopener noreferrer" class="ref-image-link"><img id="refDiagramImage" src="./assets/smart-225b.webp" loading="lazy" alt="SMART 225 belichtingsdiagram"></a>
+  <p class="small-muted ref-warning" data-ref-key="diagramNote"></p>
+ </div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="weld">Lasdetailschetsen</h2><img class="ref-illustration" src="./assets/weld-details.webp" alt="Schemaprojectie van lasdetails met X Y Z richting" loading="lazy">
+  <p class="small-muted" data-ref-key="weldNote"></p>
+ </div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="process">Lasprocessen (oude ISO 4063-lijst)</h2>
+  <label class="ref-label" for="refProcess" data-ref-key="processLabel">Procesnummer</label><select id="refProcess" class="ref-select"></select>
+  <p id="refProcessResult" class="ref-result"></p><p class="small-muted" data-ref-key="processNote"></p>
+ </div>
+ <div class="panel ref-panel">
+  <h2 data-ref-key="source">Brongegevens en rechten</h2>
+  <p class="small-muted" data-ref-key="sourceNote"></p>
+  <a href="./PROVENANCE.md" target="_blank" rel="noopener noreferrer">PROVENANCE.md</a>
+  <p class="small-muted ref-warning" data-ref-key="caution"></p>
+ </div>
+</section>
+<section class="screen" data-screen="records" id="screen-records" hidden><div class="section-heading"><p class="overline" data-i18n="historyOverline">LOKAAL</p><h1 data-i18n="records">Onderzoeksrecords</h1><p class="subtitle" data-i18n="recordsSub">Alleen op dit apparaat opgeslagen. Geen vrijgegeven RT-opnameverslagen.</p></div><div id="recordList" class="record-list"></div><div class="record-tools"><button class="outline-button" type="button" id="exportRecords" data-i18n="exportRecords">Exporteer JSON</button><button class="outline-button danger-button" type="button" id="clearRecords" data-i18n="clearRecords">Wis records</button></div></section>
+<section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>2.5.1 · filmmiddens in cm</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">Deze app heeft geen account, externe trackers of server voor ingevoerde projectgegevens. De browser kan lokaal gegevens bewaren.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
+</main>
+<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="sources" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg><span data-i18n="tabSources">Bronnen</span></button><button data-nav="curves" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-10"/></svg><span data-i18n="tabCurves">Grafieken</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="records" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM9 10h6M9 14h6M9 18h4"/></svg><span data-i18n="tabRecords">Records</span></button><button data-nav="settings" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span data-i18n="tabSettings">Instellingen</span></button></nav>
+</div>
+<section id="printView" aria-hidden="true"></section>
+<script type="module" src="./app.mjs"></script>
+</body></html>
