@@ -1,6 +1,6 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='basic-rt-pro-v3.8.3-mobile-ux-20261114';
-const ASSETS=['./','./index.html','./styles.css','./app.mjs','./ui-polish.mjs','./reference-recovery.mjs',
+const CACHE='basic-rt-pro-v3.8.5-measured-geometry-20261114';
+const ASSETS=['./','./index.html','./styles.css','./app.mjs','./ui-polish.mjs','./workflow-shape.mjs','./reference-recovery.mjs',
 './rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',

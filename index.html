@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Basic RT PRO">
 <meta name="description" content="Basic RT PRO — werkassistent voor radiografisch onderzoek, bronverval, grafieken, IQI en filmverdeling (onderzoeksversie).">
-<title>Basic RT PRO 3.8.3 · Se-75 en Ir-192 · D4/D5/D7</title>
+<title>Basic RT PRO 3.8.5 · Se-75 en Ir-192 · D4/D5/D7</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./styles.css?v=385">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -170,20 +170,35 @@
 <strong>De app is niet volledig gestart</strong>
 <p id="bootFailureDetail">De rekenmodule is niet geladen.</p>
 <button id="rtRepairCache" type="button" onclick="window.rtForceRefresh()">Cache wissen en opnieuw starten</button>
-<a href="./controle.html?v=383">Open technische controle</a>
+<a href="./controle.html?v=385">Open technische controle</a>
 </div>
 <main>
 <div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
 <section class="screen is-active" data-screen="calc" id="screen-calc">
   <div class="section-heading"><div><p class="overline" data-i18n="workspace">WERKBLAD</p><h1 data-i18n="mainTitle">Belichting berekenen</h1><p class="subtitle" data-i18n="mainSub">Een onderzoeksberekening op basis van traceerbare grafieken.</p></div></div>
   <button class="outline-button rt31-mainlink" type="button" id="rt31Shortcut" data-ui-i18n="extraTools">Alle extra RT-tools openen →</button>
+<section class="workshape" id="workShapePanel" aria-label="Werkstuk en opnamegeometrie">
+ <div class="group-label"><span class="step">1</span><h2 data-work-t="what">Wat ga je schieten?</h2></div>
+ <div class="workshape-switch" role="group" aria-label="Werkstukvorm">
+  <button type="button" class="workshape-choice active" id="workPlate" aria-pressed="true" data-work-t="plate">Plaat / Las</button>
+  <button type="button" class="workshape-choice" id="workPipe" aria-pressed="false" data-work-t="pipe">Pijp / Buis</button>
+ </div>
+ <div id="workDimensions" class="workshape-fields">
+  <div class="workshape-field" id="workOutsideWrap" hidden><label for="workOutside" data-work-t="outside">Buitendiameter Ø (mm)</label><div class="workshape-value"><input id="workOutside" type="text" inputmode="decimal" autocomplete="off" value="114" aria-describedby="workGeometryResult"><span>mm</span></div><div class="workshape-chips" id="workOutsideChips"><button type="button" data-work-od="60">60</button><button type="button" data-work-od="89">89</button><button type="button" data-work-od="114">114</button><button type="button" data-work-od="168">168</button><button type="button" data-work-od="219">219</button><button type="button" data-work-od="324">324</button></div></div>
+  <div class="workshape-field"><label for="workWall" data-work-t="wall">Gemeten wanddikte t (mm)</label><div class="workshape-value"><input id="workWall" type="text" inputmode="decimal" autocomplete="off" value="25" aria-describedby="workGeometryResult"><span>mm</span></div><div class="workshape-chips" id="workWallChips"></div></div>
+ </div>
+ <div id="workPenetratedWrap" class="workshape-penetrated" hidden><label for="workPenetrated" data-work-t="penetrated">Doorstraalde dikte voor de curve, w (mm)</label><div class="workshape-value"><input type="text" inputmode="decimal" id="workPenetrated" autocomplete="off" value="12"><span>mm</span></div><button type="button" id="workResetDouble" class="workshape-secondary" data-work-t="resetDouble">Gebruik weer nominale 2 × t</button></div>
+ <div class="workshape-result" id="workGeometryResult" role="status" aria-live="polite"></div>
+ <div class="workshape-actions"><button id="workApplyTechnique" type="button" class="workshape-secondary" hidden data-work-t="applyTechnique">Neem techniekvoorstel over</button><button id="workOpenProcedure" type="button" class="workshape-secondary" data-work-t="procedure">Controleer IQI / procedure</button></div>
+ <p class="workshape-caution" data-work-t="caution">2 × wanddikte is uitsluitend een nominale benadering voor dubbelwandige opname. De werkelijke stralingsweg, techniek, IQI en het aantal opnames hangen af van geometrie en toepasselijke procedure.</p>
+</section>
 <div class="mode-switch" role="group" aria-label="Gamma / X-ray"><button type="button" id="modeGamma" class="mode-btn active" aria-pressed="true"><span class="mode-symbol">☢</span><span>Gamma</span></button><button type="button" id="modeXray" class="mode-btn" aria-pressed="false"><span class="mode-symbol">ϟ</span><span>X-ray</span></button></div>
   <div id="gammaFields">
-    <div class="group-label"><span class="step">1</span><h2 data-i18n="chooseIsotope">Kies de isotoop</h2></div>
+    <div class="group-label"><span class="step">2</span><h2 data-i18n="chooseIsotope">Kies de isotoop</h2></div>
     <div class="choice-row" role="radiogroup" aria-label="Gamma isotope"><label class="choice"><input type="radio" name="isotope" value="Se-75" checked><span>Se-75</span></label><label class="choice"><input type="radio" name="isotope" value="Ir-192"><span>Ir-192</span></label></div>
   </div>
   <div id="xrayFields" hidden>
-    <div class="group-label"><span class="step">1</span><h2 data-i18n="chooseXray">Kies de röntgenbuis</h2></div>
+    <div class="group-label"><span class="step">2</span><h2 data-i18n="chooseXray">Kies de röntgenbuis</h2></div>
     <div class="fields-grid"><div class="field-card"><label for="xrayBrand" data-i18n="brand">Merk</label><select id="xrayBrand"><option value="Andrex">Andrex</option><option value="YXLON">YXLON</option><option value="COMET">COMET</option><option value="ICM">ICM</option></select></div><div class="field-card"><label for="xrayModel" data-i18n="model">Model</label><select id="xrayModel"><option value="Andrex SMART 225">SMART 225</option></select></div><div class="field-card"><label for="kv">kV</label><select id="kv"><option>100</option><option>120</option><option>140</option><option>160</option><option>180</option><option selected>200</option><option>210</option><option>225</option></select></div><div class="field-card"><label for="ma">mA</label><div class="input-with-unit"><input id="ma" type="text" inputmode="decimal" value="5" autocomplete="off"><span>mA</span></div></div></div>
     <div class="mini-note" data-i18n="xrayNote">Kies een exact apparaat en controleer de grafiekcondities. De nieuwe YXLON-curves zijn digitaal uit afbeeldingen afgeleid en NIET gevalideerd. SMART 200PC: uitsluitend naslag.</div>
     <div class="xray-chart-panel" aria-label="Grafiekgegevens">
@@ -208,10 +223,10 @@
     <strong>Grafiekstatus</strong>
     <p id="rt29StatusText">Kies een apparaat of isotoop om de ondersteunde condities te bekijken.</p>
   </section>
-  <div class="group-label"><span class="step">2</span><h2 data-i18n="enterData">Vul de gegevens in</h2></div>
+  <div class="group-label rt-step-two"><span class="step">3</span><h2 data-i18n="enterData">Vul de gegevens in</h2><button id="activityJump" class="rt-activity-jump" type="button"><span id="activityJumpLabel">☢ Activiteit</span><strong id="activityJumpValue">36 Ci</strong></button></div>
   <div class="fields-grid">
-    <div class="field-card"><label for="thickness" data-i18n="steel">Materiaaldikte</label><div class="input-with-unit"><input id="thickness" type="text" inputmode="decimal" value="25" placeholder="0–100" autocomplete="off"><span>mm</span></div><div class="rt-quick-values" data-field="thickness"><button type="button" data-value="5">5</button><button type="button" data-value="10">10</button><button type="button" data-value="20">20</button><button type="button" data-value="40">40</button></div></div>
-    <div class="field-card"><label for="material">Materiaal</label><select id="material"><option value="Fe">Staal / koolstofstaal</option><option value="RVS300">RVS 300-serie</option><option value="RVSother">RVS, andere legering</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Bronze">Brons</option><option value="Ti">Titanium</option><option value="InconelX">Inconel X</option><option value="Monel">Monel</option><option value="Brass">Messing</option><option value="Mg">Magnesium</option><option value="Other">Ander materiaal</option></select></div>
+    <div class="field-card" id="legacyThicknessCard" hidden><label for="thickness" data-i18n="steel">Materiaaldikte</label><div class="input-with-unit"><input id="thickness" type="text" inputmode="decimal" value="25" placeholder="0–100" autocomplete="off"><span>mm</span></div><div class="rt-quick-values" data-field="thickness"><button type="button" data-value="5">5</button><button type="button" data-value="10">10</button><button type="button" data-value="20">20</button><button type="button" data-value="40">40</button></div></div>
+    <div class="field-card"><label for="material">Materiaal</label><select id="material"><option value="Fe">Staal (Fe)</option><option value="RVS300">RVS 300-serie</option><option value="RVSother">RVS, andere legering</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Bronze">Brons</option><option value="Ti">Titanium</option><option value="InconelX">Inconel X</option><option value="Monel">Monel</option><option value="Brass">Messing</option><option value="Mg">Magnesium</option><option value="Other">Ander materiaal</option></select></div>
     <div class="field-card"><label for="film" data-i18n="film">Filmtype</label><select id="film"><option selected>D4</option><option>D5</option><option>D7</option></select></div>
     <div class="field-card"><label for="distance" id="distanceLabel" data-i18n="distanceGamma">Bron-filmafstand</label><div class="input-with-unit"><input id="distance" type="text" inputmode="decimal" value="500" autocomplete="off"><span>mm</span></div><div class="rt-quick-values" data-field="distance"><button type="button" data-value="500">500</button><button type="button" data-value="800">800</button><button type="button" data-value="1000">1000</button><button type="button" data-value="1200">1200</button></div></div>
     <div class="field-card density-card"><label for="density" data-i18n="density">Filmzwarting (D)</label><input id="density" type="text" inputmode="decimal" value="2,0" placeholder="Bijv. 2,4" autocomplete="off" aria-describedby="densityHelp"><p class="small-muted" id="densityHelp">Gamma: D4 vanaf 1,4 (Se-75) of 1,5 (Ir-192); D5/D7 vanaf 1,5; maximaal 3,9. Buiten de getoetste film- en staaldiktegebieden geen gamma-uitkomst. X-ray heeft eigen grenzen. Controleer ook de procedure- en filmviewergrenzen.</p><div class="rt-density-quick" data-field="density"><button type="button" data-value="2.0">2,0</button><button type="button" data-value="2.5">2,5</button><button type="button" data-value="3.0">3,0</button></div></div>
@@ -223,7 +238,7 @@
   </div>
 
   <section class="iqi-entry" id="iqiPanel" aria-labelledby="iqiTitle">
-    <div class="group-label"><span class="step">3</span><h2 id="iqiTitle" data-i18n="iqiTitle">IQI / zichtbare draad</h2></div>
+    <div class="group-label"><span class="step">4</span><h2 id="iqiTitle" data-i18n="iqiTitle">IQI / zichtbare draad</h2></div>
     <p class="small-muted" data-i18n="iqiIntro">Kies de werkelijke opnametechniek en IQI-positie. De eis is onafhankelijk van de geschatte belichtingstijd.</p>
     <div class="fields-grid iqi-grid">
       <div class="field-card"><label for="iqiClass" data-i18n="iqiClass">Opnameklasse</label><select id="iqiClass"><option value="" data-i18n="iqiChoose">Kies…</option><option value="A" data-i18n="iqiClassA">Klasse A</option><option value="B" data-i18n="iqiClassB">Klasse B</option></select></div>
@@ -364,7 +379,7 @@
  <div id="refHealth" role="status" hidden class="panel ref-panel" style="border:1px solid #deaa4e;background:#2d2420;color:#fff4da;padding:16px"><strong>Naslag controle</strong><p id="refHealthText" style="margin:8px 0 0"></p></div>
  <div class="section-heading"><p class="overline" data-ref-key="over">PRAKTIJKHULPMIDDELEN</p><h1 data-ref-key="heading">Tabellen & naslag</h1><p class="subtitle" data-ref-key="sub">Originele bronnen, geen vrijgave voor belichting.</p></div>
  <div class="panel ref-panel"><h2>Nieuwe RT-procedurehulp</h2><p>Welke IQI-draad en hoe verdeel je de films langs een las? ISO-lassen en ASME-gietstukken apart.</p><button class="outline-button" type="button" data-proc-open>Open IQI &amp; filmverdeling</button></div>
- <div class="panel ref-panel">
+ <div class="panel ref-panel" id="legacySchedulePanel" hidden>
   <h2 data-ref-key="pipe">Buismaten · NPS / Schedule</h2>
   <div class="fields-grid"><div class="field-card"><label for="refNps" data-ref-key="nps">Nominale maat</label><select id="refNps"></select></div><div class="field-card"><label for="refSch" data-ref-key="sch">Schedule</label><select id="refSch"></select></div></div>
   <p id="refPipeResult" class="ref-result" aria-live="polite">—</p>
@@ -538,7 +553,7 @@
   <p class="rt31-warning">Basic RT PRO 3.8.2 is een onderzoeks- en werkvoorbereidingshulpmiddel, geen besturing van apparatuur, geen vergunning en geen gecertificeerd veiligheids- of dosimetriesysteem.</p>
 </section>
 
-<section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.3 BETA · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">Deze app heeft geen account, externe trackers of server voor ingevoerde projectgegevens. De browser kan lokaal gegevens bewaren.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
+<section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.5 BETA · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">Deze app heeft geen account, externe trackers of server voor ingevoerde projectgegevens. De browser kan lokaal gegevens bewaren.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
 </main>
 <div id="stickyOutcome" class="sticky-outcome" role="status" aria-live="polite" hidden>
   <div class="sticky-meta"><strong id="stickyLabel">Berekening · onderzoek</strong><small id="stickyNote">Nog geen berekening</small></div>
@@ -605,9 +620,10 @@
   window.BasicRtCometCatalog={models:items.map(x=>x.model),mode:'reference-only',datasetValidated:false};
 })();
 </script>
-<script type="module" src="./app.mjs?v=383"></script>
-<script type="module" src="./ui-polish.mjs?v=383"></script>
-<script type="module" src="./reference-recovery.mjs?v=383"></script>
+<script type="module" src="./app.mjs?v=385"></script>
+<script type="module" src="./ui-polish.mjs?v=385"></script>
+<script type="module" src="./workflow-shape.mjs?v=385"></script>
+<script type="module" src="./reference-recovery.mjs?v=385"></script>
 <script id="rt29-clean-calculator">
 (function(){
 'use strict';
