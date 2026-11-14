@@ -667,3 +667,6 @@ body{font-synthesis:none}
   #screen-calc .rt-waygate-reference>summary{font-size:11.5px}
   #screen-calc .rt-waygate-reference>summary span{font-size:9px}
 }
+
+/* A blocked research estimate is already explained in the result card: do not overlay input fields with a second fixed error banner. */
+.sticky-outcome.sticky-error{display:none!important}
