@@ -105,6 +105,35 @@ function setupZoom(){
 function setupMenus(){
  document.addEventListener('pointerdown',e=>{const menu=$('moreMenu'),toggle=$('moreToggle');if(!menu||menu.hidden)return;if(e.target.closest('#moreMenu,#moreToggle'))return;menu.hidden=true;toggle.setAttribute('aria-expanded','false');});
 }
-function init(){accordionise();buildSourceCert();setupGeometryLink();setupDoubleWall();setupQuickDensity();setupZoom();setupMenus();translations();}
+/* Calculator jump navigation: presentation only, never triggers a calculation. */
+function translateCalculatorJump(){
+ const translationsByLanguage={
+  nl:{shape:'Werkstuk',input:'Invoer',iqi:'IQI',result:'Resultaat'},
+  en:{shape:'Object',input:'Inputs',iqi:'IQI',result:'Result'},
+  pl:{shape:'Element',input:'Dane',iqi:'IQI',result:'Wynik'}
+ };
+ const dict=translationsByLanguage[lang()]||translationsByLanguage.nl;
+ document.querySelectorAll('#screen-calc .rt-jumpbar button').forEach(button=>{
+  const label=button.querySelector('b');
+  if(label)label.textContent=dict[button.dataset.rtJumpKey]||'';
+ });
+}
+function setupCalculatorJump(){
+ const nav=$('screen-calc')?.querySelector('.rt-jumpbar');
+ if(!nav)return;
+ nav.addEventListener('click',event=>{
+  const button=event.target.closest('button[data-rt-jump]');
+  if(!button||!nav.contains(button))return;
+  const target=$(button.dataset.rtJump);
+  if(target&&!target.hidden){
+   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+   target.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});
+  }
+ });
+ translateCalculatorJump();
+ window.addEventListener('rt-language-changed',translateCalculatorJump);
+}
+
+function init(){accordionise();buildSourceCert();setupGeometryLink();setupDoubleWall();setupQuickDensity();setupZoom();setupMenus();setupCalculatorJump();translations();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('rt-language-changed',translations);
