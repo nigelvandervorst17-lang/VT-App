@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=400">
+<link rel="stylesheet" href="./styles.css?v=401">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -211,6 +211,9 @@
       <p class="rt-compact-pipe-caution" id="rtCompactPipeCaution">2 × t is een benadering, geen kalibratie. Controleer de werkelijke stralingsweg, IQI en goedgekeurde opnametechniek.</p>
     </div>
     <div class="rt-compact-grid">
+      <label class="rt-compact-field" id="rtCompactKvField" hidden><span>Spanning (kV)</span>
+        <input id="rtCompactKv" type="text" inputmode="decimal" value="80" autocomplete="off" aria-describedby="rtCompactModeNote">
+      </label>
       <label class="rt-compact-field"><span id="rtCompactActivityLabel">Activiteit (Ci)</span>
         <input type="text" id="rtCompactActivity" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
       </label>
@@ -241,11 +244,18 @@
       </div>
     </div>
     <p class="rt-compact-note" id="rtCompactModeNote" role="status">Onderzoeksberekening: geen vrijgegeven belichtingstijd.</p>
+    <section class="rt-waygate-live" id="rtWaygateLive" aria-label="Waygate-softwarevergelijking" hidden>
+      <div class="rt-waygate-live-head">WAYGATE · UIT SCREENSHOTS</div>
+      <div class="rt-waygate-live-time" id="rtWaygateLiveTime">—</div>
+      <p id="rtWaygateLiveMessage" class="rt-waygate-live-message" role="status" aria-live="polite">Importeer eerst je Waygate-softwarepunten.</p>
+      <p class="rt-waygate-live-caution">Softwarevergelijking, geen gekalibreerde of vrijgegeven RT-belichtingstijd. Geen startfunctie.</p>
+    </section>
     <div class="rt-compact-result-mount" id="rtCompactResultMount"></div>
     <details id="rtWaygateReference" class="rt-waygate-reference" hidden>
       <summary>Waygate X-ray-softwarepunten <span id="rtWaygateCount">Nog geen lokale punten</span></summary>
       <div class="rt-waygate-content">
-        <p class="small-muted"><strong>Alleen softwarevergelijking, geen fysieke filmmeting of gekalibreerde belichtingstijd.</strong> De Waygate-screenshots gebruiken 80 kV, terwijl het gekozen Andrex-model in Basic RT PRO andere grafiekvoorwaarden heeft.</p>
+        <p class="small-muted"><strong>Alleen softwarevergelijking, geen fysieke filmmeting of gekalibreerde belichtingstijd.</strong> De Waygate-screenshots tonen softwarewaarden bij 80 kV, 4 mA, 5 mm Fe, D4 en 100 mm. Je hoeft hier geen fabrikant of buismodel te kiezen. De gewone fabrikantcurves staan apart onder Extra instellingen.</p>
+        <button type="button" id="rtWaygateUseReference" class="rt-waygate-use" hidden>Vul de beschikbare Waygate-voorbeeldgegevens in</button>
         <div id="rtWaygateBody" aria-live="polite"></div>
         <p id="rtWaygateMatch" class="rt-waygate-match" role="status" aria-live="polite"></p>
         <label class="rt-waygate-import" for="rtWaygateImport">Importeer eigen Waygate-vergelijking (JSON, alleen lokaal)</label>
@@ -853,8 +863,8 @@
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
-<script type="module" src="./compact-layout.mjs?v=400"></script>
-<script type="module" src="./xray-waygate-local.mjs?v=400"></script>
+<script type="module" src="./compact-layout.mjs?v=401"></script>
+<script type="module" src="./xray-waygate-local.mjs?v=401"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
