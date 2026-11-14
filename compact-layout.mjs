@@ -73,6 +73,7 @@ function sync(){
     copy($('film'),film);
     copy($('distance'),distance);
     copy($('density'),density);
+    const wg=$('rtWaygateReference');if(wg)wg.hidden=g;
     const note=$('rtCompactModeNote');
     if(note)note.textContent=disabled?tr('locked'):g?tr('noRuntime'):tr('xray');
     const summary=$('rtCompactAdvancedLabel');
