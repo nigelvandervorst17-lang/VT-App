@@ -1,14 +1,14 @@
-/* Basic RT PRO 3.8 BETA — network first; COMET references and resilient install */
-const CACHE='basic-rt-pro-v3.8-se75-ir192-d4d5d7-20261114';
-const ASSETS=['./','./index.html','./styles.css','./app.mjs','./reference-recovery.mjs',
+/* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
+const CACHE='basic-rt-pro-v3.8.3-mobile-ux-20261114';
+const ASSETS=['./','./index.html','./styles.css','./app.mjs','./ui-polish.mjs','./reference-recovery.mjs',
 './rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',
-'./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./brand-logo.png',
-'./assets/smart-225b.webp','./assets/smart-225-d7.webp','./assets/smart-200pc-d7.webp',
-'./assets/weld-details.webp','./assets/smart-300pc-d7.webp','./assets/smart-300hp-d7.webp',
-'./assets/smart-225-yxlon-d7.webp','./assets/smart-200pc-new-d7.webp',
-'./assets/smart-200-d7.webp','./assets/smart-160-d7.webp'];
+'./controle.html','./curveatlas.html','./curveatlas.pdf','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./brand-logo.png',
+'./smart-225b.webp','./smart-225-d7.webp','./smart-200pc-d7.webp',
+'./weld-details.webp','./smart-300pc-d7.webp','./smart-300hp-d7.webp',
+'./smart-225-yxlon-d7.webp','./smart-200pc-new-d7.webp',
+'./smart-200-d7.webp','./smart-160-d7.webp'];
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
     const cache=await caches.open(CACHE);

@@ -28,6 +28,10 @@ Object.assign(messages.pl,{"iqiTitle": "IQI / widoczny drut", "iqiIntro": "Wybie
 Object.assign(messages.nl,{"iqiClassA": "Klasse A", "iqiClassB": "Klasse B", "iqiFilmMarker": "Bij IQI aan filmzijde is de F-markering op de opname vereist en moet deze in het verslag worden vermeld.", "iqiDWFilmAgreement": "Bij DWDI met IQI aan filmzijde is overeenstemming tussen contractpartijen vereist."});
 Object.assign(messages.en,{"iqiClassA": "Class A", "iqiClassB": "Class B", "iqiFilmMarker": "For a film-side IQI, the lead F marker must be visible and the location recorded in the report.", "iqiDWFilmAgreement": "For DWDI with a film-side IQI, agreement between the contracting parties is required."});
 Object.assign(messages.pl,{"iqiClassA": "Klasa A", "iqiClassB": "Klasa B", "iqiFilmMarker": "Przy IQI po stronie błony znacznik ołowiany F musi być widoczny i odnotowany w raporcie.", "iqiDWFilmAgreement": "W przypadku DWDI z IQI po stronie błony wymagane jest uzgodnienie między stronami umowy."});
+
+Object.assign(messages.nl,{tabMore:'Meer',calculate:'Bereken belichting',chooseFilm:'Film',chooseKv:'Spanning (kV)',tapCurve:'Tik op de curve om dikte en belichtingswaarde af te lezen.'});
+Object.assign(messages.en,{tabMore:'More',calculate:'Calculate exposure',chooseFilm:'Film',chooseKv:'Voltage (kV)',tapCurve:'Tap the curve to read thickness and exposure value.'});
+Object.assign(messages.pl,{tabMore:'Więcej',calculate:'Oblicz ekspozycję',chooseFilm:'Film',chooseKv:'Napięcie (kV)',tapCurve:'Dotknij krzywej, aby odczytać grubość i ekspozycję.'});
 const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 const defaultState={language:'nl',mode:'gamma',isotope:'Se-75',film:'D4',density:'2.0',material:'Fe',thickness:'25',distance:'500',activityMode:'manual',manualCi:'36',certCi:'36',certDate:'',referenceDate:today(),xrayBrand:'Andrex',xrayModel:'Andrex SMART 225',kv:'200',ma:'5',iqiClass:'',iqiTechnique:'',iqiSide:'',iqiPenetrated:''};
 function load(key,fallback){try{const data=JSON.parse(localStorage.getItem(key));return data??fallback}catch{return fallback}}
@@ -92,8 +96,8 @@ function syncXrayControls({setDefaults=false}={}){
   saveState();
 }
 
-function setLanguage(){document.documentElement.lang=state.language;updateReferenceLanguage();$('language').value=state.language;$$('[data-i18n]').forEach(el=>{const key=el.getAttribute('data-i18n');if(messages[state.language][key])el.textContent=t(key)});$('distanceLabel').textContent=t(state.mode==='gamma'?'distanceGamma':'distanceXray');setupXrayModels();syncXrayControls();renderCurveList();renderCurvePreview();renderRecords();renderOnline();updateSource();if(lastResult)drawResult(lastResult);else clearResult();renderIQI();}
-function clearResult(){lastResult=null;lastSnapshot=null;$('resultCard').className='result-card';$('resultKicker').textContent=t('noResult');$('resultTime').textContent='—';$('resultReason').textContent=t('enterFirst');$('resultProvenance').hidden=true;$('saveResult').disabled=true;$('printRecord').disabled=true;}
+function setLanguage(){document.documentElement.lang=state.language;updateReferenceLanguage();$('language').value=state.language;$$('[data-i18n]').forEach(el=>{const key=el.getAttribute('data-i18n');if(messages[state.language][key])el.textContent=t(key)});$('distanceLabel').textContent=t(state.mode==='gamma'?'distanceGamma':'distanceXray');setupXrayModels();syncXrayControls();renderCurveList();renderCurvePreview();renderRecords();renderOnline();updateSource();if(lastResult)drawResult(lastResult);else clearResult();renderIQI();window.dispatchEvent(new CustomEvent('rt-language-changed',{detail:{lang:state.language}}));}
+function clearResult(){const sticky=$('stickyOutcome');if(sticky)sticky.hidden=true;lastResult=null;lastSnapshot=null;$('resultCard').className='result-card';$('resultKicker').textContent=t('noResult');$('resultTime').textContent='—';$('resultReason').textContent=t('enterFirst');$('resultProvenance').hidden=true;$('saveResult').disabled=true;$('printRecord').disabled=true;}
 function iqiModeView(){
   const isDouble=['dwsi','dwdi'].includes(state.iqiTechnique);
   $('iqiPenetratedWrap').hidden=!isDouble;
@@ -148,37 +152,104 @@ function renderGeometry(){
 function updateSource(){ $('sourceIso').textContent=state.isotope;$('sourceHalfLife').textContent=`${localNum(HALF_LIFE_DAYS[state.isotope],3)} d`;let r=activityFromState();$('sourceActiveCi').textContent=r.ok?`${localNum(r.ci,3)} Ci`:'—'; renderDecay();renderGeometry(); }
 function activityFromState(){if(state.activityMode==='manual'){const ci=parseDecimal(state.manualCi);return Number.isFinite(ci)&&ci>0?{ok:true,ci}:{ok:false,error:'invalid'}}return certificateActivity({isotope:state.isotope,initialCi:parseDecimal(state.certCi),certificateDate:state.certDate,referenceDate:state.referenceDate})}
 function errorText(r){if(r.error==='density')return `Zwarting buiten het ondersteunde bereik (${r.minDensity ?? '1,5'}–${r.maxDensity ?? '3,9'}) voor deze film en isotoop. Geen extrapolatie.`;if(r.error==='zero_thickness')return '0 mm: geen toepasselijke fabrikantcurve voor een opname zonder materiaal.';if(r.error==='thickness_input')return 'Materiaaldikte buiten invoerbereik 0–100 mm.';if(r.error==='material')return 'Geen onderbouwde materiaal-equivalentiefactor voor deze bron/energie. Geen tijd berekend.';if(r.error==='range')return t('errRange').replace('{min}',localNum(r.lower,2)).replace('{max}',localNum(r.upper,2));return t('err'+String(r.error||'Generic').charAt(0).toUpperCase()+String(r.error||'Generic').slice(1))||t('errGeneric')}
-function drawResult(r){$('resultCard').className='result-card '+(r.ok?'success':'blocked');$('resultKicker').textContent=r.ok?t('result'):t('blocked');$('resultTime').textContent=r.ok?hms(r.minutes):'—';$('resultReason').textContent=r.ok?(r.comparisonOnly ? (state.language==='nl'?'Waygate-vergelijking · tussenpunten geïnterpoleerd; andere activiteiten/afstanden theoretisch geschaald. NIET gevalideerd voor opnames.':state.language==='pl'?'Porównanie Waygate — interpolacja i skalowanie teoretyczne; NIE zatwierdzono do ekspozycji.':'Waygate comparison — interpolated; other activities/distances scaled theoretically. NOT validated for exposures.') : t('notRelease')):errorText(r);$('resultProvenance').hidden=!r.ok;if(r.ok){$('resultProvenance').textContent=`${r.materialFactorApproximate?'⚠ Materiaalomrekening is een schatting, niet gevalideerd. ':''}${r.equivalentSteelMm!=null?`${MATERIALS[r.material]||r.material}: ${localNum(r.physicalThicknessMm,2)} mm ≈ ${localNum(r.equivalentSteelMm,2)} mm Fe. `:''}${t('dataset')}: ${r.datasetId} · ${localNum(r.exposure,3)} ${r.exposureUnit} · ${t('densityLabel')} doel: ${localNum(r.targetDensity??r.referenceDensity,2)} (bron D=${localNum(r.referenceDensity,1)}; factor ${localNum(r.densityFactor??1,3)}) · ${t('distanceLabel')}: ${r.referenceDistanceMm} mm · ${r.densityMethod||'basisgrafiek'} · ${r.status || 'unvalidated'}`;} $('saveResult').disabled=!r.ok;$('printRecord').disabled=!r.ok;}
+function drawResult(r){
+ const sticky=$('stickyOutcome');
+ if(sticky){
+  sticky.hidden=!$('screen-calc')||$('screen-calc').hidden;sticky.classList.toggle('sticky-error',!r.ok);
+  $('stickyTime').textContent=r.ok?hms(r.minutes):'—';
+  $('stickyLabel').textContent=r.ok?'Belichting · onderzoeksmodel':'Berekening geblokkeerd';
+  $('stickyNote').textContent=r.ok?(state.isotope+' · '+state.film+' · D='+state.density):'Buiten ondersteund bereik of invoerfout';
+ }
+ $('resultCard').className='result-card '+(r.ok?'success':'blocked');$('resultKicker').textContent=r.ok?t('result'):t('blocked');$('resultTime').textContent=r.ok?hms(r.minutes):'—';$('resultReason').textContent=r.ok?(r.comparisonOnly ? (state.language==='nl'?'Waygate-vergelijking · tussenpunten geïnterpoleerd; andere activiteiten/afstanden theoretisch geschaald. NIET gevalideerd voor opnames.':state.language==='pl'?'Porównanie Waygate — interpolacja i skalowanie teoretyczne; NIE zatwierdzono do ekspozycji.':'Waygate comparison — interpolated; other activities/distances scaled theoretically. NOT validated for exposures.') : t('notRelease')):errorText(r);$('resultProvenance').hidden=!r.ok;if(r.ok){$('resultProvenance').textContent=`${r.materialFactorApproximate?'⚠ Materiaalomrekening is een schatting, niet gevalideerd. ':''}${r.equivalentSteelMm!=null?`${MATERIALS[r.material]||r.material}: ${localNum(r.physicalThicknessMm,2)} mm ≈ ${localNum(r.equivalentSteelMm,2)} mm Fe. `:''}${t('dataset')}: ${r.datasetId} · ${localNum(r.exposure,3)} ${r.exposureUnit} · ${t('densityLabel')} doel: ${localNum(r.targetDensity??r.referenceDensity,2)} (bron D=${localNum(r.referenceDensity,1)}; factor ${localNum(r.densityFactor??1,3)}) · ${t('distanceLabel')}: ${r.referenceDistanceMm} mm · ${r.densityMethod||'basisgrafiek'} · ${r.status || 'unvalidated'}`;} $('saveResult').disabled=!r.ok;$('printRecord').disabled=!r.ok;}
 function calculate(){gather();const thicknessMm=parseDecimal(state.thickness),distanceMm=parseDecimal(state.distance),density=parseDecimal(state.density);let r;
   if(state.mode==='gamma'){let act=activityFromState();r=act.ok?calculateGamma({isotope:state.isotope,film:state.film,density,thicknessMm,distanceMm,activityCi:act.ci,material:state.material},curves):{ok:false,error:act.error};
   } else r=calculateXray({model:state.xrayModel,film:state.film,density,kv:parseDecimal(state.kv),ma:parseDecimal(state.ma),thicknessMm,distanceMm,material:state.material},curves);
   const iqi=renderIQI();lastResult=r;lastSnapshot={iqi:iqi.ok?iqi:null,mode:state.mode,isotope:state.isotope,model:state.xrayModel,brand:state.xrayBrand,film:state.film,density,material:state.material,thicknessMm,distanceMm,activityMode:state.activityMode,activityCi:state.mode==='gamma'?activityFromState().ci:null,certificateDate:state.activityMode==='certificate'?state.certDate:null,referenceDate:state.activityMode==='certificate'?state.referenceDate:null,kv:state.mode==='xray'?parseDecimal(state.kv):null,ma:state.mode==='xray'?parseDecimal(state.ma):null};drawResult(r);
 }
-function nav(page){$$('.screen').forEach(s=>{const match=s.dataset.screen===page;s.hidden=!match;s.classList.toggle('is-active',match)});$$('.nav').forEach(btn=>{const sel=btn.dataset.nav===page;btn.classList.toggle('active',sel);if(sel)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current')});window.scrollTo({top:0,behavior:'instant'});if(page==='sources')updateSource();if(page==='curves'){renderCurveList();renderCurvePreview()}if(page==='records')renderRecords();}
-function renderCurveList(){
- const items=[
-  ['Se-75 · Waygate-softwarevergelijking','D4: 1–40 mm, D=1,4–3,9; D5/D7: 4–30 mm, D=1,5–3,9. Afstand/Ci theoretisch geschaald. Niet vrijgegeven.',curves.gamma['Se-75'].waygateModel.datasetId],
-  ['Ir-192 · Waygate-softwarevergelijking','D4: 4–100 mm; D5/D7: 20–50 mm; D=1,5–3,9. Afstand/Ci theoretisch geschaald. Niet vrijgegeven.',curves.gamma['Ir-192'].waygateModel.datasetId]
- ];
- for(const [model,ds] of Object.entries(curves.xray||{})){
-  if((model.startsWith('YXLON')||model.startsWith('Andrex'))&&ds?.datasetId){
-   items.push([model,'Apparaatgebonden grafiek / onderzoeksstatus; controleer kV, film en FFD. Niet gevalideerd.',ds.datasetId]);
-  }
- }
- $('curveList').innerHTML=items.map(([name,conditions,id])=>`<div class="data-entry"><h3>${htmlEscape(name)} <span class="status-chip">ONDERZOEK</span></h3><p>${htmlEscape(conditions)}</p><p>Dataset: <code>${htmlEscape(id)}</code></p></div>`).join('')+`<div class="data-entry"><h3>${htmlEscape(t('otherModels'))}</h3></div>`;
+function nav(page){const more=$('moreMenu'),toggle=$('moreToggle');if(more)more.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.classList.toggle('active',['tools','records','settings'].includes(page));}const sticky=$('stickyOutcome');if(sticky)sticky.hidden=page!=='calc'||!lastResult;$$('.screen').forEach(s=>{const match=s.dataset.screen===page;s.hidden=!match;s.classList.toggle('is-active',match)});$$('.nav').forEach(btn=>{const sel=btn.dataset.nav===page;btn.classList.toggle('active',sel);if(sel)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current')});window.scrollTo({top:0,behavior:'instant'});if(page==='sources')updateSource();if(page==='curves'){renderCurveList();renderCurvePreview()}if(page==='records')renderRecords();}
+function curveChoices(){
+ return [{value:'Se-75',label:'Se-75 · gamma'}, {value:'Ir-192',label:'Ir-192 · gamma'},
+  ...Object.entries(curves.xray||{}).filter(([name,ds])=>ds?.datasetId&&(name.startsWith('YXLON')||name.startsWith('Andrex'))).map(([value,ds])=>({value,label:value,ds}))];
 }
-function renderCurvePreview(){const which=radioValue('curvePreview')||'Se-75', ds=curves.gamma[which];const lines=[],xs=[];for(const film of ['D4','D5','D7']){const pts=ds.curves[film];pts.forEach(p=>xs.push(p.mm));}
-  const left=49,right=385,top=24,bottom=208, low=Math.floor(Math.log10(Math.min(...['D4','D5','D7'].flatMap(f=>ds.curves[f].map(p=>p.ci_h))))),high=Math.ceil(Math.log10(Math.max(...['D4','D5','D7'].flatMap(f=>ds.curves[f].map(p=>p.ci_h)))));const xlo=ds.minThicknessMm,xhi=ds.maxThicknessMm, x=mm=>left+(mm-xlo)/(xhi-xlo)*(right-left), y=v=>bottom-(Math.log10(v)-low)/(high-low)*(bottom-top);let svg=`<svg viewBox="0 0 410 252" role="img" aria-label="${htmlEscape(which)} D4 D5 D7 - log exposure against thickness"><rect width="410" height="252" fill="#102438"/>`;
- for(let log=low;log<=high;log++){const yv=y(10**log);svg+=`<line x1="${left}" x2="${right}" y1="${yv}" y2="${yv}" stroke="#42647b" stroke-dasharray="3 4"/><text x="43" y="${yv+4}" text-anchor="end" font-size="10" fill="#aec8d9">10^${log}</text>`}
- const step=which==='Se-75'?5:10;for(let v=xlo;v<=xhi;v+=step)svg+=`<line x1="${x(v)}" x2="${x(v)}" y1="${top}" y2="${bottom}" stroke="#2b455b"/><text x="${x(v)}" y="226" text-anchor="middle" font-size="10" fill="#d2e3f0">${v}</text>`;
- const colors={D4:'#ffda5c',D5:'#79efca',D7:'#8bb5ff'};for(const f of ['D4','D5','D7']){const path=ds.curves[f].map((p,i)=>`${i?'L':'M'}${x(p.mm).toFixed(1)},${y(p.ci_h).toFixed(1)}`).join(' ');svg+=`<path d="${path}" stroke="${colors[f]}" stroke-width="2.5" fill="none" stroke-linejoin="round"/>`;lines.push(`<text x="${left+12+lines.length*85}" y="246" font-size="11" fill="${colors[f]}">${f}</text>`)}if(which==='Se-75'&&ds.comparisonSeries?.D4?.points){const pts=ds.comparisonSeries.D4.points;const waygate=pts.map((p,i)=>`${i?'L':'M'}${x(p.mm).toFixed(1)},${y(p.ci_h).toFixed(1)}`).join(' ');svg+=`<path d="${waygate}" stroke="#fff" stroke-width="2.2" stroke-dasharray="5 4" fill="none"/>`;pts.forEach(p=>{svg+=`<circle cx="${x(p.mm).toFixed(1)}" cy="${y(p.ci_h).toFixed(1)}" r="1.8" fill="#fff"/>`});}svg+=lines.join('')+`<text x="${right}" y="245" font-size="9" text-anchor="end" fill="#a6becf">mm Fe · Ci·h (log)</text></svg>`;$('curveSVG').innerHTML=svg;
+function renderCurveList(){
+ const lang=state.language;
+ const choices=curveChoices();const cards=choices.map(c=>{
+  const ds=c.ds||curves.gamma[c.value], gamma=!c.ds;
+  const range=gamma?(c.value==='Se-75'?'D4 1–40 mm · D5/D7 4–30 mm':'D4 4–100 mm · D5/D7 20–50 mm')
+    :`${ds.curves?.length?`${Math.round(Math.min(...ds.curves.map(v=>v.minThicknessMm)))}–${Math.round(Math.max(...ds.curves.map(v=>v.maxThicknessMm)))} mm Fe`:'Alleen afbeelding'} · ${ds.film||'D7'} · FFD ${ds.referenceDistanceMm||'?'} mm`;
+  const label=lang==='pl'?'Pokaż wykres':lang==='en'?'View graph':'Bekijk grafiek';
+  const caution=lang==='pl'?'Niezweryfikowane':lang==='en'?'Unvalidated':'Niet gevalideerd';
+  return `<div class="data-entry"><h3>${htmlEscape(c.label)} <span class="status-chip">${caution}</span></h3><p>${htmlEscape(range)}</p><button type="button" data-curve-select="${htmlEscape(c.value)}">${label}</button><details><summary>ⓘ ${lang==='pl'?'Dane techniczne':lang==='en'?'Technical data':'Technische gegevens'}</summary><code>${htmlEscape(ds.datasetId||ds.waygateModel?.datasetId||'')}</code></details></div>`;
+ });
+ $('curveList').innerHTML=cards.join('');
+ const picker=$('curveDevicePicker');const prev=picker.value||'Se-75';picker.replaceChildren(...choices.map(c=>new Option(c.label,c.value)));
+ picker.value=choices.some(c=>c.value===prev)?prev:'Se-75';
+}
+let curveInteraction=null;
+function renderCurvePreview(){
+ const picker=$('curveDevicePicker');if(!picker.options.length)renderCurveList();
+ const which=picker.value||'Se-75',isGamma=!!curves.gamma[which],source=isGamma?curves.gamma[which]:curves.xray[which];
+ const filmPicker=$('curveFilmPicker'),kvPicker=$('curveKvPicker'),filmLabel=document.querySelector('label[for="curveFilmPicker"]'),kvLabel=$('curveKvLabel');
+ filmPicker.hidden=!isGamma;filmLabel.hidden=!isGamma;kvPicker.hidden=isGamma;kvLabel.hidden=isGamma;
+ if(!source){$('curveSVG').textContent=t('errModel');return;}
+ let points=[],unit,seriesName='',xlo,xhi;
+ if(isGamma){
+  const film=filmPicker.value||'D4';points=(source.curves[film]||[]).map(p=>({mm:p.mm,exposure:p.ci_h}));
+  unit='Ci·h';seriesName=film;
+ }else{
+  const kvs=(source.curves||[]).map(v=>v.kv).filter(Number.isFinite);
+  const prev=kvPicker.value;kvPicker.replaceChildren(...kvs.map(v=>new Option(`${v} kV`,String(v))));
+  if(kvs.length){kvPicker.value=kvs.includes(Number(prev))?prev:String(kvs[Math.floor(kvs.length/2)]);
+    const line=source.curves.find(v=>String(v.kv)===kvPicker.value);
+    const n=34;points=Array.from({length:n+1},(_,i)=>{const mm=line.minThicknessMm+(line.maxThicknessMm-line.minThicknessMm)*i/n;return {mm,exposure:10**(line.log10MamIntercept+line.log10MamPerMm*mm)};});
+    seriesName=`${line.kv} kV`;
+  }
+  unit='mA·min';
+ }
+ const el=$('curveSVG');const output=$('curveReadout');
+ const lang=state.language;const status=lang==='en'?'Research estimate, not validated':lang==='pl'?'Szacunek badawczy, niezweryfikowany':'Onderzoeksschatting, niet gevalideerd';
+ const title=`${which} · ${seriesName}`;
+ if(!points.length){
+  const image=source.imageFile;el.replaceChildren();
+  const h=document.createElement('p');h.className='small-muted';h.textContent=title+' · '+status;el.append(h);
+  if(image){const im=document.createElement('img');im.src=image;im.alt=title+' exposure chart';im.loading='lazy';el.append(im);}
+  output.textContent=(lang==='en'?'Chart image only: axis needs verification.':lang==='pl'?'Tylko obraz wykresu: oś wymaga sprawdzenia.':'Alleen grafiekafbeelding: asindeling moet nog worden gecontroleerd.');
+  curveInteraction=null;return;
+ }
+ xlo=points[0].mm;xhi=points[points.length-1].mm;
+ const minExp=Math.min(...points.map(p=>p.exposure)),maxExp=Math.max(...points.map(p=>p.exposure));
+ let lo=Math.floor(Math.log10(minExp)),hi=Math.ceil(Math.log10(maxExp));if(hi===lo)hi=lo+1;
+ const left=58,right=392,top=24,bottom=204;
+ const x=v=>left+(v-xlo)/(xhi-xlo)*(right-left),y=v=>bottom-(Math.log10(v)-lo)/(hi-lo)*(bottom-top);
+ let svg=`<svg viewBox="0 0 420 246" role="img" aria-label="${htmlEscape(title)}; ${unit}" data-series="${htmlEscape(seriesName)}"><rect width="420" height="246" fill="#102438"/>`;
+ for(let l=lo;l<=hi;l++){const yy=y(10**l);svg+=`<line x1="${left}" x2="${right}" y1="${yy}" y2="${yy}" stroke="#345872" stroke-dasharray="3 4"/><text x="53" y="${yy+3}" text-anchor="end" fill="#c2d8e9" font-size="10">10^${l}</text>`;}
+ for(let i=0;i<=4;i++){const mm=xlo+(xhi-xlo)*i/4;svg+=`<text x="${x(mm)}" y="222" text-anchor="middle" fill="#c1d6e7" font-size="11">${mm.toFixed(1)}</text>`;}
+ svg+=`<path d="${points.map((p,i)=>`${i?'L':'M'}${x(p.mm).toFixed(2)},${y(p.exposure).toFixed(2)}`).join(' ')}" fill="none" stroke="#8df0c9" stroke-width="3" stroke-linecap="round"/>`;
+ if(isGamma){points.forEach(p=>{svg+=`<circle cx="${x(p.mm).toFixed(1)}" cy="${y(p.exposure).toFixed(1)}" r="2.5" fill="#ffe095"/>`});}
+ svg+=`<line id="chartCrosshair" x1="${left}" x2="${left}" y1="${top}" y2="${bottom}" stroke="#fff" stroke-width="1" stroke-dasharray="4 4" visibility="hidden"/><circle id="chartMarker" r="5" cx="${left}" cy="${bottom}" fill="#fff" stroke="#1b354a" stroke-width="2" visibility="hidden"/><text x="${right}" y="242" text-anchor="end" fill="#c3d4e2" font-size="10">mm Fe · ${unit} (log)</text></svg>`;
+ el.innerHTML=svg;const caption=isGamma?'':` · ${source.film} · FFD ${source.referenceDistanceMm} mm`;
+ output.textContent=title+caption+' · '+status+' · '+t('tapCurve');
+ curveInteraction={points,unit,xlo,xhi,left,right,top,bottom,x,y,which,seriesName};
+}
+function inspectCurve(event){
+ if(!curveInteraction)return;
+ const svg=$('curveSVG').querySelector('svg');if(!svg)return;
+ const bounds=svg.getBoundingClientRect();const px=((event.clientX-bounds.left)/bounds.width)*420;
+ if(px<curveInteraction.left||px>curveInteraction.right)return;
+ const z=curveInteraction;const mm=z.xlo+(px-z.left)/(z.right-z.left)*(z.xhi-z.xlo);
+ let a=z.points[0],b=z.points[z.points.length-1];
+ for(let i=1;i<z.points.length;i++)if(mm<=z.points[i].mm){a=z.points[i-1];b=z.points[i];break;}
+ const fraction=(mm-a.mm)/(b.mm-a.mm);const exposure=Math.exp(Math.log(a.exposure)+(Math.log(b.exposure)-Math.log(a.exposure))*fraction);
+ svg.querySelector('#chartCrosshair').setAttribute('x1',z.x(mm));svg.querySelector('#chartCrosshair').setAttribute('x2',z.x(mm));svg.querySelector('#chartCrosshair').setAttribute('visibility','visible');
+ svg.querySelector('#chartMarker').setAttribute('cx',z.x(mm));svg.querySelector('#chartMarker').setAttribute('cy',z.y(exposure));svg.querySelector('#chartMarker').setAttribute('visibility','visible');
+ $('curveReadout').textContent=`${z.which} · ${z.seriesName} · ${mm.toFixed(2)} mm Fe ≈ ${exposure.toFixed(3)} ${z.unit} · ${state.language==='en'?'Not validated':state.language==='pl'?'Niezweryfikowane':'Niet gevalideerd'}`;
 }
 function addRecord(){if(!lastResult?.ok||!lastSnapshot)return;records.unshift({id:'RT-'+Date.now(),createdAt:new Date().toISOString(),status:'RESEARCH_ONLY_NOT_VALIDATED',...lastSnapshot,minutes:lastResult.minutes,exposure:lastResult.exposure,exposureUnit:lastResult.exposureUnit,datasetId:lastResult.datasetId,referenceDensity:lastResult.referenceDensity,referenceDistanceMm:lastResult.referenceDistanceMm});records=records.slice(0,50);saveRecords();$('resultReason').textContent=t('saved');}
 function renderRecords(){const list=$('recordList');if(!records.length){list.innerHTML=`<div class="empty">${htmlEscape(t('noSaved'))}</div>`;return;}list.innerHTML=records.map(r=>`<div class="record-item"><h3>${htmlEscape(r.mode==='gamma'?r.isotope:r.model)} · ${htmlEscape(r.film)} <span class="status-chip">${htmlEscape(t('researchOnly'))}</span></h3><p>${htmlEscape(r.createdAt?.slice(0,16).replace('T',' ')||'')} · ${htmlEscape(MATERIALS[r.material]||'Staal')}: ${htmlEscape(r.thicknessMm)} mm · ${htmlEscape(t('timeLabel'))}: ${hms(r.minutes)}</p><p>${htmlEscape(r.datasetId||'')}</p></div>`).join('');}
 function download(fileName,contents,type){const b=new Blob([contents],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=fileName;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function printRecord(){if(!lastResult?.ok||!lastSnapshot)return;const r=lastResult,s=lastSnapshot;const rows=[[t('modeLabel'),s.mode==='gamma'?s.isotope:s.model],[t('steel'),(MATERIALS[s.material]||s.material||'Staal')+' · '+s.thicknessMm+' mm'],[t('film'),s.film],[t('densityLabel'),s.density],[t('distanceLabel'),s.distanceMm+' mm'],...(s.mode==='gamma'?[[t('activity'),s.activityCi+' Ci']]:[['kV',s.kv],['mA',s.ma]]),[t('timeLabel'),hms(r.minutes)],[t('dataset'),r.datasetId],[t('sourceDetails'),r.sourceTitle],...(s.iqi?[[t('iqiResultTitle'),`${s.iqi.wire} · ${localNum(s.iqi.diameterMm,3)} mm`],['IQI table',s.iqi.table]]:[])];$('printView').innerHTML=`<h1>Basic RT PRO · ${htmlEscape(t('record'))}</h1><p>${new Date().toLocaleString()}</p><table>${rows.map(([l,v])=>`<tr><td>${htmlEscape(l)}</td><td>${htmlEscape(v)}</td></tr>`).join('')}</table><div class="watermark">${htmlEscape(t('notRelease'))}. ${htmlEscape(t('infoText'))}</div>`;window.print();}
 function renderOnline(){$('onlineStatus').textContent=navigator.onLine?t('online'):t('offline');}
-function bind(){ if(!['D4','D5','D7'].includes(state.film))state.film='D4'; $('language').value=state.language;$$('input[name="isotope"]').forEach(x=>{x.checked=x.value===state.isotope;x.addEventListener('change',()=>{gather();clearResult();activityView();})});radioSet('activityMode',state.activityMode);radioSet('curvePreview','Se-75');['film','density','material','thickness','distance','manualCi','certCi','certDate','referenceDate','xrayBrand','kv','ma','iqiClass','iqiTechnique','iqiSide','iqiPenetrated'].forEach(k=>fill(k,state[k]));iqiModeView();setupXrayModels();$('xrayModel').value=state.xrayModel;syncXrayControls();
+function bind(){ if(!['D4','D5','D7'].includes(state.film))state.film='D4'; $('language').value=state.language;$$('input[name="isotope"]').forEach(x=>{x.checked=x.value===state.isotope;x.addEventListener('change',()=>{gather();clearResult();activityView();})});radioSet('activityMode',state.activityMode);['film','density','material','thickness','distance','manualCi','certCi','certDate','referenceDate','xrayBrand','kv','ma','iqiClass','iqiTechnique','iqiSide','iqiPenetrated'].forEach(k=>fill(k,state[k]));iqiModeView();setupXrayModels();$('xrayModel').value=state.xrayModel;syncXrayControls();
  $('modeGamma').onclick=()=>{state.mode='gamma';modeView({resetDefaults:true});gather();};$('modeXray').onclick=()=>{state.mode='xray';modeView({resetDefaults:true});gather();};
  $$('input[name="activityMode"]').forEach(x=>x.addEventListener('change',()=>{gather();activityView();clearResult();}));
  ['film','density','material','thickness','distance','manualCi','certCi','certDate','referenceDate','xrayModel','kv','ma'].forEach(k=>{$(k).addEventListener('input',()=>{gather();activityView();clearResult()});$(k).addEventListener('change',()=>{gather();activityView();clearResult()})});
@@ -188,11 +259,30 @@ function bind(){ if(!['D4','D5','D7'].includes(state.film))state.film='D4'; $('l
  $('xrayBrand').onchange=()=>{state.xrayBrand=$('xrayBrand').value;setupXrayModels();syncXrayControls({setDefaults:true});gather();clearResult()};
  $('xrayModel').onchange=()=>{state.xrayModel=$('xrayModel').value;syncXrayControls({setDefaults:true});gather();clearResult()};$('language').onchange=()=>{state.language=$('language').value;saveState();setLanguage()};$('calculate').onclick=calculate;$$('[data-nav]').forEach(btn=>btn.onclick=()=>nav(btn.dataset.nav));
  $('saveResult').onclick=addRecord;$('printRecord').onclick=printRecord;$('toCertificate').onclick=()=>{nav('calc');state.mode='gamma';modeView();state.activityMode='certificate';radioSet('activityMode','certificate');activityView();saveState();$('certCi').focus()};
- $$('input[name="curvePreview"]').forEach(el=>el.onchange=renderCurvePreview);$('exportRecords').onclick=()=>{if(records.length)download('basic-rt-pro-research-records.json',JSON.stringify({warning:'NOT VALIDATED FOR EXPOSURES',version:'2.4.0',records},null,2),'application/json');else alert(t('emptyExport'))};
+ $('curveDevicePicker').addEventListener('change',renderCurvePreview);
+ $('curveFilmPicker').addEventListener('change',renderCurvePreview);
+ $('curveKvPicker').addEventListener('change',renderCurvePreview);
+ $('curveSVG').addEventListener('pointerdown',inspectCurve);
+ $('curveList').addEventListener('click',e=>{const b=e.target.closest('[data-curve-select]');if(!b)return;$('curveDevicePicker').value=b.dataset.curveSelect;renderCurvePreview();$('curvePreviewPanel').scrollIntoView({behavior:'smooth',block:'start'});});
+ $('moreToggle').addEventListener('click',()=>{const menu=$('moreMenu');menu.hidden=!menu.hidden;$('moreToggle').setAttribute('aria-expanded',String(!menu.hidden));});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('moreMenu')&&!$('moreMenu').hidden){$('moreMenu').hidden=true;$('moreToggle').setAttribute('aria-expanded','false');}});$('exportRecords').onclick=()=>{if(records.length)download('basic-rt-pro-research-records.json',JSON.stringify({warning:'NOT VALIDATED FOR EXPOSURES',version:'2.4.0',records},null,2),'application/json');else alert(t('emptyExport'))};
  $('clearRecords').onclick=()=>{if(confirm(t('confirmRecords'))){records=[];saveRecords();renderRecords()}};$('eraseAll').onclick=()=>{if(confirm(t('confirmErase'))){localStorage.removeItem(RECORD_KEY);localStorage.removeItem(SETTINGS_KEY);records=[];state={...defaultState};location.reload()}};
  window.addEventListener('online',renderOnline);window.addEventListener('offline',renderOnline);
 }
 initReferenceTools(()=>state.language);bind();initProcedureUi(nav);modeView();activityView();setLanguage();iqiModeView();renderIQI();
+// Quick choices update the same input events as typing; every positive mm value remains allowed.
+$$('.rt-quick-values button').forEach(btn=>btn.addEventListener('click',()=>{
+ const el=$(btn.closest('[data-field]')?.dataset.field);if(!el)return;
+ el.value=btn.dataset.value;el.dispatchEvent(new Event('input',{bubbles:true}));
+}));
+// Show live gamma preview after edits. X-ray stays manual because curve support is model-specific.
+let liveTimer=0;
+const scheduleLive=()=>{clearTimeout(liveTimer);if(state.mode!=='gamma')return;liveTimer=setTimeout(()=>{if(state.mode==='gamma'&&!$('screen-calc').hidden)calculate();},260);};
+['film','density','material','thickness','distance','manualCi','certCi','certDate','referenceDate'].forEach(id=>{
+ $(id)?.addEventListener('input',scheduleLive);$(id)?.addEventListener('change',scheduleLive);
+});
+$$('input[name="isotope"],input[name="activityMode"]').forEach(el=>el.addEventListener('change',scheduleLive));
+window.basicRTAppReady=true;window.dispatchEvent(new Event('basicrt-ready'));
 if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=383').then(reg=>reg.update()).catch(()=>{}));
 }

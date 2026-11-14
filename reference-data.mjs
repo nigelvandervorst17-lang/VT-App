@@ -26,15 +26,15 @@ export const filmSystems=[
  {type:'D8',iso:'C6',speed:400},
 ];
 export const exposureDiagrams=[
- {id:'smart-225b',name:'ANDREX SMART 225 · D5 (225b-bestand)',film:'D5',screen:'0,027 mm Pb',distance:'80 cm',density:'2,5',file:'./assets/smart-225b.webp',note:'100–225 kV · grafiek in mA·min'},
- {id:'smart-225-d7',name:'SMART 225 · D7',film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:'./assets/smart-225-d7.webp',note:'70–225 kV · fabrikantgrafiek, scan'},
- {id:'smart-200pc-d7',name:'SMART 200PC · D7',film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:'./assets/smart-200pc-d7.webp',note:'80–200 kV · fabrikantgrafiek, scan'},
- {id:'yxlon-160',name:"YXLON Y.SMART 160E/0.4 / 160E/1.5 / 160W exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./assets/smart-160-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
- {id:'yxlon-200',name:"YXLON Y.SMART 200 / 200W exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./assets/smart-200-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
- {id:'yxlon-200pc',name:"YXLON Y.SMART 200PC exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./assets/smart-200pc-new-d7.webp",note:"80–200 kV · alleen naslag: schalen inconsistent"},
- {id:'yxlon-225',name:"YXLON Y.SMART 225 / 225X / 225W exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./assets/smart-225-yxlon-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
- {id:'yxlon-300hp',name:"YXLON Y.SMART 300HP / 300HPW exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./assets/smart-300hp-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
- {id:'yxlon-300pc',name:"YXLON Y.SMART 300PC exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./assets/smart-300pc-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
+ {id:'smart-225b',name:'ANDREX SMART 225 · D5 (225b-bestand)',film:'D5',screen:'0,027 mm Pb',distance:'80 cm',density:'2,5',file:'./smart-225b.webp',note:'100–225 kV · grafiek in mA·min'},
+ {id:'smart-225-d7',name:'SMART 225 · D7',film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:'./smart-225-d7.webp',note:'70–225 kV · fabrikantgrafiek, scan'},
+ {id:'smart-200pc-d7',name:'SMART 200PC · D7',film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:'./smart-200pc-d7.webp',note:'80–200 kV · fabrikantgrafiek, scan'},
+ {id:'yxlon-160',name:"YXLON Y.SMART 160E/0.4 / 160E/1.5 / 160W exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./smart-160-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
+ {id:'yxlon-200',name:"YXLON Y.SMART 200 / 200W exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./smart-200-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
+ {id:'yxlon-200pc',name:"YXLON Y.SMART 200PC exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./smart-200pc-new-d7.webp",note:"80–200 kV · alleen naslag: schalen inconsistent"},
+ {id:'yxlon-225',name:"YXLON Y.SMART 225 / 225X / 225W exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./smart-225-yxlon-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
+ {id:'yxlon-300hp',name:"YXLON Y.SMART 300HP / 300HPW exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./smart-300hp-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
+ {id:'yxlon-300pc',name:"YXLON Y.SMART 300PC exposure diagram (user-provided PNG)",film:'D7',screen:'Pb',distance:'70 cm',density:'2,0',file:"./smart-300pc-d7.webp",note:"Door pixels ingelezen, niet gevalideerde grafiek; alleen voor privétest"},
 
 ];
 // ISO 4063:1998 reference numbers from user-supplied older N.I.L. printout (dated 17-03-2008).

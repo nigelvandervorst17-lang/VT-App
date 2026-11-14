@@ -53,7 +53,7 @@ export function updateReferenceLanguage(){
 export function initReferenceTools(getLanguage){
  language=getLanguage;
  const nps=el('refNps');
- nps.replaceChildren(...pipeSchedules.map(p=>{const op=document.createElement('option');op.value=p.nps;op.textContent=`${p.nps}″ · Ø ${locNum(p.od)} mm`;return op;}));
+ nps.replaceChildren(...pipeSchedules.map(p=>{const op=document.createElement('option');op.value=p.nps;op.textContent=`${p.nps}″ (${locNum(p.od)} mm)`;return op;}));
  nps.value='4';
  el('refAchieved').replaceChildren(...densityAchieved.map(v=>{const op=document.createElement('option');op.value=String(v);op.textContent=locNum(v);return op;}));
  el('refAchieved').value='2';

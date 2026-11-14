@@ -91,3 +91,89 @@
 .proc-film-position{padding:7px 2px;border-bottom:1px solid rgba(220,240,249,.15)}
 .proc-film-position strong{display:block;color:#b4fff0;font-size:13px}
 .proc-film-position span{display:block;color:#d9e8f0;font-size:12px}
+
+/* Basic RT PRO 3.8.2 — mobiele herstel- en ergonomieregels */
+.top-header{background:#061628!important;color:#f4f9ff!important;border-bottom:1px solid #294964;}
+.brand-copy strong span{color:#78bcff;}
+.brand-copy small{color:#c8dcf0!important;}
+.lang-control select{background:#21394e!important;color:#fff!important;border-color:#54738b!important;min-height:50px!important;}
+button, .ghost-button, .outline-button, .rt31-run, .rt31-secondary, .rt30-button{min-height:48px;}
+.choice span,.mode-btn{min-height:58px;}
+.field-card input,.field-card select,.inner-field input{min-height:52px;}
+.rt-quick-values{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.rt-quick-values button{flex:1;min-width:46px;min-height:48px;border-radius:10px;border:1px solid #587991;background:#24445f;color:#effaff;font-size:13px;font-weight:850;padding:8px 4px;}
+.rt-quick-values button:active{background:#1462a9;}
+.sticky-outcome{position:fixed;z-index:28;bottom:calc(72px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(100%,680px);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#102d41;border:1px solid #4b7892;border-radius:13px 13px 0 0;box-shadow:0 -6px 22px #0007;padding:9px 16px 10px;color:#d4f9f0;}
+.sticky-outcome[hidden]{display:none!important;}
+.sticky-outcome.sticky-error{border-color:#bd8172;color:#ffcabd;background:#342b33;}
+.sticky-meta{display:grid;gap:2px;min-width:0;}
+.sticky-meta strong{font-size:12px;font-weight:850;}
+.sticky-meta small{font-size:10px;color:#bdd0de;line-height:1.3;}
+#stickyTime{font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.4px;}
+.app-shell{padding-bottom:calc(155px + env(safe-area-inset-bottom));}
+.boot-failure{margin:12px 16px;padding:15px;border-radius:13px;border:1px solid #c58d7a;background:#372b32;color:#fff2e9;}
+.boot-failure[hidden]{display:none!important;}
+.boot-failure strong{font-size:15px;}
+.boot-failure p{font-size:12px;color:#f5d2c6;line-height:1.5;overflow-wrap:anywhere;}
+.boot-failure a{display:inline-block;color:#abdfff;margin-left:9px;font-size:13px;padding:10px 0;}
+.boot-failure button{border:0;background:#f3b990;color:#202c3b;font-size:13px;font-weight:800;border-radius:10px;padding:10px 12px;}
+
+/* Basic RT PRO 3.8.3 — iOS overlap, navigatie en compacte referentiepanelen */
+html{background:#061628;color-scheme:dark;scroll-padding-top:calc(68px + env(safe-area-inset-top));}
+body{background:#061628;}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:#061628;z-index:1000;pointer-events:none;}
+.app-shell{padding-top:env(safe-area-inset-top,0px);}
+.top-header{position:sticky!important;top:env(safe-area-inset-top,0px)!important;z-index:100!important;padding:12px 16px!important;min-height:70px;background:#061628!important;box-shadow:0 4px 12px #030a1533;}
+.brand-copy strong{font-size:clamp(15px,4.5vw,21px);}
+.brand-icon img{display:block;width:47px;height:47px;object-fit:contain;}
+.lang-control select{max-width:96px;}
+select,.field-card select,.ref-select,.rt31-grid select,.rt30-field select,.procedure-panel select,.comet-ref-card select{box-sizing:border-box;min-width:0;max-width:100%;padding-right:38px!important;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(13px,3.7vw,16px)!important;}
+.field-card,.fields-grid>*{min-width:0;}
+.rt-density-quick{display:flex;gap:6px;margin-top:9px;}
+.rt-density-quick button,.rt-small-action{min-height:43px;flex:1;background:#24455d;color:#e7f6ff;border:1px solid #557c96;border-radius:9px;font-size:13px;font-weight:800;padding:6px;}
+.rt-small-action{width:100%;margin-top:9px;min-height:46px;}
+.bottom-nav{z-index:105;gap:5px;padding-left:10px;padding-right:10px;}
+.bottom-nav .nav{font-size:11px!important;min-width:0;min-height:57px;}
+.bottom-nav .nav svg{width:22px;height:22px;}
+.more-menu{position:fixed;z-index:104;bottom:calc(75px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(96%,660px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px;background:#0c263c;border:1px solid #4b7390;border-radius:15px;box-shadow:0 15px 35px #000a;}
+.more-menu[hidden]{display:none!important;}
+.more-menu .nav{min-height:65px;font-size:12px;display:flex;}
+.more-menu .nav svg{width:22px;height:22px;}
+.sticky-outcome{bottom:calc(78px + env(safe-area-inset-bottom));}
+.rt-ref-accordion{padding:0;overflow:hidden;}
+.rt-ref-accordion>summary{list-style:none;min-height:58px;display:flex;align-items:center;gap:10px;cursor:pointer;padding:15px;font-weight:850;}
+.rt-ref-accordion>summary::-webkit-details-marker{display:none;}
+.rt-ref-accordion>summary:after{content:'+';margin-left:auto;font-size:23px;color:#8fc9ef;}
+.rt-ref-accordion[open]>summary:after{content:'−';}
+.rt-ref-accordion>.rt-ref-body{padding:0 14px 15px;}
+.ref-panel .rt-ref-body h2{margin:0 0 12px;}
+.inline-compact-info{margin:8px 0 0;font-size:12px;line-height:1.4;color:#b3d2ea;}
+.inline-compact-info summary{cursor:pointer;font-weight:750;}
+.inline-compact-info p{margin:5px 0 0;}
+.ref-illustration{background:#11293c!important;filter:invert(.88) hue-rotate(180deg);}
+.ref-image-link{background:#bdc8d2!important;}
+.rt30-source-item a{white-space:nowrap;flex-shrink:0;overflow-wrap:normal;}
+.rt-chart-options{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0;}
+.rt-chart-options label{font-size:12px;font-weight:750;}
+.rt-chart-options select{flex:1;min-height:42px;background:#203e55;color:#fff;border:1px solid #547992;border-radius:10px;padding:8px 37px 8px 9px;min-width:85px;max-width:180px;}
+#curveSVG{min-height:200px;touch-action:pan-y;}
+#curveSVG svg{width:100%;height:auto;}
+#curveSVG img{max-width:100%;max-height:500px;width:100%;height:auto;object-fit:contain;background:#bac3cc;}
+#curvePreviewPanel{scroll-margin-top:100px;}
+#curveList .data-entry{padding:10px 0;}
+#curveList .data-entry h3{font-size:13px;}
+#curveList .data-entry p{font-size:11px;}
+#curveList .data-entry details{font-size:10px;color:#b8d4e9;overflow-wrap:anywhere;}
+#curveList button[data-curve-select]{min-height:42px;background:#214864;border:1px solid #5b86a7;color:#eaf7ff;border-radius:8px;padding:8px 13px;}
+.rt-lightbox{border:1px solid #7192a6;border-radius:12px;background:#0d2336;color:#eef9ff;max-width:96vw;width:min(900px,96vw);max-height:96dvh;padding:10px;}
+.rt-lightbox::backdrop{background:#000e;}
+.rt-lightbox img{width:100%;height:auto;max-height:80dvh;object-fit:contain;touch-action:pinch-zoom;}
+.rt-lightbox button{margin-bottom:9px;min-height:45px;}
+@media(max-width:420px){.screen{padding:17px 12px 22px}.field-card{padding:11px 10px}.fields-grid{gap:9px}.top-header{padding:9px 10px!important}.brand-icon{width:43px;height:43px}.brand-icon img{width:43px;height:43px}.brand-copy strong{letter-spacing:-.6px}.brand-copy small{letter-spacing:.5px;}.bottom-nav .nav{font-size:10px!important;}}
+@media print{.more-menu,body::before{display:none!important}}
+
+/* Density occupies a full row: no unused half-width column */
+.density-card{grid-column:1/-1;}
+.density-card input{width:100%;max-width:100%;background:#233b54;border:1px solid #60768d;border-radius:11px;padding:12px;font-size:18px;color:#fff;min-height:52px;}
+.source-cert-box{border-top:1px solid #4a6984;margin-top:18px;padding-top:16px;}
+.source-cert-box h2{margin:0 0 12px;}

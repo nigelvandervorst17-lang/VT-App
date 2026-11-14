@@ -75,7 +75,7 @@ export function interpolateLog(points,mm){
 }
 function inputValid(thicknessMm,distanceMm){
   return [thicknessMm,distanceMm].every(finite)&&thicknessMm>=0&&distanceMm>0&&
-      thicknessMm<=100&&distanceMm<=100000;
+      thicknessMm<=100&&distanceMm<=100000&&distanceMm>thicknessMm;
 }
 export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,activityCi,material='Fe',screens='Pb'},db){
   if(!inputValid(thicknessMm,distanceMm)||!finite(activityCi)||activityCi<=0||activityCi>100000) return {ok:false,error:ERROR.INVALID};

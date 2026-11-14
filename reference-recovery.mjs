@@ -24,7 +24,7 @@ const recovery=async()=>{
   ]){
     const img=document.querySelector(selector);
     if(!img)continue;
-    const check=()=>{if(img.complete && img.naturalWidth===0)warn('Afbeeldingen niet gevonden: '+name+'. Upload ook de map assets/ met alle .webp-bestanden.');};
+    const check=()=>{if(img.complete && img.naturalWidth===0)warn('Afbeeldingen niet gevonden: '+name+'. Upload ook de .webp-afbeeldingen uit het volledige herstelpakket in de hoofdmap.');};
     img.addEventListener('error',check);
     if(img.complete)check();
     else img.addEventListener('load',check,{once:true});

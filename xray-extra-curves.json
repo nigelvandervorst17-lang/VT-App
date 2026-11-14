@@ -9,7 +9,7 @@
     "material": "Fe",
     "referenceDistanceMm": 700,
     "status": "pixel_digitized_unvalidated",
-    "imageFile": "./assets/smart-300pc-d7.webp",
+    "imageFile": "./smart-300pc-d7.webp",
     "chartedRangeMm": [
       0,
       60
@@ -92,7 +92,7 @@
     "material": "Fe",
     "referenceDistanceMm": 700,
     "status": "pixel_digitized_unvalidated",
-    "imageFile": "./assets/smart-300hp-d7.webp",
+    "imageFile": "./smart-300hp-d7.webp",
     "chartedRangeMm": [
       0,
       75
@@ -175,7 +175,7 @@
     "material": "Fe",
     "referenceDistanceMm": 700,
     "status": "pixel_digitized_unvalidated",
-    "imageFile": "./assets/smart-225-yxlon-d7.webp",
+    "imageFile": "./smart-225-yxlon-d7.webp",
     "chartedRangeMm": [
       0,
       55
@@ -294,7 +294,7 @@
     "material": "Fe",
     "referenceDistanceMm": 700,
     "status": "pixel_digitized_unvalidated",
-    "imageFile": "./assets/smart-200pc-new-d7.webp",
+    "imageFile": "./smart-200pc-new-d7.webp",
     "chartedRangeMm": [
       0,
       40
@@ -316,7 +316,7 @@
     "material": "Fe",
     "referenceDistanceMm": 700,
     "status": "pixel_digitized_unvalidated",
-    "imageFile": "./assets/smart-200-d7.webp",
+    "imageFile": "./smart-200-d7.webp",
     "chartedRangeMm": [
       0,
       45
@@ -423,7 +423,7 @@
     "material": "Fe",
     "referenceDistanceMm": 700,
     "status": "pixel_digitized_unvalidated",
-    "imageFile": "./assets/smart-160-d7.webp",
+    "imageFile": "./smart-160-d7.webp",
     "chartedRangeMm": [
       0,
       35

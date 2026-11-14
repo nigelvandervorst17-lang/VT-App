@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Basic RT PRO 3.8 BETA — Se-75/Ir-192 D4 D5 D7",
-  "short_name": "RT PRO 3.8",
+  "name": "Basic RT PRO 3.8.3 BETA — mobiele verbeteringen",
+  "short_name": "RT PRO 3.8.3",
   "description": "Onderzoeksversie met gebruikersreferenties Waygate Se-75/Ir-192 D4/D5/D7, X-ray, IQI en RT Tools. Geen vrijgegeven RT-belichtingstijden.",
   "start_url": "./",
   "scope": "./",
