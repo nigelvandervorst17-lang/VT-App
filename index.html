@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=394">
+<link rel="stylesheet" href="./styles.css?v=395">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -176,6 +176,12 @@
 <div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
 <section class="screen is-active" data-screen="calc" id="screen-calc">
   <div class="section-heading"><div><p class="overline" data-i18n="workspace">WERKBLAD</p><h1 data-i18n="mainTitle">Belichting berekenen</h1><p class="subtitle" data-i18n="mainSub">Een onderzoeksberekening op basis van traceerbare grafieken.</p></div></div>
+  <nav class="rt-jumpbar" aria-label="Snel navigeren binnen Rekenen">
+    <button type="button" data-rt-jump="workShapePanel" data-rt-jump-key="shape"><span aria-hidden="true">1</span><b>Werkstuk</b></button>
+    <button type="button" data-rt-jump="calcInputsHeading" data-rt-jump-key="input"><span aria-hidden="true">3</span><b>Invoer</b></button>
+    <button type="button" data-rt-jump="iqiPanel" data-rt-jump-key="iqi"><span aria-hidden="true">4</span><b>IQI</b></button>
+    <button type="button" data-rt-jump="resultCard" data-rt-jump-key="result"><span aria-hidden="true">✓</span><b>Resultaat</b></button>
+  </nav>
   <button class="outline-button rt31-mainlink" type="button" id="rt31Shortcut" data-ui-i18n="extraTools">Alle extra RT-tools openen →</button>
 <section class="workshape" id="workShapePanel" aria-label="Werkstuk en opnamegeometrie">
  <div class="group-label"><span class="step">1</span><h2 data-work-t="what">Wat ga je schieten?</h2></div>
@@ -223,7 +229,7 @@
     <strong>Grafiekstatus</strong>
     <p id="rt29StatusText">Kies een apparaat of isotoop om de ondersteunde condities te bekijken.</p>
   </section>
-  <div class="group-label rt-step-two"><span class="step">3</span><h2 data-i18n="enterData">Vul de gegevens in</h2><button id="activityJump" class="rt-activity-jump" type="button"><span id="activityJumpLabel">☢ Activiteit</span><strong id="activityJumpValue">36 Ci</strong></button></div>
+  <div class="group-label rt-step-two" id="calcInputsHeading"><span class="step">3</span><h2 data-i18n="enterData">Vul de gegevens in</h2><button id="activityJump" class="rt-activity-jump" type="button"><span id="activityJumpLabel">☢ Activiteit</span><strong id="activityJumpValue">36 Ci</strong></button></div>
   <div class="fields-grid">
     <div class="field-card" id="legacyThicknessCard" hidden><label for="thickness" data-i18n="steel">Materiaaldikte</label><div class="input-with-unit"><input id="thickness" type="text" inputmode="decimal" value="25" placeholder="0–100" autocomplete="off"><span>mm</span></div><div class="rt-quick-values" data-field="thickness"><button type="button" data-value="5">5</button><button type="button" data-value="10">10</button><button type="button" data-value="20">20</button><button type="button" data-value="40">40</button></div></div>
     <div class="field-card"><label for="material">Materiaal</label><select id="material"><option value="Fe">Staal (Fe)</option><option value="RVS300">RVS 300-serie</option><option value="RVSother">RVS, andere legering</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Bronze">Brons</option><option value="Ti">Titanium</option><option value="InconelX">Inconel X</option><option value="Monel">Monel</option><option value="Brass">Messing</option><option value="Mg">Magnesium</option><option value="Other">Ander materiaal</option></select></div>
@@ -759,7 +765,7 @@
 <script type="module" src="./app.mjs?v=394"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
-<script type="module" src="./ui-polish.mjs?v=391"></script>
+<script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
