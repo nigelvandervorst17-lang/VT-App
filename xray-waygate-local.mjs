@@ -199,6 +199,50 @@ function forget(){
  try{localStorage.removeItem(KEY);current=null;render();message('Lokale Waygate-softwarepunten gewist.');}
  catch(_){message('Wissen in browseropslag mislukt.',true);}
 }
+/* One-tap import from the user's screenshot values in a URL fragment.
+ * Fragments are not sent in the HTTP request to GitHub Pages. This is
+ * not physical film calibration and no points are stored in the public repo.
+ */
+function parseShareFragment(fragment){
+ if(typeof fragment!=='string'||!fragment.startsWith('#wgr=')||fragment.length>350)
+  return {ok:false,error:'Geen Waygate-gegevens in deze link.'};
+ const parts=fragment.slice(5).split('~');
+ if(parts.length!==6)return {ok:false,error:'Waygate-link is onvolledig.'};
+ const [kv,ma,thickness,film,distance,values]=parts;
+ const pointStrings=values.split(',');
+ if(pointStrings.length<1||pointStrings.length>50)return {ok:false,error:'Ongeldige softwarepunten.'};
+ const points=[];
+ for(const item of pointStrings){
+  const pieces=item.split(':');
+  if(pieces.length!==2)return {ok:false,error:'Ongeldig D/tijd-paar.'};
+  points.push({density:pieces[0],timeSeconds:pieces[1]});
+ }
+ return validate({schema:SCHEMA,kind:'waygate_software_output',
+  conditions:{energyKv:kv,currentMa:ma,thicknessMm:thickness,film,
+   sourceDetectorMm:distance,material:'Fe'},points});
+}
+function receiveSharedSoftwarePoints(){
+ const hash=window.location.hash;
+ if(!hash.startsWith('#wgr='))return;
+ let cleanUrl=window.location.pathname+window.location.search;
+ try{
+  const reference=parseShareFragment(hash);
+  // The share fragment must not remain in browser history or on-screen links.
+  history.replaceState(history.state,'',cleanUrl);
+  if(!reference.ok){message('De Waygate-link is ongeldig: '+reference.error,true);return;}
+  if(current){
+   message('Bestaande lokale Waygate-gegevens blijven bewaard. Verwijder ze eerst als je een ander referentieset wilt laden.');
+   return;
+  }
+  if(save(reference.data)){
+   render();
+   message('Vijf softwarepunten uit jouw screenshots lokaal geladen. Geen buismodel nodig en geen wijzigingen aan RT-curves.');
+   // Geometry and main calculator modules initialize after the viewer.
+   setTimeout(useReference,150);
+  }
+ }catch(_){message('Automatisch laden van Waygate-softwarepunten is niet gelukt.',true);}
+}
+
 function init(){
  const panel=$('rtWaygateReference');if(!panel)return;
  const loaded=read();if(!loaded.ok)message(loaded.error,true);else current=loaded.data;
@@ -215,5 +259,6 @@ function init(){
  }
  window.addEventListener('rt-language-changed',compare);
  render();
+ receiveSharedSoftwarePoints();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
