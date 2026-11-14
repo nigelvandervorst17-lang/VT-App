@@ -137,20 +137,25 @@ async function installTurnstile(){
   const el=$('aiTurnstile');
   if(!el) return;
   if(widgetId!==null && window.turnstile){window.turnstile.remove(widgetId);widgetId=null;widgetSiteKey='';}
+  el.hidden=false;
   el.replaceChildren();
-  if(!siteKey){status('Stel eerst de publieke Turnstile-sitekey en Worker-URL in.',true);return;}
+  const heading=document.querySelector('#screen-ai .ai-turnstile-label');
+  if(heading)heading.textContent='Beveiligingscontrole wordt uitgevoerd…';
+  if(!siteKey){status('Open AI-instellingen om de publieke Worker-URL en Turnstile-sitekey in te vullen.',true);return;}
+  status('Beveiligingscontrole wordt uitgevoerd…');
   try {
     await loadTurnstileApi();
     if(siteKey !== publicConfig().siteKey.trim())return;
     widgetId = window.turnstile.render(el,{sitekey:siteKey,theme:'dark',
-      callback:()=>status('Beveiligingscontrole gereed. Je kunt je vraag versturen.'),
-      'expired-callback':()=>status('Controle verlopen; voer deze opnieuw uit.',true),
-      'error-callback':()=>status('Beveiligingscontrole mislukt; probeer opnieuw.',true)});
+      callback:()=>{el.hidden=true;if(heading)heading.textContent='✓ Beveiliging gereed';status('Beveiligingscontrole gereed. Stel je vraag.');},
+      'expired-callback':()=>{el.hidden=false;if(heading)heading.textContent='Beveiligingscontrole verlopen';status('Controle verlopen; voer deze opnieuw uit.',true);},
+      'error-callback':()=>{el.hidden=false;if(heading)heading.textContent='Beveiligingscontrole';status('Beveiligingscontrole mislukt; probeer opnieuw.',true);}});
     widgetSiteKey=siteKey;
   }catch(err){status(err.message,true);}
 }
 function resetTurnstile(){
-  if(widgetId!==null && window.turnstile) window.turnstile.reset(widgetId);
+  const el=$('aiTurnstile'),heading=document.querySelector('#screen-ai .ai-turnstile-label');
+  if(widgetId!==null && window.turnstile){if(el)el.hidden=false;if(heading)heading.textContent='Beveiligingscontrole wordt uitgevoerd…';window.turnstile.reset(widgetId);}
 }
 async function ask(){
   if(waiting)return;
@@ -197,6 +202,15 @@ function init(){
   $('aiSiteKey').value=config.siteKey || AI_TURNSTILE_SITE_KEY;
   $('aiSaveConfig').addEventListener('click',savePublicConfig);
   $('aiAsk').addEventListener('click',ask);
+  document.querySelectorAll('[data-ai-example]').forEach(button=>button.addEventListener('click',()=>{
+    if(waiting)return;
+    $('aiQuestion').value=button.dataset.aiExample||'';
+    ask();
+  }));
+  $('aiSettingsButton')?.addEventListener('click',()=>{
+    const details=$('aiConfigDetails');if(!details)return;details.open=true;
+    details.scrollIntoView({behavior:'smooth',block:'center'});
+  });
   $('aiQuestion').addEventListener('keydown',e=>{
     if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();ask();}
   });
@@ -217,6 +231,7 @@ function init(){
   document.querySelector('[data-nav="ai"]')?.addEventListener('click',()=>{
     if(widgetId===null) installTurnstile(); preview();
   });
-  if(!publicConfig().endpoint || !publicConfig().siteKey)status('Configureer eerst de Worker-URL en publieke Turnstile-sitekey.');
+  if(!publicConfig().endpoint || !publicConfig().siteKey)status('Tik op AI-instellingen om de verbinding eenmalig in te stellen.');
+  else status('Beveiligingscontrole wordt uitgevoerd…');
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
