@@ -70,11 +70,51 @@ function preview(){
   const el=$('aiPreview');
   if(el && !el.hidden) el.textContent=$('aiSendContext').checked ? JSON.stringify(snapshot(),null,2) : 'Context wordt niet meegestuurd.';
 }
+// Kleine, veilige formatter: DOM-tekstknooppunten in plaats van HTML invoegen.
+// Ondersteunt **vet**, *cursief*, U_{g} en eenvoudige inline LaTeX-notatie.
+function simplifyMath(source){
+  return String(source)
+    .replace(/\\\(([\s\S]*?)\\\)/g,'$1')
+    .replace(/\\\[([\s\S]*?)\\\]/g,'$1')
+    .replace(/\$([^$\n]+)\$/g,'$1')
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,'($1 / $2)')
+    .replace(/\\times/g,'×').replace(/\\cdot/g,'·')
+    .replace(/\\(?:mathrm|text)\{([^{}]+)\}/g,'$1')
+    .replace(/\\left|\\right/g,'').replace(/\\[,;]/g,' ');
+}
+function appendSubscripts(parent,source){
+  const subs=/([A-Za-z0-9])_(?:\{([^{}\n]{1,20})\}|([A-Za-z0-9]))/g;
+  let cursor=0,match;
+  while((match=subs.exec(source))){
+    parent.append(document.createTextNode(source.slice(cursor,match.index)+match[1]));
+    const sub=document.createElement('sub');
+    sub.textContent=match[2]||match[3];
+    parent.append(sub);
+    cursor=subs.lastIndex;
+  }
+  parent.append(document.createTextNode(source.slice(cursor)));
+}
+function appendSafeFormatted(parent,content){
+  const source=simplifyMath(content);
+  const inline=/(\*\*[^*\n]{1,200}\*\*|\*[^*\n]{1,200}\*)/g;
+  let cursor=0,match;
+  while((match=inline.exec(source))){
+    appendSubscripts(parent,source.slice(cursor,match.index));
+    const strong=match[0].startsWith('**');
+    const wrapper=document.createElement(strong?'strong':'em');
+    appendSubscripts(wrapper,match[0].slice(strong?2:1,strong?-2:-1));
+    parent.append(wrapper);
+    cursor=inline.lastIndex;
+  }
+  appendSubscripts(parent,source.slice(cursor));
+}
 function appendMessage(role, content){
   const el=document.createElement('div');
   el.className='ai-message '+(role==='user'?'ai-user':'ai-model');
   const label=document.createElement('strong');label.textContent=role==='user'?'Jij':'AI Expert';
-  const body=document.createElement('p');body.textContent=content; // no HTML injection
+  const body=document.createElement('p');
+  if(role==='model')appendSafeFormatted(body,content);
+  else body.textContent=content;
   el.append(label,body);
   $('aiMessages').append(el);
   el.scrollIntoView({block:'nearest',behavior:'smooth'});
