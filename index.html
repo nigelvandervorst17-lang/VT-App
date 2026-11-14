@@ -9,11 +9,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Basic RT PRO">
 <meta name="description" content="Basic RT PRO — werkassistent voor radiografisch onderzoek, bronverval, grafieken, IQI en filmverdeling (onderzoeksversie).">
-<title>Basic RT PRO 3.8.5 · Se-75 en Ir-192 · D4/D5/D7</title>
+<title>Basic RT PRO 3.8.6 · AI Expert · Se-75 en Ir-192</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=385">
+<link rel="stylesheet" href="./styles.css?v=386">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -553,13 +553,47 @@
   <p class="rt31-warning">Basic RT PRO 3.8.2 is een onderzoeks- en werkvoorbereidingshulpmiddel, geen besturing van apparatuur, geen vergunning en geen gecertificeerd veiligheids- of dosimetriesysteem.</p>
 </section>
 
-<section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.5 BETA · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">Deze app heeft geen account, externe trackers of server voor ingevoerde projectgegevens. De browser kan lokaal gegevens bewaren.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
+
+<!-- AI Expert — uitleghulp met expliciete, alleen-lezen context uit rt-core.mjs-resultaat -->
+<section class="screen" data-screen="ai" id="screen-ai" hidden>
+  <div class="section-heading"><p class="overline">ONLINE · RT-NDO NASLAG</p><h1>AI Expert</h1>
+    <p class="subtitle">Vragen over normen, IQI, filmafwijkingen en de huidige onderzoeksberekening.</p></div>
+  <div class="panel ai-warning" role="note"><strong>Geen Level 3-vrijgave of stralingsbeschermingsplan</strong>
+    <p>AI kan fouten maken. Normen en tabellen zijn niet live gelicentieerd beschikbaar; controleer altijd de geldende uitgave en goedgekeurde procedure. Deze app bevat niet-gevalideerde belichtingscurves. Gebruik AI niet om werkelijke opnames of afzettingen vrij te geven.</p></div>
+  <div class="panel ai-config"><details id="aiConfigDetails"><summary>Verbinding instellen · Gemini via Cloudflare Worker</summary>
+    <label for="aiWorkerUrl">Publieke Worker-URL (geen API-sleutel)</label>
+    <input id="aiWorkerUrl" type="url" autocomplete="url" placeholder="https://basic-rt-pro-ai.jouwnaam.workers.dev">
+    <label for="aiSiteKey">Publieke Turnstile-sitekey</label>
+    <input id="aiSiteKey" type="text" autocomplete="off" placeholder="Sitekey, niet de secret key">
+    <button type="button" class="outline-button" id="aiSaveConfig">Verbinding op dit toestel bewaren</button>
+    <p class="small-muted">De Gemini API-key en Turnstile-secret staan uitsluitend in de Cloudflare Worker. Alleen deze publieke waarden worden lokaal opgeslagen.</p>
+  </details></div>
+  <div class="panel ai-context"><label class="ai-check"><input type="checkbox" id="aiSendContext" checked> Huidige RT-invoer en app-uitkomst meesturen bij mijn vraag</label>
+    <p class="small-muted">Dit verstuurt uitsluitend relevante RT-velden naar jouw Worker en Google Gemini. Geen bronregister, opgeslagen records, persoonlijke namen of certificaatdocumenten. Op de gratis Gemini-laag kunnen gegevens voor productverbetering worden gebruikt. Uitschakelen kan.</p>
+    <div class="ai-actions"><button type="button" id="aiRecalculate" class="ghost-button">Reken opnieuw met app</button>
+    <button type="button" id="aiPreviewToggle" class="ghost-button" aria-expanded="false">Bekijk context</button></div>
+    <pre id="aiPreview" hidden aria-label="Voorbeeld meegestuurde RT-gegevens"></pre>
+  </div>
+  <div class="panel ai-chat">
+    <div id="aiMessages" role="log" aria-live="polite" aria-label="AI-gesprek">
+      <div class="ai-message ai-model"><strong>AI Expert</strong><p>Stel bijvoorbeeld: “Welke geometrische gegevens ontbreken voor klasse B?” of “Welke oorzaken zijn mogelijk bij halvemaanvormige vlekken op film?”</p></div>
+    </div>
+    <label for="aiQuestion">Jouw vraag</label>
+    <textarea id="aiQuestion" rows="3" maxlength="1500" placeholder="Stel je RT-vraag… (Ctrl+Enter om te verzenden)"></textarea>
+    <div class="ai-turnstile-label">Beveiligingscontrole</div><div id="aiTurnstile"></div>
+    <p id="aiStatus" role="status" aria-live="polite">Stel eerst de veilige verbinding in.</p>
+    <div class="ai-actions"><button type="button" id="aiAsk" class="calculate-button">Verstuur vraag</button>
+      <button type="button" id="aiClearChat" class="ghost-button">Wis chat</button></div>
+    <p class="small-muted">Deze chat werkt alleen online. Het gesprek blijft tijdelijk op dit toestel zolang het scherm openstaat; de app slaat de chat niet op.</p>
+  </div>
+</section>
+<section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.6 BETA · AI Expert · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">De standaardrekenmodule slaat gegevens lokaal op. Als je AI Expert gebruikt, worden je vraag en optioneel geselecteerde RT-invoer via jouw Worker naar Google Gemini verstuurd.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
 </main>
 <div id="stickyOutcome" class="sticky-outcome" role="status" aria-live="polite" hidden>
   <div class="sticky-meta"><strong id="stickyLabel">Berekening · onderzoek</strong><small id="stickyNote">Nog geen berekening</small></div>
   <strong id="stickyTime">—</strong>
 </div>
-<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="sources" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg><span data-i18n="tabSources">Bronnen</span></button><button data-nav="curves" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-10"/></svg><span data-i18n="tabCurves">Grafieken</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation"><button class="nav" data-nav="tools" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3h8l1 4 4 2v6l-4 2-1 4H8l-1-4-4-2V9l4-2z"></path><circle cx="12" cy="12" r="3"/></svg><span data-ui-i18n="toolsNav">Tools</span></button><button data-nav="records" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM9 10h6M9 14h6M9 18h4"/></svg><span data-i18n="tabRecords">Records</span></button><button data-nav="settings" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span data-i18n="tabSettings">Instellingen</span></button></div>
+<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="sources" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg><span data-i18n="tabSources">Bronnen</span></button><button data-nav="curves" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-10"/></svg><span data-i18n="tabCurves">Grafieken</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="ai" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5zM8 11h.01M16 11h.01M9 15h6"/></svg><span>AI Expert</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation"><button class="nav" data-nav="tools" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3h8l1 4 4 2v6l-4 2-1 4H8l-1-4-4-2V9l4-2z"></path><circle cx="12" cy="12" r="3"/></svg><span data-ui-i18n="toolsNav">Tools</span></button><button data-nav="records" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM9 10h6M9 14h6M9 18h4"/></svg><span data-i18n="tabRecords">Records</span></button><button data-nav="settings" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span data-i18n="tabSettings">Instellingen</span></button></div>
 </div>
 <section id="printView" aria-hidden="true"></section>
 
@@ -620,7 +654,8 @@
   window.BasicRtCometCatalog={models:items.map(x=>x.model),mode:'reference-only',datasetValidated:false};
 })();
 </script>
-<script type="module" src="./app.mjs?v=385"></script>
+<script type="module" src="./app.mjs?v=386"></script>
+<script type="module" src="./ai-expert.mjs?v=386"></script>
 <script type="module" src="./ui-polish.mjs?v=385"></script>
 <script type="module" src="./workflow-shape.mjs?v=385"></script>
 <script type="module" src="./reference-recovery.mjs?v=385"></script>

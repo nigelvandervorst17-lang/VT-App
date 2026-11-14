@@ -1,0 +1,18 @@
+name = "basic-rt-pro-ai"
+main = "src/index.mjs"
+compatibility_date = "2026-10-15"
+workers_dev = true
+
+[vars]
+# Verander dit alleen naar je eigen EXACTE GitHub Pages origin (zonder pad).
+ALLOWED_ORIGIN = "https://nigelvandervorst17-lang.github.io"
+# Hostname waarop je Turnstile-widget staat (zonder https://).
+TURNSTILE_HOSTNAME = "nigelvandervorst17-lang.github.io"
+GEMINI_MODEL = "gemini-2.5-flash"
+
+[[ratelimits]]
+name = "AI_LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 5
+  period = 60

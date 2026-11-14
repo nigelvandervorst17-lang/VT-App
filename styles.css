@@ -218,3 +218,30 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-stat
 .workshape-secondary:disabled{opacity:.5}
 .workshape-caution{color:#bcd6e4;font-size:12px;line-height:1.5;margin:11px 0 0}
 @media(max-width:385px){.workshape{padding:11px}.workshape-fields{grid-template-columns:1fr}.workshape-choice{font-size:13px}}
+
+/* Basic RT PRO 3.8.6 — AI Expert (no inline HTML from model) */
+#screen-ai{padding-bottom:40px}
+#screen-ai .panel{max-width:100%;overflow-wrap:anywhere}
+#screen-ai .ai-warning{border-color:#9a774b;background:#302d2a;color:#fff0d2}
+#screen-ai .ai-warning p{font-size:12px;line-height:1.6;margin-bottom:0;color:#edddc8}
+#screen-ai .ai-config summary{cursor:pointer;font-size:13px;font-weight:820}
+#screen-ai .ai-config label,#screen-ai .ai-chat label{display:block;font-weight:760;font-size:12px;margin:12px 0 6px}
+#screen-ai .ai-config input,#screen-ai .ai-chat textarea{width:100%;max-width:100%;box-sizing:border-box;border-radius:10px;padding:11px;background:#243e56;border:1px solid #6d91ab;color:#fff;font-size:15px;min-height:49px}
+#screen-ai .ai-chat textarea{resize:vertical;line-height:1.5}
+#screen-ai .ai-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;font-weight:760}
+#screen-ai .ai-check input{width:20px;height:20px;min-width:20px;accent-color:#5ec8a6;margin-top:1px}
+#screen-ai .ai-actions{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:10px 0}
+#screen-ai .ai-actions .ghost-button,#screen-ai .ai-actions .calculate-button{flex:1 1 125px;width:auto;margin:0;min-height:48px;font-size:13px}
+#screen-ai .ai-actions button:disabled{opacity:.45;cursor:not-allowed}
+#screen-ai #aiPreview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:11px;line-height:1.55;background:#091d30;border-radius:10px;padding:11px;color:#dcf4ff;border:1px solid #486b85}
+#screen-ai #aiMessages{max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:7px 1px 15px;min-height:120px}
+#screen-ai .ai-message{border:1px solid #43647b;border-radius:14px;padding:10px 13px;max-width:100%;background:#0a2438;overflow-wrap:anywhere}
+#screen-ai .ai-user{background:#1b4668;border-color:#3981ba;margin-left:20px}
+#screen-ai .ai-message strong{font-size:12px;display:block;margin-bottom:5px;color:#b6eaff}
+#screen-ai .ai-message p{white-space:pre-wrap;font-size:13px;line-height:1.6;margin:0;color:#ecf7ff}
+#screen-ai .ai-turnstile-label{font-size:12px;color:#cbdceb;font-weight:760;margin:14px 0 6px}
+#screen-ai #aiStatus{font-size:12px;line-height:1.5;color:#a1f1d6;min-height:18px}
+#screen-ai #aiStatus.ai-error{color:#ffbdb8}
+#screen-ai #aiTurnstile{max-width:100%;min-height:45px;overflow:hidden}
+.bottom-nav .nav[data-nav="ai"] span{white-space:nowrap}
+@media(max-width:390px){.bottom-nav .nav{font-size:8px;min-height:56px;padding-left:0;padding-right:0}.bottom-nav .nav svg{width:19px;height:19px}}
