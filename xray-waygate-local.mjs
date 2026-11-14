@@ -153,6 +153,9 @@ function init(){
   $(id)?.addEventListener('change',compare);
   $(id)?.addEventListener('input',compare);
  }
+ for(const id of ['modeGamma','modeXray','rtCompactSe','rtCompactIr','rtCompactXray']){
+  $(id)?.addEventListener('click',()=>setTimeout(compare,0));
+ }
  render();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
