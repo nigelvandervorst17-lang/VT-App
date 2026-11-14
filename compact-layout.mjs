@@ -13,19 +13,18 @@ const thickness = $('rtCompactThickness');
 const film = $('rtCompactFilm');
 const distance = $('rtCompactDistance');
 const density = $('rtCompactDensity');
-const info = $('rtCompactHint');
 let syncing = false;
 
 const translations = {
   nl:{activity:'Activiteit (Ci)',current:'Stroom (mA)',thickness:'Staaldikte t (mm)',penetrated:'Doorstraalde dikte w (mm)',
       locked:'Certificaatmodus actief: wijzig activiteit onder Extra instellingen.',noRuntime:'Geen vrijgegeven belichtingstijd. Controleer de volledige geometrie en brongegevens.',xray:'X-ray: toestel, spanning en stroom moeten met de fabrikantcurve overeenkomen.',
-      summary:'Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding',details:'Meer over onderzoek en beperkingen'},
+      summary:'Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding',details:'Meer over onderzoek en beperkingen',title:'Snelle onderzoeksberekening',film:'Filmtype',distance:'Bron-/focus-filmafstand (mm)',density:'Doelzwarting (D)'},
   en:{activity:'Activity (Ci)',current:'Current (mA)',thickness:'Steel thickness t (mm)',penetrated:'Penetrated thickness w (mm)',
       locked:'Certificate mode: edit activity under Advanced settings.',noRuntime:'No approved exposure time. Check geometry and source data.',xray:'X-ray: model, voltage and current must match manufacturer chart.',
-      summary:'Advanced settings · geometry, IQI and preparation',details:'Research limitations'},
+      summary:'Advanced settings · geometry, IQI and preparation',details:'Research limitations',title:'Quick research estimate',film:'Film type',distance:'Source/focus-to-film (mm)',density:'Target optical density (D)'},
   pl:{activity:'Aktywność (Ci)',current:'Prąd (mA)',thickness:'Grubość stali t (mm)',penetrated:'Grubość prześwietlana w (mm)',
       locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'RTG: model, napięcie i prąd muszą odpowiadać wykresowi producenta.',
-      summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej'}
+      summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej',title:'Szybkie obliczenie badawcze',film:'Typ błony',distance:'Odległość źródło/błona (mm)',density:'Docelowa gęstość (D)'}
 };
 const lang=()=>['nl','en','pl'].includes($('language')?.value)?$('language').value:'nl';
 const tr=k=>translations[lang()]?.[k]||translations.nl[k]||k;
@@ -41,8 +40,6 @@ function dispatch(target){
   target.dispatchEvent(new Event('input',{bubbles:true}));
   target.dispatchEvent(new Event('change',{bubbles:true}));
 }
-function hint(text){if(info)info.textContent=text;}
-function markDirty(){ /* Actual core owns validity, status, and recalculation. */ }
 function sync(){
   if(!panel||syncing)return;
   syncing=true;
@@ -52,6 +49,9 @@ function sync(){
     const activityLabel=$('rtCompactActivityLabel'),thicknessLabel=$('rtCompactThicknessLabel');
     if(activityLabel)activityLabel.textContent=g?tr('activity'):tr('current');
     if(thicknessLabel)thicknessLabel.textContent=pipe?tr('penetrated'):tr('thickness');
+    for(const [id,label] of [['rtCompactTitle','title'],['rtCompactFilmLabel','film'],['rtCompactDistanceLabel','distance'],['rtCompactDensityLabel','density']]){
+      const item=$(id);if(item)item.textContent=tr(label);
+    }
     for(const [id,active] of [['rtCompactSe',g&&activeIsotope()==='Se-75'],['rtCompactIr',g&&activeIsotope()==='Ir-192'],['rtCompactXray',!g]]){
       const button=$(id);if(button){button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
     }
@@ -83,20 +83,23 @@ function updateDensityButtons(){
   });
 }
 function setupInput(proxy,getOriginal){
-  proxy?.addEventListener('input',()=>{
+  const relay=()=>{
     const original=getOriginal();
     if(!original||proxy.disabled)return;
-    original.value=proxy.value;
-    dispatch(original);
+    if(original.value!==proxy.value){
+      original.value=proxy.value;
+      dispatch(original);
+    }
     requestAnimationFrame(sync);
-  });
-  proxy?.addEventListener('change',sync);
+  };
+  proxy?.addEventListener('input',relay);
+  proxy?.addEventListener('change',relay);
 }
 function selectMode(which){
   if(which==='xray'){
-    $('modeXray')?.click();
+    if(gamma())$('modeXray')?.click();
   }else{
-    $('modeGamma')?.click();
+    if(!gamma())$('modeGamma')?.click();
     const original=document.querySelector('input[name="isotope"][value="'+which+'"]');
     if(original){original.checked=true;dispatch(original);}
   }
