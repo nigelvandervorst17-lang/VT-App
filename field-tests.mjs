@@ -168,6 +168,7 @@ function render(){
   const list=$('ftList');if(!list)return;
   list.replaceChildren();
   $('ftCount').textContent=records.length+' fysieke filmtest'+(records.length===1?'':'en')+' lokaal bewaard';
+  if($('ftCurveCount'))$('ftCurveCount').textContent=records.length+' fysieke filmtest'+(records.length===1?'':'en')+' in het lokale register.';
   if(!records.length){
     list.append(element('p','Nog geen praktijkmetingen opgeslagen. Waygate-softwarepunten zijn hier bewust niet opgenomen.','small-muted'));
     return;
@@ -270,6 +271,10 @@ function init(){
   $('ftExportJson').addEventListener('click',exportJson);
   $('ftExportCsv').addEventListener('click',exportCsv);
   $('ftImport').addEventListener('change',importJson);
+  $('ftCurveOpen')?.addEventListener('click',()=>{
+    document.querySelector('#moreMenu [data-nav="records"]')?.click();
+    requestAnimationFrame(()=>$('fieldTestsPanel')?.scrollIntoView({behavior:'smooth',block:'start'}));
+  });
   render();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
