@@ -514,21 +514,6 @@ body{font-synthesis:none}
 #screen-calc .rt-compact-chip-row button.active{
   color:#fff;background:#086bcc;border-color:#83c5f9;
 }
-#screen-calc .rt-compact-xray{
-  margin-top:10px;border:1px solid #456c86;border-radius:12px;
-  background:#102e42;padding:10px;
-}
-#screen-calc .rt-compact-xray .small-muted{margin:0 0 7px;font-size:11px}
-#screen-calc .rt-compact-xray .fields-grid{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
-}
-#screen-calc .rt-compact-xray .field-card{
-  min-width:0;margin:0;border-radius:11px;padding:8px;
-}
-#screen-calc .rt-compact-xray .field-card select,
-#screen-calc .rt-compact-xray .field-card input{
-  min-height:46px;font-size:16px!important;
-}
 #screen-calc .rt-compact-note{
   font-size:11px;line-height:1.42;color:#c6d8e5;margin:9px 0 0;
 }
