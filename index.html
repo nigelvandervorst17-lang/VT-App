@@ -590,13 +590,15 @@
     <input id="aiSiteKey" type="text" autocomplete="off" placeholder="Sitekey, niet de secret key">
     <button type="button" class="outline-button" id="aiSaveConfig">Verbinding op dit toestel bewaren</button>
     <p class="small-muted">De Gemini API-key en Turnstile-secret staan uitsluitend in de Cloudflare Worker. Alleen deze publieke waarden worden lokaal opgeslagen.</p>
-  </details></div>
+      <div class="ai-settings-privacy">
   <div class="panel ai-context"><label class="ai-check"><input type="checkbox" id="aiSendContext" checked> Huidige RT-invoer en app-uitkomst meesturen bij mijn vraag</label>
     <p class="small-muted">Dit verstuurt uitsluitend relevante RT-velden naar jouw Worker en Google Gemini. Geen bronregister, opgeslagen records, persoonlijke namen of certificaatdocumenten. Op de gratis Gemini-laag kunnen gegevens voor productverbetering worden gebruikt. Uitschakelen kan.</p>
     <div class="ai-actions"><button type="button" id="aiRecalculate" class="ghost-button">Reken opnieuw met app</button>
     <button type="button" id="aiPreviewToggle" class="ghost-button" aria-expanded="false">Bekijk context</button></div>
     <pre id="aiPreview" hidden aria-label="Voorbeeld meegestuurde RT-gegevens"></pre>
   </div>
+    </div>
+  </details></div>
 </section>
 <section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.6 BETA · AI Expert · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">De standaardrekenmodule slaat gegevens lokaal op. Als je AI Expert gebruikt, worden je vraag en optioneel geselecteerde RT-invoer via jouw Worker naar Google Gemini verstuurd.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
 </main>
