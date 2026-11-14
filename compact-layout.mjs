@@ -13,18 +13,20 @@ const thickness = $('rtCompactThickness');
 const film = $('rtCompactFilm');
 const distance = $('rtCompactDistance');
 const density = $('rtCompactDensity');
+const outside = $('rtCompactOutside');
+const wall = $('rtCompactWall');
 let syncing = false;
 
 const translations = {
   nl:{activity:'Activiteit (Ci)',current:'Stroom (mA)',thickness:'Staaldikte t (mm)',penetrated:'Doorstraalde dikte w (mm)',
       locked:'Certificaatmodus actief: wijzig activiteit onder Extra instellingen.',noRuntime:'Geen vrijgegeven belichtingstijd. Controleer de volledige geometrie en brongegevens.',xray:'X-ray: toestel, spanning en stroom moeten met de fabrikantcurve overeenkomen.',
-      summary:'Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding',details:'Meer over onderzoek en beperkingen',title:'Snelle onderzoeksberekening',film:'Filmtype',distance:'Bron-/focus-filmafstand (mm)',density:'Doelzwarting (D)'},
+      summary:'Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding',details:'Meer over onderzoek en beperkingen',title:'Snelle onderzoeksberekening',film:'Filmtype',distance:'Bron-/focus-filmafstand (mm)',density:'Doelzwarting (D)',plate:'Plaat / Las',pipe:'Buis / Pijp',outside:'Buitendiameter Ø (mm)',wall:'Gemeten wanddikte t (mm)',nominal:'Nominaal 2 × t',pipeCaution:'2 × t is een benadering, geen kalibratie. Controleer de werkelijke stralingsweg, IQI en goedgekeurde opnametechniek.',pipeInvalid:'Ongeldige buisgeometrie: controleer Ø, t en w. Er kan geen onderbouwde berekening worden gegeven.',pipeNote:'Nominale dubbele wand',pipeW:'Gekozen doorstraalde dikte w'},
   en:{activity:'Activity (Ci)',current:'Current (mA)',thickness:'Steel thickness t (mm)',penetrated:'Penetrated thickness w (mm)',
       locked:'Certificate mode: edit activity under Advanced settings.',noRuntime:'No approved exposure time. Check geometry and source data.',xray:'X-ray: model, voltage and current must match manufacturer chart.',
-      summary:'Advanced settings · geometry, IQI and preparation',details:'Research limitations',title:'Quick research estimate',film:'Film type',distance:'Source/focus-to-film (mm)',density:'Target optical density (D)'},
+      summary:'Advanced settings · geometry, IQI and preparation',details:'Research limitations',title:'Quick research estimate',film:'Film type',distance:'Source/focus-to-film (mm)',density:'Target optical density (D)',plate:'Plate / Weld',pipe:'Pipe / Tube',outside:'Outside diameter Ø (mm)',wall:'Measured wall thickness t (mm)',nominal:'Nominal 2 × t',pipeCaution:'2 × t is an approximation, not a calibration. Verify the actual beam path, IQI and approved technique.',pipeInvalid:'Invalid pipe geometry: check Ø, t and w. No supported exposure estimate.',pipeNote:'Nominal double wall',pipeW:'Selected penetrated thickness w'},
   pl:{activity:'Aktywność (Ci)',current:'Prąd (mA)',thickness:'Grubość stali t (mm)',penetrated:'Grubość prześwietlana w (mm)',
       locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'RTG: model, napięcie i prąd muszą odpowiadać wykresowi producenta.',
-      summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej',title:'Szybkie obliczenie badawcze',film:'Typ błony',distance:'Odległość źródło/błona (mm)',density:'Docelowa gęstość (D)'}
+      summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej',title:'Szybkie obliczenie badawcze',film:'Typ błony',distance:'Odległość źródło/błona (mm)',density:'Docelowa gęstość (D)',plate:'Blacha / Spoina',pipe:'Rura',outside:'Średnica zewnętrzna Ø (mm)',wall:'Zmierzona grubość ścianki t (mm)',nominal:'Nominalnie 2 × t',pipeCaution:'2 × t to przybliżenie, nie kalibracja. Zweryfikuj rzeczywistą drogę wiązki, IQI i zatwierdzoną technikę.',pipeInvalid:'Nieprawidłowa geometria rury: sprawdź Ø, t i w. Brak wiarygodnego oszacowania.',pipeNote:'Nominalnie dwie ścianki',pipeW:'Wybrana grubość prześwietlana w'}
 };
 const lang=()=>['nl','en','pl'].includes($('language')?.value)?$('language').value:'nl';
 const tr=k=>translations[lang()]?.[k]||translations.nl[k]||k;
@@ -45,11 +47,16 @@ function sync(){
   syncing=true;
   try{
     const g=gamma(),pipe=isPipe(),cert=certificate();
+    const pipeFields=$('rtCompactPipeFields');
+    if(pipeFields)pipeFields.hidden=!pipe;
+    for(const [id,selected] of [['rtCompactPlate',!pipe],['rtCompactPipe',pipe]]){
+      const button=$(id);if(button){button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));}
+    }
     const source=sourceInput();
     const activityLabel=$('rtCompactActivityLabel'),thicknessLabel=$('rtCompactThicknessLabel');
     if(activityLabel)activityLabel.textContent=g?tr('activity'):tr('current');
     if(thicknessLabel)thicknessLabel.textContent=pipe?tr('penetrated'):tr('thickness');
-    for(const [id,label] of [['rtCompactTitle','title'],['rtCompactFilmLabel','film'],['rtCompactDistanceLabel','distance'],['rtCompactDensityLabel','density']]){
+    for(const [id,label] of [['rtCompactTitle','title'],['rtCompactFilmLabel','film'],['rtCompactDistanceLabel','distance'],['rtCompactDensityLabel','density'],['rtCompactOutsideLabel','outside'],['rtCompactWallLabel','wall'],['rtCompactPipeCaution','pipeCaution'],['rtCompactNominal','nominal'],['rtCompactPlate','plate'],['rtCompactPipe','pipe']]){
       const item=$(id);if(item)item.textContent=tr(label);
     }
     for(const [id,active] of [['rtCompactSe',g&&activeIsotope()==='Se-75'],['rtCompactIr',g&&activeIsotope()==='Ir-192'],['rtCompactXray',!g]]){
@@ -60,6 +67,9 @@ function sync(){
     if(disabled) {if(activity&&document.activeElement!==activity)activity.value='';}
     else copy(source,activity);
     copy(thicknessInput(),thickness);
+    copy($('workOutside'),outside);
+    copy($('workWall'),wall);
+    renderPipeInfo(pipe);
     copy($('film'),film);
     copy($('distance'),distance);
     copy($('density'),density);
@@ -73,6 +83,30 @@ function sync(){
     if(help)help.textContent=tr('details');
     updateDensityButtons();
   }finally{syncing=false;}
+}
+function renderPipeInfo(pipe){
+  const output=$('rtCompactPipeStatus');
+  if(!output||!pipe)return;
+  const parse=value=>{
+    const raw=String(value??'').trim().replace(',','.');
+    return /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)?Number(raw):NaN;
+  };
+  const od=parse($('workOutside')?.value);
+  const t=parse($('workWall')?.value);
+  const w=parse($('workPenetrated')?.value);
+  const valid=Number.isFinite(od)&&Number.isFinite(t)&&Number.isFinite(w)&&od>0&&t>0&&t<=100&&t<od/2&&w>0;
+  output.classList.toggle('rt-compact-invalid',!valid);
+  if(!valid){output.textContent=tr('pipeInvalid');return;}
+  const fmt=n=>n.toLocaleString(lang()==='pl'?'pl-PL':lang()==='en'?'en-GB':'nl-NL',{maximumFractionDigits:3});
+  output.textContent=tr('pipeNote')+' 2 × t = '+fmt(2*t)+' mm · '+tr('pipeW')+' = '+fmt(w)+' mm.';
+}
+function selectShape(which){
+  const original=$(which==='pipe'?'workPipe':'workPlate');
+  if(!original)return;
+  if(original.getAttribute('aria-pressed')!=='true')original.click();
+  // Workshape handles the real geometry, retains independent values for plate/pipe,
+  // updates thickness and IQI inputs, and blocks invalid geometry.
+  setTimeout(sync,0);
 }
 function updateDensityButtons(){
   const val=String(density?.value||'').replace(',','.').trim();
@@ -128,6 +162,14 @@ function init(){
   $('rtCompactXray')?.addEventListener('click',()=>selectMode('xray'));
   setupInput(activity,sourceInput);
   setupInput(thickness,thicknessInput);
+  setupInput(outside,()=>$('workOutside'));
+  setupInput(wall,()=>$('workWall'));
+  $('rtCompactPlate')?.addEventListener('click',()=>selectShape('plate'));
+  $('rtCompactPipe')?.addEventListener('click',()=>selectShape('pipe'));
+  $('rtCompactNominal')?.addEventListener('click',()=>{
+    $('workResetDouble')?.click();
+    setTimeout(sync,0);
+  });
   setupInput(film,()=>$('film'));
   setupInput(distance,()=>$('distance'));
   setupInput(density,()=>$('density'));
@@ -143,7 +185,7 @@ function init(){
   },true));
   $('activityJump')?.addEventListener('click',()=>{advanced.open=true;},true);
   document.querySelectorAll('[data-proc-open],#workOpenProcedure').forEach(b=>b.addEventListener('click',()=>{advanced.open=true;},true));
-  const selectors=['workWall','workPenetrated','film','distance','density','manualCi','ma','xrayModel','kv'];
+  const selectors=['workWall','workOutside','workPenetrated','film','distance','density','manualCi','ma','xrayModel','kv'];
   for(const id of selectors){$(id)?.addEventListener('input',()=>requestAnimationFrame(sync));$(id)?.addEventListener('change',()=>requestAnimationFrame(sync));}
   for(const id of ['workPlate','workPipe','modeGamma','modeXray'])$(id)?.addEventListener('click',()=>setTimeout(sync,0));
   document.querySelectorAll('input[name="isotope"],input[name="activityMode"]').forEach(el=>el.addEventListener('change',()=>setTimeout(sync,0)));
@@ -151,6 +193,8 @@ function init(){
   document.querySelectorAll('.bottom-nav [data-nav],#moreMenu [data-nav]').forEach(b=>b.addEventListener('click',()=>setTimeout(sync,0)));
   window.addEventListener('rt-language-changed',sync);
   sync();
+  // The geometry module initializes after this presentation module on some browsers.
+  setTimeout(sync,0);
 }
 function dispatchProxy(input){input.dispatchEvent(new Event('input',{bubbles:true}));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
