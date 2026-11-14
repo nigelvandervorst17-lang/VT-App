@@ -48,7 +48,7 @@ function init(){
   }
  };
  const choose=shape=>{
-  if(lastShape===shape)return;
+  if(lastShape===shape){if(shape==='plate')setTechnique('sw');render();return;}
   if(lastShape==='plate'&&Number.isFinite(num(wall.value))&&num(wall.value)>0)plateT=num(wall.value);
   if(lastShape==='pipe'){if(num(wall.value)>0)pipeT=num(wall.value);if(num(out.value)>0)pipeOD=num(out.value);}
   lastShape=shape;override=false;wall.value=String(shape==='plate'?plateT:pipeT);out.value=String(pipeOD);chips();
@@ -66,6 +66,6 @@ function init(){
  $('workOpenProcedure').addEventListener('click',()=>{const button=document.querySelector('[data-proc-open]');if(button){button.click();if(lastShape==='pipe'){const odField=$('procOD'),tField=$('procT');if(odField&&Number.isFinite(num(out.value))){odField.value=String(num(out.value));evt(odField,'change');}if(tField&&Number.isFinite(num(wall.value))){tField.value=String(num(wall.value));evt(tField,'change');}}}});
  $('language')?.addEventListener('change',translate);window.addEventListener('rt-language-changed',translate);
  // The existing app module has finished initializing before this module executes.
- const initialValue=String(input.value||'25');if(lastShape==='plate'){plateT=Number(initialValue)||25;wall.value=String(plateT);}else{wall.value=String(pipeT);out.value=String(pipeOD);}chips();render();translate();
+ const initialValue=String(input.value||'25');if(lastShape==='plate'){plateT=Number(initialValue)||25;wall.value=String(plateT);}else{wall.value=String(pipeT);out.value=String(pipeOD);}chips();if(lastShape==='plate')setTechnique('sw');render();translate();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
