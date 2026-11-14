@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=395">
+<link rel="stylesheet" href="./styles.css?v=396">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -176,6 +176,61 @@
 <div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
 <section class="screen is-active" data-screen="calc" id="screen-calc">
   <div class="section-heading"><div><p class="overline" data-i18n="workspace">WERKBLAD</p><h1 data-i18n="mainTitle">Belichting berekenen</h1><p class="subtitle" data-i18n="mainSub">Een onderzoeksberekening op basis van traceerbare grafieken.</p></div></div>
+  <!-- Compact research-calculator view. Real input elements remain in extended settings and
+       are bridged by compact-layout.mjs; when JS is unavailable, the full form remains visible. -->
+  <section class="rt-compact-calculator" id="rtCompactPanel" aria-label="Compact rekenoverzicht" hidden>
+    <div class="rt-compact-toolbar">
+      <strong>Snelle onderzoeksberekening</strong>
+      <details class="rt-compact-help">
+        <summary id="rtCompactHelpTitle">ⓘ Grenzen</summary>
+        <p>Software-onderzoeksuitkomst, geen gevalideerde RT-belichtingstijd of vrijgave. Controleer de echte geometrie, actuele brongegevens, filmcondities, IQI en goedgekeurde procedure. Dit scherm geeft geen instructie om een bron of toestel te bedienen.</p>
+      </details>
+    </div>
+    <div class="rt-compact-source" role="group" aria-label="Kies Se-75, Ir-192 of X-ray">
+      <button type="button" id="rtCompactSe" aria-pressed="true" class="active">Se-75</button>
+      <button type="button" id="rtCompactIr" aria-pressed="false">Ir-192</button>
+      <button type="button" id="rtCompactXray" aria-pressed="false">X-ray</button>
+    </div>
+    <div class="rt-compact-grid">
+      <label class="rt-compact-field"><span id="rtCompactActivityLabel">Activiteit (Ci)</span>
+        <input type="text" id="rtCompactActivity" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
+      </label>
+      <label class="rt-compact-field"><span id="rtCompactThicknessLabel">Staaldikte t (mm)</span>
+        <input type="text" id="rtCompactThickness" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
+      </label>
+      <label class="rt-compact-field"><span>Filmtype</span>
+        <select id="rtCompactFilm"><option>D4</option><option>D5</option><option>D7</option></select>
+      </label>
+      <div class="rt-compact-field">
+        <label for="rtCompactDistance">Bron-/focus-filmafstand (mm)</label>
+        <input type="text" id="rtCompactDistance" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
+        <div class="rt-compact-chip-row" role="group" aria-label="Afstand snel kiezen">
+          <button type="button" data-rt-compact-distance="500">500</button>
+          <button type="button" data-rt-compact-distance="800">800</button>
+          <button type="button" data-rt-compact-distance="1000">1000</button>
+        </div>
+      </div>
+      <div class="rt-compact-field rt-compact-wide">
+        <label for="rtCompactDensity">Doelzwarting (D)</label>
+        <input type="text" id="rtCompactDensity" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
+        <div class="rt-compact-chip-row" role="group" aria-label="Doelzwarting snel kiezen">
+          <button type="button" data-rt-compact-density="2.0">2,0</button>
+          <button type="button" data-rt-compact-density="2.5">2,5</button>
+          <button type="button" data-rt-compact-density="2.8">2,8</button>
+          <button type="button" data-rt-compact-density="3.0">3,0</button>
+        </div>
+      </div>
+    </div>
+    <div id="rtCompactXrayEquipment" class="rt-compact-xray" hidden>
+      <p class="small-muted">Kies de werkelijke fabrikantcurve, het toestel en de spanning.</p>
+    </div>
+    <p class="rt-compact-note" id="rtCompactModeNote" role="status">Onderzoeksberekening: geen vrijgegeven belichtingstijd.</p>
+    <div class="rt-compact-result-mount" id="rtCompactResultMount"></div>
+  </section>
+  <details id="rtCompactAdvanced" class="rt-compact-advanced" hidden>
+    <summary id="rtCompactAdvancedLabel">Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding</summary>
+    <div id="rtCompactAdvancedBody"></div>
+  </details>
   <nav class="rt-jumpbar" aria-label="Snel navigeren binnen Rekenen">
     <button type="button" data-rt-jump="workShapePanel" data-rt-jump-key="shape"><span aria-hidden="true">1</span><b>Werkstuk</b></button>
     <button type="button" data-rt-jump="calcInputsHeading" data-rt-jump-key="input"><span aria-hidden="true">3</span><b>Invoer</b></button>
@@ -766,6 +821,7 @@
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
+<script type="module" src="./compact-layout.mjs?v=396"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
