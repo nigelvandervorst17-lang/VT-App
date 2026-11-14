@@ -263,3 +263,28 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-stat
 #screen-ai #aiTurnstile{scroll-margin-bottom:160px}
 #screen-ai .ai-turnstile-label{margin-top:18px}
 @media(max-width:420px){#screen-ai{padding-bottom:calc(182px + env(safe-area-inset-bottom))}#screen-ai #aiMessages{max-height:350px}}
+
+/* UX improvements November 2026 */
+#screen-ai .ai-heading-row{display:flex;align-items:center;justify-content:space-between;gap:9px}
+#screen-ai .ai-heading-row h1{margin:0}
+#screen-ai .ai-settings-button{background:#1c3a55;color:#dcefff;border:1px solid #587b98;border-radius:11px;min-height:41px;padding:8px 10px;font-size:12px;font-weight:800}
+#screen-ai .ai-settings-button:focus-visible{outline:3px solid #a2dcff;outline-offset:2px}
+#screen-ai .ai-warning{padding:9px 12px;margin:10px 0;font-size:12px}
+#screen-ai .ai-warning p{margin:3px 0 0}
+#screen-ai .ai-chat{margin-top:12px}
+#screen-ai .ai-quick-questions{display:flex;gap:7px;flex-wrap:wrap;margin:11px 0 15px}
+#screen-ai .ai-quick-questions button{flex:0 1 auto;min-height:42px;padding:8px 11px;border:1px solid #527fa6;border-radius:24px;background:#173e5a;color:#f1f8ff;font-size:12px;font-weight:800}
+#screen-ai .ai-quick-questions button:focus-visible{outline:3px solid #a2dcff;outline-offset:2px}
+#screen-ai .ai-turnstile-label{color:#a5efdb}
+#screen-ai #aiTurnstile[hidden]{display:none!important;min-height:0!important}
+#screen-ai .ai-config,.ai-context{scroll-margin-top:65px}
+#screen-ai .ai-config details[open] summary{margin-bottom:12px}
+#screen-refs .ref-search-wrap{background:#142c44;border:1px solid #3c6485;border-radius:14px;padding:12px 14px;margin-bottom:16px}
+#screen-refs .ref-search-wrap label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}
+#screen-refs #refQuickSearch{width:100%;min-height:49px;padding:9px 12px;border:1px solid #648eac;border-radius:10px;background:#253e57;color:#fff;font-size:16px}
+#screen-refs .ref-search-hidden{display:none!important}
+#iqiPenetratedWrap{grid-column:1/-1}
+#iqiPenetratedWrap .rt-small-action{display:block;width:100%;min-height:44px;margin-top:10px}
+#geometryPanel .fields-grid>.field-card:last-child{grid-column:1/-1}
+@media(max-width:375px){#geometryPanel .fields-grid>.field-card:last-child{grid-column:auto}}
+#screen-curves #curveUseInCalc:disabled{opacity:.45;cursor:not-allowed}
