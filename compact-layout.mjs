@@ -101,7 +101,7 @@ function selectMode(which){
   }else{
     if(!gamma())$('modeGamma')?.click();
     const original=document.querySelector('input[name="isotope"][value="'+which+'"]');
-    if(original){original.checked=true;dispatch(original);}
+    if(original&&!original.checked){original.checked=true;dispatch(original);}
   }
   setTimeout(sync,0);
 }
