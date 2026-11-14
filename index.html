@@ -180,7 +180,7 @@
        are bridged by compact-layout.mjs; when JS is unavailable, the full form remains visible. -->
   <section class="rt-compact-calculator" id="rtCompactPanel" aria-label="Compact rekenoverzicht" hidden>
     <div class="rt-compact-toolbar">
-      <strong>Snelle onderzoeksberekening</strong>
+      <strong id="rtCompactTitle">Snelle onderzoeksberekening</strong>
       <details class="rt-compact-help">
         <summary id="rtCompactHelpTitle">ⓘ Grenzen</summary>
         <p>Software-onderzoeksuitkomst, geen gevalideerde RT-belichtingstijd of vrijgave. Controleer de echte geometrie, actuele brongegevens, filmcondities, IQI en goedgekeurde procedure. Dit scherm geeft geen instructie om een bron of toestel te bedienen.</p>
@@ -198,11 +198,11 @@
       <label class="rt-compact-field"><span id="rtCompactThicknessLabel">Staaldikte t (mm)</span>
         <input type="text" id="rtCompactThickness" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
       </label>
-      <label class="rt-compact-field"><span>Filmtype</span>
+      <label class="rt-compact-field"><span id="rtCompactFilmLabel">Filmtype</span>
         <select id="rtCompactFilm"><option>D4</option><option>D5</option><option>D7</option></select>
       </label>
       <div class="rt-compact-field">
-        <label for="rtCompactDistance">Bron-/focus-filmafstand (mm)</label>
+        <label for="rtCompactDistance" id="rtCompactDistanceLabel">Bron-/focus-filmafstand (mm)</label>
         <input type="text" id="rtCompactDistance" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
         <div class="rt-compact-chip-row" role="group" aria-label="Afstand snel kiezen">
           <button type="button" data-rt-compact-distance="500">500</button>
@@ -211,7 +211,7 @@
         </div>
       </div>
       <div class="rt-compact-field rt-compact-wide">
-        <label for="rtCompactDensity">Doelzwarting (D)</label>
+        <label for="rtCompactDensity" id="rtCompactDensityLabel">Doelzwarting (D)</label>
         <input type="text" id="rtCompactDensity" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactModeNote">
         <div class="rt-compact-chip-row" role="group" aria-label="Doelzwarting snel kiezen">
           <button type="button" data-rt-compact-density="2.0">2,0</button>
@@ -821,7 +821,7 @@
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
-<script type="module" src="./compact-layout.mjs?v=396"></script>
+<script type="module" src="./compact-layout.mjs?v=397"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
