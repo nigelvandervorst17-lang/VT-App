@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=391">
+<link rel="stylesheet" href="./styles.css?v=393">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -448,7 +448,88 @@
   <p class="rt30-sm">Fabrikant-PDF's blijven externe links; niet gekopieerd naar de openbaar te publiceren app. Gebruik de originele normedities en tekeningen voor vrijgave.</p>
 </section>
 </section>
-<section class="screen" data-screen="records" id="screen-records" hidden><div class="section-heading"><p class="overline" data-i18n="historyOverline">LOKAAL</p><h1 data-i18n="records">Onderzoeksrecords</h1><p class="subtitle" data-i18n="recordsSub">Alleen op dit apparaat opgeslagen. Geen vrijgegeven RT-opnameverslagen.</p></div><div id="recordList" class="record-list"></div><div class="record-tools"><button class="outline-button" type="button" id="exportRecords" data-i18n="exportRecords">Exporteer JSON</button><button class="outline-button danger-button" type="button" id="clearRecords" data-i18n="clearRecords">Wis records</button></div></section>
+<section class="screen" data-screen="records" id="screen-records" hidden>
+  <div class="section-heading"><p class="overline">FYSIEKE FILMTESTEN · LOKAAL</p>
+    <h1>Praktijkmetingen</h1>
+    <p class="subtitle">Registreer werkelijk gemaakte filmopnames en gemeten filmzwarting, apart van Waygate-softwarecurves en onderzoeksberekeningen.</p></div>
+  <div class="panel ft-panel" id="fieldTestsPanel">
+    <h2>Densitometerregister</h2>
+    <p class="small-muted"><strong>Dit zijn alleen jouw eigen meetregistraties.</strong> Alle records blijven lokaal in deze browser. Er worden geen meetgegevens aan GitHub, Cloudflare of Gemini verzonden. Exporteren is nodig voor een back-up of overdracht naar een ander toestel.</p>
+    <p class="ft-unverified">Door gebruiker geregistreerd ≠ onafhankelijk gecontroleerd. Geen automatische belichtingscurve, normvrijgave of beoordeling van stralingsveiligheid.</p>
+    <details id="ftFormDetails" class="ft-details" open>
+      <summary>+ Fysieke filmtest toevoegen of bewerken</summary>
+      <form id="ftForm" autocomplete="off">
+        <div class="ft-grid">
+          <label>Testnummer *<input id="ftTestId" maxlength="72" required placeholder="Eigen uniek testnummer"></label>
+          <label>Werkelijke opnamedatum *<input id="ftDate" type="date" required></label>
+          <label>Stralingsbron / toestel *<select id="ftSource" required>
+            <option value="">Kies de bron</option><option value="Se-75">Se-75</option>
+            <option value="Ir-192">Ir-192</option><option value="Co-60">Co-60</option>
+            <option value="X-ray">Röntgen</option><option value="other">Overig</option></select></label>
+          <label>Bronreferentie / toestelmodel<input id="ftSourceRef" maxlength="80" placeholder="Optioneel"></label>
+          <label>Materiaal *<select id="ftMaterial" required><option value="">Kies materiaal</option>
+            <option value="Fe">Staal (Fe)</option><option value="RVS">RVS</option>
+            <option value="Al">Aluminium</option><option value="other">Overig</option></select></label>
+          <label>Werkelijke materiaaldikte (mm) *<input id="ftThickness" inputmode="decimal" required placeholder="mm"></label>
+          <label>Filmtype *<select id="ftFilm" required><option value="">Kies film</option>
+            <option>D4</option><option>D5</option><option>D7</option><option value="other">Andere film</option></select></label>
+          <label>Filmnummer / batch<input id="ftFilmBatch" maxlength="90" placeholder="Optioneel"></label>
+          <label>Werkelijke belichtingstijd *<input id="ftExposure" required inputmode="text" placeholder="mm:ss of seconden"></label>
+          <label>Werkelijke SFD / FFD (mm)<input id="ftDistance" inputmode="decimal" placeholder="mm"></label>
+          <label>Bronactiviteit op opnamedatum (Ci)<input id="ftActivity" inputmode="decimal" placeholder="Voor gamma"></label>
+          <label>Röntgenspanning (kV)<input id="ftKv" inputmode="decimal" placeholder="Voor röntgen"></label>
+          <label>Röntgenstroom (mA)<input id="ftMa" inputmode="decimal" placeholder="Voor röntgen"></label>
+          <label>Opnametechniek<select id="ftGeometry"><option value="">Niet geregistreerd</option>
+            <option>SWSI</option><option>DWDI</option><option>DWSI</option><option value="other">Anders</option></select></label>
+          <label>Schermen<select id="ftScreens"><option value="">Niet geregistreerd</option>
+            <option value="Pb">Lood (Pb)</option><option value="none">Geen</option><option value="other">Anders</option></select></label>
+        </div>
+        <h3>Gemeten filmzwarting met densitometer</h3>
+        <div class="ft-grid ft-density-grid">
+          <label>D-meting 1 *<input id="ftD1" required inputmode="decimal" placeholder="D, werkelijk gemeten"></label>
+          <label>D-meting 2<input id="ftD2" inputmode="decimal" placeholder="Optioneel"></label>
+          <label>D-meting 3<input id="ftD3" inputmode="decimal" placeholder="Optioneel"></label>
+          <label>Meetpositie(s)<input id="ftReadPosition" maxlength="120" placeholder="Bijv. lasgebied of basismateriaal"></label>
+          <label>Densitometer-ID<input id="ftDensitometer" maxlength="80" placeholder="Optioneel"></label>
+        </div>
+        <h3>Verwerking en filmbeoordeling</h3>
+        <div class="ft-grid">
+          <label>Filmverwerking<select id="ftProcessing"><option value="">Niet geregistreerd</option>
+            <option value="manual">Handmatig</option><option value="automatic">Automatisch</option>
+            <option value="other">Anders</option></select></label>
+          <label>Ontwikkeltemperatuur (°C)<input id="ftTemp" inputmode="decimal" placeholder="Optioneel"></label>
+          <label>Ontwikkeltijd (min)<input id="ftDevelopMin" inputmode="decimal" placeholder="Optioneel"></label>
+          <label>Visuele filmbeoordeling<select id="ftFilmCheck">
+            <option value="not-reviewed">Niet vastgelegd</option><option value="looks-good">Visueel goed volgens registratie</option>
+            <option value="anomaly">Afwijking gemeld</option></select></label>
+          <label>IQI-waarneming<select id="ftIqi">
+            <option value="not-reviewed">Niet beoordeeld</option>
+            <option value="visible">Zichtbaar genoteerd</option>
+            <option value="not-visible">Niet zichtbaar</option></select></label>
+        </div>
+        <label class="ft-notes">Opmerkingen / afwijkingen<textarea id="ftNotes" maxlength="800" rows="3" placeholder="Bijvoorbeeld filmfout, gebruikte procedure of bijzonderheden"></textarea></label>
+        <div class="ft-actions">
+          <button type="submit" id="ftSave" class="calculate-button">Praktijktest opslaan</button>
+          <button type="button" id="ftNew" class="ghost-button">Nieuw / leeg formulier</button>
+        </div>
+        <p class="small-muted">* verplicht. D1–D3 zijn afzonderlijke metingen; de app berekent hieruit bewust geen gemiddelde of correctiefactor.</p>
+      </form>
+    </details>
+    <p id="ftStatus" class="ft-status" role="status" aria-live="polite"></p>
+    <div class="ft-register-heading"><h3 id="ftCount">0 fysieke filmtesten lokaal bewaard</h3></div>
+    <div id="ftList" class="ft-list"></div>
+    <div class="ft-export-grid">
+      <button type="button" class="outline-button" id="ftExportJson">Back-up als JSON</button>
+      <button type="button" class="outline-button" id="ftExportCsv">Export als CSV</button>
+    </div>
+    <label class="ft-import-label" for="ftImport">Importeer eigen JSON-back-up (vervangt lokale praktijkmetingen)</label>
+    <input type="file" id="ftImport" accept=".json,application/json">
+    <p class="small-muted">Bewaar de originele densitometer- en filmtestregistraties apart. De lokale opslag kan verdwijnen wanneer browsergegevens worden gewist.</p>
+  </div>
+  <div class="section-heading ft-research-heading"><h2>Afzonderlijke software-onderzoeksrecords</h2><p class="subtitle">Dit zijn berekende resultaten, geen fysieke filmmetingen.</p></div>
+  <div id="recordList" class="record-list"></div>
+  <div class="record-tools"><button class="outline-button" type="button" id="exportRecords" data-i18n="exportRecords">Exporteer JSON</button><button class="outline-button danger-button" type="button" id="clearRecords" data-i18n="clearRecords">Wis records</button></div>
+</section>
 
 <section class="screen" data-screen="tools" id="screen-tools" hidden>
   <p class="overline">WERKGEREEDSCHAP · 3.8.2 BETA</p>
@@ -668,6 +749,7 @@
 })();
 </script>
 <script type="module" src="./app.mjs?v=391"></script>
+<script type="module" src="./field-tests.mjs?v=393"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=391"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
