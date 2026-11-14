@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=396">
+<link rel="stylesheet" href="./styles.css?v=398">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -190,6 +190,25 @@
       <button type="button" id="rtCompactSe" aria-pressed="true" class="active">Se-75</button>
       <button type="button" id="rtCompactIr" aria-pressed="false">Ir-192</button>
       <button type="button" id="rtCompactXray" aria-pressed="false">X-ray</button>
+    </div>
+    <div class="rt-compact-shape" role="group" aria-label="Werkstukvorm">
+      <button type="button" id="rtCompactPlate" class="active" aria-pressed="true">Plaat / Las</button>
+      <button type="button" id="rtCompactPipe" aria-pressed="false">Buis / Pijp</button>
+    </div>
+    <div class="rt-compact-pipe" id="rtCompactPipeFields" hidden>
+      <div class="rt-compact-pipe-grid">
+        <label class="rt-compact-field"><span id="rtCompactOutsideLabel">Buitendiameter Ø (mm)</span>
+          <input id="rtCompactOutside" type="text" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactPipeStatus">
+        </label>
+        <label class="rt-compact-field"><span id="rtCompactWallLabel">Gemeten wanddikte t (mm)</span>
+          <input id="rtCompactWall" type="text" inputmode="decimal" autocomplete="off" aria-describedby="rtCompactPipeStatus">
+        </label>
+      </div>
+      <div class="rt-compact-pipe-assist">
+        <p id="rtCompactPipeStatus" role="status" aria-live="polite">Controleer Ø, t en de werkelijke doorstraalde dikte.</p>
+        <button id="rtCompactNominal" type="button">Nominaal 2 × t</button>
+      </div>
+      <p class="rt-compact-pipe-caution" id="rtCompactPipeCaution">2 × t is een benadering, geen kalibratie. Controleer de werkelijke stralingsweg, IQI en goedgekeurde opnametechniek.</p>
     </div>
     <div class="rt-compact-grid">
       <label class="rt-compact-field"><span id="rtCompactActivityLabel">Activiteit (Ci)</span>
@@ -821,7 +840,7 @@
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
-<script type="module" src="./compact-layout.mjs?v=397"></script>
+<script type="module" src="./compact-layout.mjs?v=398"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
