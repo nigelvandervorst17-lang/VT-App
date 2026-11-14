@@ -579,3 +579,51 @@ body{font-synthesis:none}
   #screen-calc .rt-compact-source button{min-height:43px}
   #screen-calc .rt-compact-chip-row button{min-height:37px}
 }
+
+/* Pipe geometry controls in the compact calculator; no exposure recalibration. */
+#screen-calc .rt-compact-shape{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+  margin:0 0 11px;
+}
+#screen-calc .rt-compact-shape button{
+  min-height:44px;min-width:0;border-radius:11px;
+  padding:9px 5px;background:#19384f;
+  border:1px solid #4c7895;color:#e8f5ff;
+  font-weight:800;font-size:12px;
+}
+#screen-calc .rt-compact-shape button.active{
+  border-color:#7dd2c9;background:#16534f;color:#e5fff5;
+}
+#screen-calc .rt-compact-pipe{
+  margin:0 0 11px;padding:10px 10px 9px;background:#102b41;
+  border:1px solid #4a7590;border-radius:12px;
+}
+#screen-calc .rt-compact-pipe-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+#screen-calc .rt-compact-pipe .rt-compact-field{padding:8px}
+#screen-calc .rt-compact-pipe .rt-compact-field>input{
+  min-height:47px;height:47px;font-size:19px;
+}
+#screen-calc .rt-compact-pipe-assist{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;margin-top:9px;
+}
+#screen-calc .rt-compact-pipe-assist p{
+  flex:1 1 auto;margin:0;font-size:11px;line-height:1.45;color:#c7e9e3;
+}
+#screen-calc .rt-compact-pipe-assist p.rt-compact-invalid{color:#ffbfae}
+#screen-calc .rt-compact-pipe-assist button{
+  flex:0 0 auto;min-height:41px;max-width:128px;
+  padding:8px 10px;border-radius:9px;border:1px solid #668ca6;
+  background:#21435c;color:#eefaff;font-size:11px;font-weight:800;
+}
+#screen-calc .rt-compact-pipe-caution{
+  font-size:11px;line-height:1.48;margin:8px 0 0;color:#c8dae6;
+}
+@media(max-width:380px){
+  #screen-calc .rt-compact-pipe-grid{gap:7px}
+  #screen-calc .rt-compact-pipe .rt-compact-field{padding:7px}
+  #screen-calc .rt-compact-pipe-assist{align-items:stretch;flex-direction:column}
+  #screen-calc .rt-compact-pipe-assist button{max-width:none;width:100%;min-height:40px}
+}
