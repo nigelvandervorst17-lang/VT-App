@@ -57,10 +57,11 @@ function values(){
  };
 }
 function matching(points,context,axis){
+ const varying=axis==='semilog'?['energyKv','thicknessMm']:[{density:'density',thickness:'thicknessMm',kv:'energyKv'}[axis]];
  const keep=['energyKv','currentMa','thicknessMm','sourceDetectorMm','film','material','density']
-  .filter(k=>k!==({density:'density',thickness:'thicknessMm',kv:'energyKv'}[axis]));
+  .filter(k=>!varying.includes(k));
  return !context.pipe?points.filter(p=>keep.every(k=>typeof p[k]==='number'?equal(p[k],context[k]):p[k]===context[k]))
-  .sort((a,b)=>a[{density:'density',thickness:'thicknessMm',kv:'energyKv'}[axis]]-b[{density:'density',thickness:'thicknessMm',kv:'energyKv'}[axis]]):[];
+  .sort((a,b)=>axis==='semilog'?(a.energyKv-b.energyKv||a.thicknessMm-b.thicknessMm):a[varying[0]]-b[varying[0]]):[];
 }
 function svgNode(tag,attributes={},text){
  const el=document.createElementNS(ns,tag);
@@ -113,6 +114,86 @@ function drawGraph(points,axis,root){
   'text-anchor':'middle',fill:'#d2eaf8','font-size':11},'Softwaretijd (s)'));
  root.append(svg);
 }
+/* Semi-log research chart: thickness linear, exposure mA·min logarithmic.
+ * Only observed Waygate software points, no extrapolation or predictions.
+ */
+function drawSemiLog(points,root){
+ const width=360,height=308,left=62,right=18,top=17,bottom=67;
+ const plotWidth=width-left-right,plotHeight=height-top-bottom;
+ const exposures=points.map(p=>p.currentMa*p.timeSeconds/60);
+ let xmin=Math.min(...points.map(p=>p.thicknessMm)),xmax=Math.max(...points.map(p=>p.thicknessMm));
+ const spread=Math.max((xmax-xmin)*0.08,0.7);
+ xmin=Math.max(0,xmin-spread);xmax+=spread;
+ let minLog=Math.log10(Math.min(...exposures)),maxLog=Math.log10(Math.max(...exposures));
+ if(maxLog-minLog<0.5){minLog-=0.3;maxLog+=0.3;}
+ else{minLog-=0.10;maxLog+=0.12;}
+ const X=n=>left+(n-xmin)/(xmax-xmin)*plotWidth;
+ const Y=n=>top+(maxLog-Math.log10(n))/(maxLog-minLog)*plotHeight;
+ const svg=svgNode('svg',{viewBox:'0 0 360 308',role:'img',
+  'aria-label':'Semi-log Waygate software-referentie. X: staaldikte in mm, lineair. Y: mA·min, logaritmisch. Geen voorspellingen.'});
+ const tickText=n=>Number(n.toPrecision(3)).toLocaleString('nl-NL',{maximumFractionDigits:4});
+ const low=Math.floor(minLog),high=Math.ceil(maxLog);
+ for(let decade=low;decade<=high;decade++){
+  const n=10**decade;
+  if(Math.log10(n)<minLog||Math.log10(n)>maxLog)continue;
+  const y=Y(n);
+  svg.append(svgNode('line',{x1:left,y1:y,x2:width-right,y2:y,stroke:'#49738c','stroke-width':1}));
+  svg.append(svgNode('text',{x:left-9,y:y+4,'text-anchor':'end',fill:'#d1e7f1','font-size':11},tickText(n)));
+  for(const factor of [2,5]){
+   const v=n*factor;
+   if(Math.log10(v)>maxLog)continue;
+   svg.append(svgNode('line',{x1:left,y1:Y(v),x2:width-right,y2:Y(v),stroke:'#2c4b61','stroke-width':0.7,'stroke-dasharray':'2 3'}));
+  }
+ }
+ for(const value of [xmin,(xmin+xmax)/2,xmax]){
+  const x=X(value);
+  svg.append(svgNode('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#32536a','stroke-width':1}));
+  svg.append(svgNode('text',{x,y:height-bottom+17,'text-anchor':'middle',fill:'#cce5f2','font-size':11},format(value)));
+ }
+ const grouped=new Map();
+ for(const point of points){
+  if(!grouped.has(point.energyKv))grouped.set(point.energyKv,[]);
+  grouped.get(point.energyKv).push(point);
+ }
+ const palette=['#89f4d0','#73bcff','#f5cf79','#e8a0d5','#f0a18d','#bac5ff'];
+ let k=0,joined=0;
+ const legend=[];
+ for(const [kv,original] of grouped){
+  const group=original.slice().sort((a,b)=>a.thicknessMm-b.thicknessMm);
+  const color=palette[k++%palette.length];
+  legend.push({kv,color,pointCount:group.length});
+  const distinctX=new Set(group.map(p=>p.thicknessMm));
+  if(group.length>=2&&distinctX.size===group.length){
+   joined++;
+   svg.append(svgNode('polyline',{
+    points:group.map(p=>X(p.thicknessMm)+','+Y(p.currentMa*p.timeSeconds/60)).join(' '),
+    fill:'none',stroke:color,'stroke-width':2,'stroke-dasharray':'5 4','stroke-linecap':'round'
+   }));
+  }
+  for(const p of group){
+   const cx=X(p.thicknessMm),cy=Y(p.currentMa*p.timeSeconds/60);
+   const circle=svgNode('circle',{cx,cy,r:4.6,fill:color,stroke:'#0c2538','stroke-width':1.5});
+   const label=format(kv)+' kV · '+format(p.thicknessMm)+' mm Fe · '+format(p.currentMa*p.timeSeconds/60)+' mA·min · '+timeLabel(p.timeSeconds)+' uit Waygate';
+   circle.append(svgNode('title',{},label));
+   svg.append(circle);
+  }
+ }
+ svg.append(svgNode('text',{x:(left+width-right)/2,y:height-35,'text-anchor':'middle',fill:'#d2eaf8','font-size':12},'Staaldikte (mm) — lineair'));
+ svg.append(svgNode('text',{transform:'translate(13 '+(top+plotHeight/2)+') rotate(-90)',
+  'text-anchor':'middle',fill:'#d2eaf8','font-size':12},'mA·min — logaritmisch'));
+ root.append(svg);
+ const legendBox=document.createElement('div');
+ legendBox.className='rt-waygate-legend';
+ for(const line of legend){
+  const item=document.createElement('span');
+  const dot=document.createElement('i');dot.style.backgroundColor=line.color;dot.setAttribute('aria-hidden','true');
+  const txt=document.createElement('span');txt.textContent=format(line.kv)+' kV ('+line.pointCount+' punt'+(line.pointCount===1?'':'en')+')';
+  item.append(dot,txt);legendBox.append(item);
+ }
+ root.append(legendBox);
+ return {curves:grouped.size,joined,points:points.length};
+}
+
 function graph(){
  const root=$('rtWaygateGraph'),note=$('rtWaygateGraphNote'),count=$('rtWaygateGraphCount');
  if(!root||!note)return;
@@ -125,8 +206,18 @@ function graph(){
   placeholder.className='rt-waygate-empty';
   placeholder.textContent='Geen geregistreerde Waygate-softwarepunten voor de huidige overige instellingen.';
   root.append(placeholder);
-  note.textContent='Verander alleen de gekozen grafiekvariabele; alle overige instellingen moeten overeenkomen. '+
-   'Gebruik eventueel de knop “Vul de beschikbare Waygate-voorbeeldgegevens in”.';
+  note.textContent=axis==='semilog'
+   ?'Voor deze film, D, mA en afstand zijn nog geen Waygate-punten. Voeg verschillende staaldiktes en spanningen toe; er wordt geen tijd berekend.'
+   :'Verander alleen de gekozen grafiekvariabele; alle overige instellingen moeten overeenkomen. Gebruik eventueel de knop “Vul de beschikbare Waygate-voorbeeldgegevens in”.';
+  return;
+ }
+ if(axis==='semilog'){
+  const view=drawSemiLog(selected,root);
+  note.textContent=view.points+' bekende Waygate-softwarepunten verdeeld over '+view.curves+' kV-waarde(n). '+
+   (view.joined?'Gestreepte lijnen verbinden uitsluitend softwarepunten, niet berekende tussentijden. ':
+   'Nog geen volledige kV-lijn: verzamel minimaal twee diktes bij dezelfde kV. ')+
+   'Film, doelzwarting, mA en afstand zijn gelijk gehouden; schermen/ontwikkelproces zijn nog niet vastgelegd. '+
+   'Dit is geen gevalideerde belichtingsgrafiek.';
   return;
  }
  drawGraph(selected,axis,root);
