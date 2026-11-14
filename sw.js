@@ -1,5 +1,5 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='basic-rt-pro-v3.8.9-waygate-local-20261114-j';
+const CACHE='basic-rt-pro-v3.9.0-waygate-no-model-20261114-k';
 const ASSETS=['./','./index.html','./styles.css','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./xray-waygate-local.mjs','./workflow-shape.mjs','./reference-recovery.mjs',
 './ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
