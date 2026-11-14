@@ -708,3 +708,7 @@ body{font-synthesis:none}
 #screen-calc #rtCompactKvField>input{
   font-variant-numeric:tabular-nums;
 }
+
+/* X-ray software comparison is model-free. Keep legacy vendor curves in the DOM
+   for archives and code compatibility, but never ask for a tube model in the calculator. */
+#screen-calc.rt-compact-ready #xrayFields{display:none!important}
