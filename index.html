@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=403">
+<link rel="stylesheet" href="./styles.css?v=405">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -253,6 +253,31 @@
       <p class="rt-waygate-live-caution">Softwarevergelijking, geen gekalibreerde of vrijgegeven RT-belichtingstijd. Geen startfunctie.</p>
     </section>
     <div class="rt-compact-result-mount" id="rtCompactResultMount"></div>
+    <details id="rtWaygateAtlas" class="rt-waygate-reference rt-waygate-atlas" hidden>
+      <summary>Eigen Waygate-grafiek <span id="rtWaygateGraphCount">Referentiepunten</span></summary>
+      <div class="rt-waygate-content">
+        <p class="small-muted"><strong>Onderzoeksgrafiek op basis van overgenomen Waygate-softwaregegevens.</strong> Alleen bekende punten, geen voorspelde belichtingstijden.</p>
+        <label class="rt-waygate-import" for="rtWaygateGraphAxis">Wat wil je vergelijken?</label>
+        <select id="rtWaygateGraphAxis" class="rt-waygate-axis">
+          <option value="density">Doelzwarting D → softwaretijd</option>
+          <option value="thickness">Staaldikte (mm) → softwaretijd</option>
+          <option value="kv">Spanning (kV) → softwaretijd</option>
+        </select>
+        <div id="rtWaygateGraph" class="rt-waygate-graph" role="img" aria-label="Waygate-referentiepunten uit de software"></div>
+        <p id="rtWaygateGraphNote" class="small-muted" role="status">Er worden alleen punten getoond bij vergelijkbare invoerwaarden.</p>
+        <div class="rt-waygate-newpoint">
+          <label class="rt-waygate-import" for="rtWaygatePointTime">Nieuwe softwaretijd uit Waygate bij de huidige X-ray-invoer</label>
+          <input id="rtWaygatePointTime" type="text" inputmode="numeric" autocomplete="off" placeholder="uu:mm:ss">
+          <button id="rtWaygatePointAdd" type="button">Waygate-punt lokaal toevoegen</button>
+        </div>
+        <p class="small-muted">Neem uitsluitend de tijd over die Waygate daadwerkelijk toont. De overige velden komen uit het X-ray-scherm. Je hoeft geen buismodel te kiezen. Geen echte film- of densitometerwaarden invoeren.</p>
+        <div class="rt-waygate-actions">
+          <button id="rtWaygatePointExport" type="button">Exporteer extra punten</button>
+          <button id="rtWaygatePointClear" type="button">Wis extra punten</button>
+        </div>
+        <p id="rtWaygatePointStatus" class="rt-waygate-status" role="status" aria-live="polite"></p>
+      </div>
+    </details>
     <details id="rtWaygateReference" class="rt-waygate-reference" hidden>
       <summary>Waygate X-ray-softwarepunten <span id="rtWaygateCount">Nog geen lokale punten</span></summary>
       <div class="rt-waygate-content">
@@ -865,8 +890,9 @@
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
-<script type="module" src="./compact-layout.mjs?v=402"></script>
-<script type="module" src="./xray-waygate-local.mjs?v=404"></script>
+<script type="module" src="./compact-layout.mjs?v=405"></script>
+<script type="module" src="./xray-waygate-local.mjs?v=405"></script>
+<script type="module" src="./xray-waygate-atlas.mjs?v=405"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
