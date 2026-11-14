@@ -232,7 +232,13 @@ function receiveSharedSoftwarePoints(){
   history.replaceState(history.state,'',cleanUrl);
   if(!reference.ok){message('De Waygate-link is ongeldig: '+reference.error,true);return;}
   if(current){
-   message('Bestaande lokale Waygate-gegevens blijven bewaard. Verwijder ze eerst als je een ander referentieset wilt laden.');
+   const a=current.conditions,b=reference.data.conditions;
+   const same=['energyKv','currentMa','thicknessMm','sourceDetectorMm','film','material'].every(k=>a[k]===b[k])&&
+    JSON.stringify(current.points)===JSON.stringify(reference.data.points);
+   if(same){
+    message('Dezelfde vijf Waygate-softwarepunten staan al op dit toestel. De waarden worden nu ingevuld.');
+    setTimeout(useReference,150);
+   }else message('Andere lokale Waygate-gegevens zijn al opgeslagen. Maak eerst een back-up en wis deze als je de vijf voorbeeldpunten wilt laden.');
    return;
   }
   if(save(reference.data)){
