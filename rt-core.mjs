@@ -1,3 +1,4 @@
+import {materialSteelEquivalent} from './material-equivalence.mjs';
 import {densityCorrectionFactor,FILM_RESPONSE} from './film-response.mjs';
 /**
  * BASIC RT PRO 2.0 — RESEARCH MODE ONLY.
@@ -7,6 +8,7 @@ import {densityCorrectionFactor,FILM_RESPONSE} from './film-response.mjs';
 export const HALF_LIFE_DAYS = Object.freeze({'Se-75':119.78,'Ir-192':73.827});
 export const ERROR = Object.freeze({
   INVALID:'invalid', MATERIAL:'material', NO_CURVE:'no_curve', DENSITY:'density',
+  THICKNESS_INPUT:'thickness_input', ZERO_THICKNESS:'zero_thickness',
   FILM:'film', RANGE:'range', KV:'kv', MA:'ma', CHART_LIMIT:'chart_limit',
   DATE:'date', SOURCE:'source', GEOMETRY:'geometry', MODEL:'model'
 });
@@ -72,25 +74,75 @@ export function interpolateLog(points,mm){
   return NaN;
 }
 function inputValid(thicknessMm,distanceMm){
-  return [thicknessMm,distanceMm].every(finite)&&thicknessMm>0&&distanceMm>thicknessMm&&
-      thicknessMm<=1000&&distanceMm<=100000;
+  return [thicknessMm,distanceMm].every(finite)&&thicknessMm>=0&&distanceMm>0&&
+      thicknessMm<=100&&distanceMm<=100000;
 }
 export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,activityCi,material='Fe',screens='Pb'},db){
   if(!inputValid(thicknessMm,distanceMm)||!finite(activityCi)||activityCi<=0||activityCi>100000) return {ok:false,error:ERROR.INVALID};
-  if(material!=='Fe'||screens!=='Pb') return {ok:false,error:ERROR.MATERIAL};
+  if(screens!=='Pb')return {ok:false,error:ERROR.MATERIAL};
+  const equivalence=materialSteelEquivalent({material,thicknessMm,mode:'gamma',isotope});
+  if(!equivalence.ok)return equivalence;
+  const effectiveMm=equivalence.steelEquivalentMm;
   const ds=db?.gamma?.[isotope];
   if(!ds) return {ok:false,error:ERROR.NO_CURVE};
   if(!ds.curves?.[film]) return {ok:false,error:ERROR.FILM};
+  // Basic RT PRO 3.8 beta: user-supplied Waygate software comparison model.
+  // Only Fe/Pb, only explicitly scoped films, steel thicknesses and film densities.
+  // Film ratios and density slopes are empirically inferred, not OEM equations.
+  // Other source strengths/SFDs use physical scaling, not Waygate direct validation.
+  const waygate=ds.waygateModel;
+  if(waygate){
+    const profile=waygate.films?.[film];
+    if(!profile)return {ok:false,error:ERROR.FILM};
+    if(material!=='Fe')return {ok:false,error:ERROR.MATERIAL};
+    if(!finite(density)||density<profile.minDensity||density>profile.maxDensity)
+      return {ok:false,error:ERROR.DENSITY,minDensity:profile.minDensity,maxDensity:profile.maxDensity};
+    if(effectiveMm<profile.minThicknessMm||effectiveMm>profile.maxThicknessMm)
+      return {ok:false,error:ERROR.RANGE,lower:profile.minThicknessMm,upper:profile.maxThicknessMm,equivalentMm:effectiveMm,material};
+    const d4CiHours=interpolateLog(waygate.d4Points,effectiveMm);
+    const ciHours=d4CiHours*profile.factorRelativeD4;
+    const densityFactor=1+profile.densitySlope*(density-waygate.referenceDensity);
+    const minutes=ciHours*60/activityCi*(distanceMm/waygate.referenceCiHoursDistanceMm)**2*densityFactor;
+    if(!finite(minutes)||minutes<=0||minutes>1e9)return {ok:false,error:ERROR.INVALID};
+    return {ok:true,minutes,exposure:ciHours,exposureUnit:'Ci·h',
+      datasetId:waygate.datasetId,sourceTitle:waygate.sourceTitle,sourceUrl:undefined,
+      referenceDistanceMm:waygate.referenceCiHoursDistanceMm,referenceDensity:waygate.referenceDensity,
+      targetDensity:density,densityFactor,densityMethod:'waygate_linear_per_film_research',
+      filmFactorDerived:film!=='D4',filmFactorRelativeD4:profile.factorRelativeD4,
+      filmFactorSource:'Waygate software comparison, not verified OEM coefficients',
+      status:'WAYGATE_SOFTWARE_FIT; model_interpolation; source_activity_and_distance_scaled; NOT_APPROVED_FOR_EXPOSURES',
+      material,physicalThicknessMm:thicknessMm,equivalentSteelMm:effectiveMm,materialFactor:1,
+      materialFactorSource:'Fe reference; no material conversion',materialFactorApproximate:false,
+      comparisonOnly:true,method:waygate.method,
+      benchmarkReferenceActivityCi:waygate.referenceActivityCi,
+      benchmarkReferenceDistanceMm:waygate.referenceDistanceMm,
+      benchmarkMinMm:profile.minThicknessMm,benchmarkMaxMm:profile.maxThicknessMm};
+  }
   const densityModel=densityCorrectionFactor({film,isotope,density,baseDensity:ds.density});
   if(!densityModel.ok)return {ok:false,error:ERROR.DENSITY,requiredDensity:ds.density,minDensity:FILM_RESPONSE.minDensity,maxDensity:FILM_RESPONSE.maxDensity};
   // A comparison series (if explicitly present) is scoped to the exact isotope+film,
   // with its own range and provenance. No extrapolation or silent OEM-curve fallback.
-  const comparison=ds.comparisonSeries?.[film];
+  // For Se-75, preserve D4 as the sole benchmark curve. D5/D7 are derived with
+  // film-specific ratios from Waygate software outputs (D=2.0, steel, Pb).
+  // Fitted on 10 & 25 mm; 15 & 30 mm are independent rounded-second checks.
+  // This is not a physical calibration; do not silently extrapolate beyond 10–30 mm.
+  const relativeFilm = isotope==='Se-75' ? ds.comparisonFilmScaling?.[film] : undefined;
+  const d4Comparison = ds.comparisonSeries?.D4;
+  const derivedComparison = relativeFilm && d4Comparison ? {
+    ...d4Comparison,...relativeFilm,
+    points:d4Comparison.points,
+    status:relativeFilm.status,
+    sourceTitle:relativeFilm.sourceTitle,
+    datasetId:relativeFilm.datasetId,
+    method:relativeFilm.method
+  } : undefined;
+  const comparison=derivedComparison ?? ds.comparisonSeries?.[film];
   const minimum=comparison?.minThicknessMm ?? ds.minThicknessMm;
   const maximum=comparison?.maxThicknessMm ?? ds.maxThicknessMm;
-  if(thicknessMm<minimum||thicknessMm>maximum) return {ok:false,error:ERROR.RANGE,lower:minimum,upper:maximum};
+  if(effectiveMm<minimum||effectiveMm>maximum) return {ok:false,error:ERROR.RANGE,lower:minimum,upper:maximum,equivalentMm:effectiveMm,material};
   const points=comparison?.points ?? ds.curves[film];
-  const ciHours=interpolateLog(points,thicknessMm);
+  const baseCiHours=interpolateLog(points,effectiveMm);
+  const ciHours=baseCiHours * (derivedComparison ? relativeFilm.factorRelativeD4 : 1);
   if(!finite(ciHours)||ciHours<=0) return {ok:false,error:ERROR.NO_CURVE};
   const minutes=ciHours*60/activityCi*(distanceMm/ds.referenceDistanceMm)**2 * densityModel.factor;
   if(!finite(minutes)||minutes<=0||minutes>1e9) return {ok:false,error:ERROR.INVALID};
@@ -101,8 +153,11 @@ export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,acti
     sourceUrl:comparison ? undefined : ds.sourceUrl,
     referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,
     densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,
-    filmFactorDerived:Boolean(ds.derivedFilms?.[film]),
-    status:(comparison?.status ?? ds.status)+(density!==ds.density?'; film_density_model_unvalidated':'')+(ds.derivedFilms?.[film]?'; film_factor_derived_unverified':''),
+    filmFactorDerived:Boolean(ds.derivedFilms?.[film] || derivedComparison),
+    filmFactorRelativeD4:derivedComparison ? relativeFilm.factorRelativeD4 : undefined,
+    filmFactorSource:derivedComparison ? 'Waygate software comparison: 10,25mm; holdout 15,30mm; D=2.0' : undefined,
+    status:(comparison?.status ?? ds.status)+(density!==ds.density?'; film_density_model_unvalidated':'')+(derivedComparison&&density!==ds.density?'; factor_outside_D2.0_unverified':'')+(ds.derivedFilms?.[film]?'; film_factor_derived_unverified':''),
+    material,physicalThicknessMm:thicknessMm,equivalentSteelMm:effectiveMm,materialFactor:equivalence.factor,materialFactorSource:equivalence.source,materialFactorApproximate:equivalence.researchOnly,
     comparisonOnly:Boolean(comparison),
     method:comparison?.method,
     benchmarkReferenceActivityCi:comparison?.referenceActivityCi,
@@ -112,7 +167,9 @@ export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,acti
 }
 export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,material='Fe'},db){
   if(!inputValid(thicknessMm,distanceMm)||!finite(ma)||ma<=0||ma>1000) return {ok:false,error:ERROR.INVALID};
-  if(material!=='Fe') return {ok:false,error:ERROR.MATERIAL};
+  const equivalence=materialSteelEquivalent({material,thicknessMm,mode:'xray',kv});
+  if(!equivalence.ok)return equivalence;
+  const effectiveMm=equivalence.steelEquivalentMm;
   const ds=db?.xray?.[model];
   if(!ds) return {ok:false,error:ERROR.MODEL};
   if(ds.enabled===false || !Array.isArray(ds.curves) || ds.curves.length===0) return {ok:false,error:ERROR.NO_CURVE};
@@ -122,12 +179,12 @@ export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,m
   if(!finite(kv)||!Number.isInteger(kv)) return {ok:false,error:ERROR.KV};
   const line=ds.curves.find(x=>x.kv===kv);
   if(!line) return {ok:false,error:ERROR.KV,availableKv:ds.curves.map(c=>c.kv)};
-  if(thicknessMm<line.minThicknessMm||thicknessMm>line.maxThicknessMm) return {ok:false,error:ERROR.RANGE,lower:line.minThicknessMm,upper:line.maxThicknessMm};
-  const mam=Math.pow(10,thicknessMm*line.log10MamPerMm+line.log10MamIntercept);
+  if(effectiveMm<line.minThicknessMm||effectiveMm>line.maxThicknessMm) return {ok:false,error:ERROR.RANGE,lower:line.minThicknessMm,upper:line.maxThicknessMm,equivalentMm:effectiveMm,material};
+  const mam=Math.pow(10,effectiveMm*line.log10MamPerMm+line.log10MamIntercept);
   if(!finite(mam)||mam<line.minMam-1e-7||mam>line.maxMam+1e-7) return {ok:false,error:ERROR.CHART_LIMIT};
   const minutes=(mam/ma)*(distanceMm/ds.referenceDistanceMm)**2 * densityModel.factor;
   if(!finite(minutes)||minutes<=0||minutes>1e9) return {ok:false,error:ERROR.INVALID};
-  return {ok:true,minutes,exposure:mam,exposureUnit:'mA·min',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,screens:ds.screens,status:ds.status+(density!==ds.density?'; 200kv_film_response_applied_to_equipment_unvalidated':'')};
+  return {ok:true,minutes,material,physicalThicknessMm:thicknessMm,equivalentSteelMm:effectiveMm,materialFactor:equivalence.factor,materialFactorSource:equivalence.source,materialFactorApproximate:equivalence.researchOnly,exposure:mam,exposureUnit:'mA·min',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,screens:ds.screens,status:ds.status+(density!==ds.density?'; 200kv_film_response_applied_to_equipment_unvalidated':'')};
 }
 export function hms(minutes){
   if(!finite(minutes)||minutes<=0) return '—';

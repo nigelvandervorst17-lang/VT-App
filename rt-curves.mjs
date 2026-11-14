@@ -1,602 +1,510 @@
-/* BASIC RT PRO 3.3 — research only. User supplied Waygate D4 comparison points, NOT OEM graph or exposure release. */
+/* BASIC RT PRO 3.8 BETA — USER WAYGATE SOFTWARE COMPARISON, NOT APPROVED FOR EXPOSURES */
 export const curves = {
-  "version": "2026.11.13-agfa-filmresponse-v3.4",
-  "restriction": "Research-only. D2/D3/D8 gamma derived from AGFA relative factors and D7 only; densities beyond 2.0 from sensitometric curve 200kV; NOT independently validated.",
+  "version": "2026.11.14-waygate-se75-ir192-D4D5D7-v3.8-beta",
+  "restriction": "Waygate-softwarevergelijking: Se75 D4 1–40 mm, D5/D7 4–30 mm; Ir192 D4 4–100 mm, D5/D7 20–50 mm; film-specifieke D 1,4/1,5–3,9. Afstand/Ci fysisch geschaald; geen praktijkvalidatie. D2/D3/D8 verwijderd uit gammacalculator.",
   "gamma": {
     "Se-75": {
-      "datasetId": "waygate-se75-20261104-vector-unvalidated",
+      "datasetId": "waygate-se75-D4-D5-D7-20261114-v3.8-beta",
       "sourceTitle": "Waygate/AGFA Radiographic Film Systems — exposure diagrams printed p16",
       "sourceUrl": "https://dam.bakerhughes.com/m/15e84aab13c9d73d/original/Radiographic-Film-Systems-Brochure_EN_LR.pdf",
       "sourceLocal": "AGFA Structurix films.pdf, page 9",
-      "status": "vector_coordinates_crosschecked_exposure_not_validated",
+      "status": "Waygate software comparison; not practice validated",
       "material": "Fe",
       "screens": "Pb",
       "density": 2.0,
       "referenceDistanceMm": 1000,
       "unit": "Ci·h",
-      "minThicknessMm": 5,
+      "minThicknessMm": 1,
       "maxThicknessMm": 40,
       "curves": {
         "D4": [
           {
+            "mm": 1,
+            "ci_h": 8.26388888888889
+          },
+          {
+            "mm": 2,
+            "ci_h": 8.836805555555555
+          },
+          {
+            "mm": 4,
+            "ci_h": 10.104166666666666
+          },
+          {
             "mm": 5,
-            "ci_h": 10.8
+            "ci_h": 10.79861111111111
+          },
+          {
+            "mm": 8,
+            "ci_h": 13.194444444444445
           },
           {
             "mm": 10,
-            "ci_h": 15.4
+            "ci_h": 15.069444444444445
+          },
+          {
+            "mm": 12,
+            "ci_h": 17.22222222222222
           },
           {
             "mm": 15,
-            "ci_h": 21.9
+            "ci_h": 21.024305555555554
+          },
+          {
+            "mm": 17,
+            "ci_h": 24.02777777777778
           },
           {
             "mm": 20,
-            "ci_h": 31.1
+            "ci_h": 29.35763888888889
           },
           {
             "mm": 25,
-            "ci_h": 44.2
+            "ci_h": 40.95486111111111
           },
           {
             "mm": 30,
-            "ci_h": 62.9
+            "ci_h": 57.15277777777778
           },
           {
             "mm": 35,
-            "ci_h": 89.3
+            "ci_h": 79.75694444444444
           },
           {
             "mm": 40,
-            "ci_h": 127.0
+            "ci_h": 111.30208333333333
           }
         ],
         "D5": [
           {
+            "mm": 4,
+            "ci_h": 5.906025709558707
+          },
+          {
             "mm": 5,
-            "ci_h": 5.65
+            "ci_h": 6.31193812945965
+          },
+          {
+            "mm": 8,
+            "ci_h": 7.712335978117901
           },
           {
             "mm": 10,
-            "ci_h": 8.07
+            "ci_h": 8.808299511850445
+          },
+          {
+            "mm": 12,
+            "ci_h": 10.066628013543363
           },
           {
             "mm": 15,
-            "ci_h": 11.5
+            "ci_h": 12.288998512501022
+          },
+          {
+            "mm": 17,
+            "ci_h": 14.044569728572597
           },
           {
             "mm": 20,
-            "ci_h": 16.4
+            "ci_h": 17.159947551312328
           },
           {
             "mm": 25,
-            "ci_h": 23.4
+            "ci_h": 23.93868496365806
           },
           {
             "mm": 30,
-            "ci_h": 33.4
-          },
-          {
-            "mm": 35,
-            "ci_h": 47.6
-          },
-          {
-            "mm": 40,
-            "ci_h": 67.9
+            "ci_h": 33.406592157847534
           }
         ],
         "D7": [
           {
+            "mm": 4,
+            "ci_h": 4.312490998376938
+          },
+          {
             "mm": 5,
-            "ci_h": 4.16
+            "ci_h": 4.608882132286006
+          },
+          {
+            "mm": 8,
+            "ci_h": 5.63143154427229
           },
           {
             "mm": 10,
-            "ci_h": 5.92
+            "ci_h": 6.431687605826774
+          },
+          {
+            "mm": 12,
+            "ci_h": 7.350500120944884
           },
           {
             "mm": 15,
-            "ci_h": 8.43
+            "ci_h": 8.97324157909703
+          },
+          {
+            "mm": 17,
+            "ci_h": 10.25513323325375
           },
           {
             "mm": 20,
-            "ci_h": 12.0
+            "ci_h": 12.529935186005845
           },
           {
             "mm": 25,
-            "ci_h": 17.1
+            "ci_h": 17.479667122287278
           },
           {
             "mm": 30,
-            "ci_h": 24.3
-          },
-          {
-            "mm": 35,
-            "ci_h": 34.6
-          },
-          {
-            "mm": 40,
-            "ci_h": 49.3
-          }
-        ],
-        "D2": [
-          {
-            "mm": 5,
-            "ci_h": 26.624
-          },
-          {
-            "mm": 10,
-            "ci_h": 37.888
-          },
-          {
-            "mm": 15,
-            "ci_h": 53.952
-          },
-          {
-            "mm": 20,
-            "ci_h": 76.8
-          },
-          {
-            "mm": 25,
-            "ci_h": 109.44
-          },
-          {
-            "mm": 30,
-            "ci_h": 155.52
-          },
-          {
-            "mm": 35,
-            "ci_h": 221.44
-          },
-          {
-            "mm": 40,
-            "ci_h": 315.52
-          }
-        ],
-        "D3": [
-          {
-            "mm": 5,
-            "ci_h": 14.976
-          },
-          {
-            "mm": 10,
-            "ci_h": 21.312
-          },
-          {
-            "mm": 15,
-            "ci_h": 30.348
-          },
-          {
-            "mm": 20,
-            "ci_h": 43.2
-          },
-          {
-            "mm": 25,
-            "ci_h": 61.56
-          },
-          {
-            "mm": 30,
-            "ci_h": 87.48
-          },
-          {
-            "mm": 35,
-            "ci_h": 124.56
-          },
-          {
-            "mm": 40,
-            "ci_h": 177.48
-          }
-        ],
-        "D8": [
-          {
-            "mm": 5,
-            "ci_h": 2.496
-          },
-          {
-            "mm": 10,
-            "ci_h": 3.552
-          },
-          {
-            "mm": 15,
-            "ci_h": 5.058
-          },
-          {
-            "mm": 20,
-            "ci_h": 7.2
-          },
-          {
-            "mm": 25,
-            "ci_h": 10.26
-          },
-          {
-            "mm": 30,
-            "ci_h": 14.58
-          },
-          {
-            "mm": 35,
-            "ci_h": 20.76
-          },
-          {
-            "mm": 40,
-            "ci_h": 29.58
+            "ci_h": 24.39299032071629
           }
         ]
       },
-      "vectorCoordinateCheck": {
-        "date": "2026-11-13",
-        "technique": "Second fitz vector-path extraction and independently reapplied logarithmic grid calibration to original AGFA PDF page 9 (printed p16).",
-        "all24PointsChecked": true,
-        "count": 24,
-        "maxAbsoluteStoredVsVectorPercent": 0.384,
-        "D4_25mm_originalVector_Cih": 44.23097,
-        "D4_25mm_stored_Cih": 44.2,
-        "warning": "This is coordinate/digitization verification only, not a film-density or exposure-time validation. Do not calibrate 8% from Waygate results."
-      },
-      "comparisonSeries": {
-        "D4": {
-          "datasetId": "se75-d4-waygate-user-ref9-20261113-research",
-          "sourceTitle": "Waygate calculator, 9 door gebruiker opgegeven schermuitkomsten (geen OEM-curve)",
-          "status": "comparison_interpolated_not_practice_validated",
-          "sourceKind": "user_supplied_waygate_reference_outputs",
-          "method": "Log-lineaire interpolatie van Ci·h tussen negen Waygate-punten; activiteit omgekeerd evenredig en afstand kwadratisch geschaald (beide fysische aannames niet afzonderlijk gemeten).",
-          "material": "Fe",
-          "screens": "Pb",
-          "density": 2.0,
-          "film": "D4",
-          "isotope": "Se-75",
-          "referenceActivityCi": 40,
-          "referenceDistanceMm": 800,
-          "minThicknessMm": 5,
-          "maxThicknessMm": 30,
-          "points": [
-            {
-              "mm": 5,
-              "secondsAt40Ci800mm": 622,
-              "ci_h": 10.79861111111111
-            },
-            {
-              "mm": 8,
-              "secondsAt40Ci800mm": 760,
-              "ci_h": 13.194444444444445
-            },
-            {
-              "mm": 10,
-              "secondsAt40Ci800mm": 868,
-              "ci_h": 15.069444444444443
-            },
-            {
-              "mm": 12,
-              "secondsAt40Ci800mm": 992,
-              "ci_h": 17.22222222222222
-            },
-            {
-              "mm": 15,
-              "secondsAt40Ci800mm": 1211,
-              "ci_h": 21.024305555555557
-            },
-            {
-              "mm": 17,
-              "secondsAt40Ci800mm": 1384,
-              "ci_h": 24.027777777777775
-            },
-            {
-              "mm": 20,
-              "secondsAt40Ci800mm": 1691,
-              "ci_h": 29.357638888888886
-            },
-            {
-              "mm": 25,
-              "secondsAt40Ci800mm": 2359,
-              "ci_h": 40.95486111111111
-            },
-            {
-              "mm": 30,
-              "secondsAt40Ci800mm": 3292,
-              "ci_h": 57.15277777777777
-            }
-          ],
-          "caution": "Referentiepunten voor 40 Ci / 800 mm / D=2.0. Tussenpunten zijn geïnterpoleerd; andere afstanden en activiteiten zijn geschaald, niet rechtstreeks door de negen screenshots bevestigd. Niet vrijgegeven voor RT-opnames."
-        }
-      },
-      "derivedFilms": {
-        "D2": {
-          "method": "AGFA_relative_film_factor_times_existing_D7_curve",
-          "factorRelativeToD7": 6.4,
-          "status": "derived_not_independently_verified",
-          "sourcePage": 13
+      "waygateModel": {
+        "datasetId": "waygate-se75-D4-D5-D7-20261114-v3.8-beta",
+        "sourceTitle": "Gebruiker verstrekte Waygate-software-uitkomsten, 14-11-2026; geen fysische kalibratie",
+        "sourceKind": "user_supplied_software_outputs",
+        "status": "RESEARCH_ONLY_NOT_APPROVED_FOR_RT_EXPOSURES",
+        "referenceActivityCi": 40,
+        "referenceDistanceMm": 800,
+        "referenceDensity": 2.0,
+        "referenceCiHoursDistanceMm": 1000,
+        "baseFilm": "D4",
+        "d4Points": [
+          {
+            "mm": 1,
+            "secondsAt40Ci800mm": 476,
+            "ci_h": 8.26388888888889
+          },
+          {
+            "mm": 2,
+            "secondsAt40Ci800mm": 509,
+            "ci_h": 8.836805555555555
+          },
+          {
+            "mm": 4,
+            "secondsAt40Ci800mm": 582,
+            "ci_h": 10.104166666666666
+          },
+          {
+            "mm": 5,
+            "secondsAt40Ci800mm": 622,
+            "ci_h": 10.79861111111111
+          },
+          {
+            "mm": 8,
+            "secondsAt40Ci800mm": 760,
+            "ci_h": 13.194444444444445
+          },
+          {
+            "mm": 10,
+            "secondsAt40Ci800mm": 868,
+            "ci_h": 15.069444444444445
+          },
+          {
+            "mm": 12,
+            "secondsAt40Ci800mm": 992,
+            "ci_h": 17.22222222222222
+          },
+          {
+            "mm": 15,
+            "secondsAt40Ci800mm": 1211,
+            "ci_h": 21.024305555555554
+          },
+          {
+            "mm": 17,
+            "secondsAt40Ci800mm": 1384,
+            "ci_h": 24.02777777777778
+          },
+          {
+            "mm": 20,
+            "secondsAt40Ci800mm": 1691,
+            "ci_h": 29.35763888888889
+          },
+          {
+            "mm": 25,
+            "secondsAt40Ci800mm": 2359,
+            "ci_h": 40.95486111111111
+          },
+          {
+            "mm": 30,
+            "secondsAt40Ci800mm": 3292,
+            "ci_h": 57.15277777777778
+          },
+          {
+            "mm": 35,
+            "secondsAt40Ci800mm": 4594,
+            "ci_h": 79.75694444444444
+          },
+          {
+            "mm": 40,
+            "secondsAt40Ci800mm": 6411,
+            "ci_h": 111.30208333333333
+          }
+        ],
+        "films": {
+          "D4": {
+            "factorRelativeD4": 1.0,
+            "minThicknessMm": 1.0,
+            "maxThicknessMm": 40.0,
+            "minDensity": 1.4,
+            "maxDensity": 3.9,
+            "densitySlope": 0.6495,
+            "status": "waygate_software_comparison_only"
+          },
+          "D5": {
+            "factorRelativeD4": 0.5845138846573567,
+            "minThicknessMm": 4.0,
+            "maxThicknessMm": 30.0,
+            "minDensity": 1.5,
+            "maxDensity": 3.9,
+            "densitySlope": 0.6542,
+            "status": "waygate_software_comparison_only"
+          },
+          "D7": {
+            "factorRelativeD4": 0.4268032328290578,
+            "minThicknessMm": 4.0,
+            "maxThicknessMm": 30.0,
+            "minDensity": 1.5,
+            "maxDensity": 3.9,
+            "densitySlope": 0.69318,
+            "status": "waygate_software_comparison_only"
+          }
         },
-        "D3": {
-          "method": "AGFA_relative_film_factor_times_existing_D7_curve",
-          "factorRelativeToD7": 3.6,
-          "status": "derived_not_independently_verified",
-          "sourcePage": 13
-        },
-        "D8": {
-          "method": "AGFA_relative_film_factor_times_existing_D7_curve",
-          "factorRelativeToD7": 0.6,
-          "status": "derived_not_independently_verified",
-          "sourcePage": 13
-        }
-      },
-      "filmFactorsRelativeD7": {
-        "D2": 6.4,
-        "D3": 3.6,
-        "D4": 2.4,
-        "D5": 1.4,
-        "D7": 1.0,
-        "D8": 0.6
+        "unresolved": "15 Ci: Waygate 38:15 instead of 1/Ci prediction 38:35; do not fit activity correction",
+        "method": "log_linear_interpolation_D4; empirical_film_factor_and_linear_density_by_film; inverse_activity_square_distance"
       }
     },
     "Ir-192": {
-      "datasetId": "waygate-ir192-20261113-vector-unvalidated",
+      "datasetId": "waygate-ir192-D4-D5-D7-20261114-v3.8-beta",
       "sourceTitle": "Waygate/AGFA Radiographic Film Systems — exposure diagrams printed p16",
       "sourceUrl": "https://dam.bakerhughes.com/m/15e84aab13c9d73d/original/Radiographic-Film-Systems-Brochure_EN_LR.pdf",
       "sourceLocal": "AGFA Structurix films.pdf, page 9",
-      "status": "vector_digitized_unverified",
+      "status": "Waygate software comparison; not practice validated",
       "material": "Fe",
       "screens": "Pb",
       "density": 2.0,
       "referenceDistanceMm": 1000,
       "unit": "Ci·h",
-      "minThicknessMm": 10,
-      "maxThicknessMm": 90,
+      "minThicknessMm": 4,
+      "maxThicknessMm": 100,
       "curves": {
         "D4": [
           {
+            "mm": 4,
+            "ci_h": 5.416666666666667
+          },
+          {
+            "mm": 5,
+            "ci_h": 5.677083333333333
+          },
+          {
             "mm": 10,
-            "ci_h": 5.269
+            "ci_h": 7.204861111111111
+          },
+          {
+            "mm": 15,
+            "ci_h": 9.131944444444445
           },
           {
             "mm": 20,
-            "ci_h": 9.439
+            "ci_h": 11.57986111111111
+          },
+          {
+            "mm": 25,
+            "ci_h": 14.6875
           },
           {
             "mm": 30,
-            "ci_h": 16.908
+            "ci_h": 18.62847222222222
           },
           {
             "mm": 40,
-            "ci_h": 30.287
+            "ci_h": 29.930555555555554
           },
           {
             "mm": 50,
-            "ci_h": 54.254
+            "ci_h": 48.125
           },
           {
             "mm": 60,
-            "ci_h": 97.186
+            "ci_h": 77.36111111111111
           },
           {
             "mm": 70,
-            "ci_h": 174.091
+            "ci_h": 124.54861111111111
           },
           {
             "mm": 80,
-            "ci_h": 311.853
+            "ci_h": 199.93055555555554
           },
           {
             "mm": 90,
-            "ci_h": 558.629
+            "ci_h": 321.38888888888886
+          },
+          {
+            "mm": 100,
+            "ci_h": 516.6145833333334
           }
         ],
         "D5": [
           {
-            "mm": 10,
-            "ci_h": 2.627
+            "mm": 20,
+            "ci_h": 7.428944097222222
           },
           {
-            "mm": 20,
-            "ci_h": 4.706
+            "mm": 25,
+            "ci_h": 9.42261875
           },
           {
             "mm": 30,
-            "ci_h": 8.429
+            "ci_h": 11.950910069444443
           },
           {
             "mm": 40,
-            "ci_h": 15.099
+            "ci_h": 19.20164861111111
           },
           {
             "mm": 50,
-            "ci_h": 27.047
-          },
-          {
-            "mm": 60,
-            "ci_h": 48.45
-          },
-          {
-            "mm": 70,
-            "ci_h": 86.79
-          },
-          {
-            "mm": 80,
-            "ci_h": 155.467
-          },
-          {
-            "mm": 90,
-            "ci_h": 278.49
+            "ci_h": 30.8741125
           }
         ],
         "D7": [
           {
-            "mm": 10,
-            "ci_h": 1.694
+            "mm": 20,
+            "ci_h": 4.743690104166666
           },
           {
-            "mm": 20,
-            "ci_h": 3.036
+            "mm": 25,
+            "ci_h": 6.016734375
           },
           {
             "mm": 30,
-            "ci_h": 5.44
+            "ci_h": 7.631153645833333
           },
           {
             "mm": 40,
-            "ci_h": 9.747
+            "ci_h": 12.261052083333333
           },
           {
             "mm": 50,
-            "ci_h": 17.465
-          },
-          {
-            "mm": 60,
-            "ci_h": 31.294
-          },
-          {
-            "mm": 70,
-            "ci_h": 56.074
-          },
-          {
-            "mm": 80,
-            "ci_h": 100.474
-          },
-          {
-            "mm": 90,
-            "ci_h": 180.032
-          }
-        ],
-        "D2": [
-          {
-            "mm": 10,
-            "ci_h": 13.552
-          },
-          {
-            "mm": 20,
-            "ci_h": 24.288
-          },
-          {
-            "mm": 30,
-            "ci_h": 43.52
-          },
-          {
-            "mm": 40,
-            "ci_h": 77.976
-          },
-          {
-            "mm": 50,
-            "ci_h": 139.72
-          },
-          {
-            "mm": 60,
-            "ci_h": 250.352
-          },
-          {
-            "mm": 70,
-            "ci_h": 448.592
-          },
-          {
-            "mm": 80,
-            "ci_h": 803.792
-          },
-          {
-            "mm": 90,
-            "ci_h": 1440.256
-          }
-        ],
-        "D3": [
-          {
-            "mm": 10,
-            "ci_h": 8.47
-          },
-          {
-            "mm": 20,
-            "ci_h": 15.18
-          },
-          {
-            "mm": 30,
-            "ci_h": 27.2
-          },
-          {
-            "mm": 40,
-            "ci_h": 48.735
-          },
-          {
-            "mm": 50,
-            "ci_h": 87.325
-          },
-          {
-            "mm": 60,
-            "ci_h": 156.47
-          },
-          {
-            "mm": 70,
-            "ci_h": 280.37
-          },
-          {
-            "mm": 80,
-            "ci_h": 502.37
-          },
-          {
-            "mm": 90,
-            "ci_h": 900.16
-          }
-        ],
-        "D8": [
-          {
-            "mm": 10,
-            "ci_h": 1.0164
-          },
-          {
-            "mm": 20,
-            "ci_h": 1.8216
-          },
-          {
-            "mm": 30,
-            "ci_h": 3.264
-          },
-          {
-            "mm": 40,
-            "ci_h": 5.8482
-          },
-          {
-            "mm": 50,
-            "ci_h": 10.479
-          },
-          {
-            "mm": 60,
-            "ci_h": 18.7764
-          },
-          {
-            "mm": 70,
-            "ci_h": 33.6444
-          },
-          {
-            "mm": 80,
-            "ci_h": 60.2844
-          },
-          {
-            "mm": 90,
-            "ci_h": 108.0192
+            "ci_h": 19.71440625
           }
         ]
       },
-      "derivedFilms": {
-        "D2": {
-          "method": "AGFA_relative_film_factor_times_existing_D7_curve",
-          "factorRelativeToD7": 8.0,
-          "status": "derived_not_independently_verified",
-          "sourcePage": 13
+      "waygateModel": {
+        "datasetId": "waygate-ir192-D4-D5-D7-20261114-v3.8-beta",
+        "sourceTitle": "Gebruiker verstrekte Waygate-software-uitkomsten, 14-11-2026; geen fysische kalibratie",
+        "sourceKind": "user_supplied_software_outputs",
+        "status": "RESEARCH_ONLY_NOT_APPROVED_FOR_RT_EXPOSURES",
+        "referenceActivityCi": 40,
+        "referenceDistanceMm": 800,
+        "referenceDensity": 2.0,
+        "referenceCiHoursDistanceMm": 1000,
+        "baseFilm": "D4",
+        "d4Points": [
+          {
+            "mm": 4,
+            "secondsAt40Ci800mm": 312,
+            "ci_h": 5.416666666666667
+          },
+          {
+            "mm": 5,
+            "secondsAt40Ci800mm": 327,
+            "ci_h": 5.677083333333333
+          },
+          {
+            "mm": 10,
+            "secondsAt40Ci800mm": 415,
+            "ci_h": 7.204861111111111
+          },
+          {
+            "mm": 15,
+            "secondsAt40Ci800mm": 526,
+            "ci_h": 9.131944444444445
+          },
+          {
+            "mm": 20,
+            "secondsAt40Ci800mm": 667,
+            "ci_h": 11.57986111111111
+          },
+          {
+            "mm": 25,
+            "secondsAt40Ci800mm": 846,
+            "ci_h": 14.6875
+          },
+          {
+            "mm": 30,
+            "secondsAt40Ci800mm": 1073,
+            "ci_h": 18.62847222222222
+          },
+          {
+            "mm": 40,
+            "secondsAt40Ci800mm": 1724,
+            "ci_h": 29.930555555555554
+          },
+          {
+            "mm": 50,
+            "secondsAt40Ci800mm": 2772,
+            "ci_h": 48.125
+          },
+          {
+            "mm": 60,
+            "secondsAt40Ci800mm": 4456,
+            "ci_h": 77.36111111111111
+          },
+          {
+            "mm": 70,
+            "secondsAt40Ci800mm": 7174,
+            "ci_h": 124.54861111111111
+          },
+          {
+            "mm": 80,
+            "secondsAt40Ci800mm": 11516,
+            "ci_h": 199.93055555555554
+          },
+          {
+            "mm": 90,
+            "secondsAt40Ci800mm": 18512,
+            "ci_h": 321.38888888888886
+          },
+          {
+            "mm": 100,
+            "secondsAt40Ci800mm": 29757,
+            "ci_h": 516.6145833333334
+          }
+        ],
+        "films": {
+          "D4": {
+            "factorRelativeD4": 1.0,
+            "minThicknessMm": 4.0,
+            "maxThicknessMm": 100.0,
+            "minDensity": 1.5,
+            "maxDensity": 3.9,
+            "densitySlope": 0.64985,
+            "status": "waygate_software_comparison_only"
+          },
+          "D5": {
+            "factorRelativeD4": 0.64154,
+            "minThicknessMm": 20.0,
+            "maxThicknessMm": 50.0,
+            "minDensity": 1.5,
+            "maxDensity": 3.9,
+            "densitySlope": 0.653,
+            "status": "waygate_software_comparison_only"
+          },
+          "D7": {
+            "factorRelativeD4": 0.40965,
+            "minThicknessMm": 20.0,
+            "maxThicknessMm": 50.0,
+            "minDensity": 1.5,
+            "maxDensity": 3.9,
+            "densitySlope": 0.6939,
+            "status": "waygate_software_comparison_only"
+          }
         },
-        "D3": {
-          "method": "AGFA_relative_film_factor_times_existing_D7_curve",
-          "factorRelativeToD7": 5.0,
-          "status": "derived_not_independently_verified",
-          "sourcePage": 13
-        },
-        "D8": {
-          "method": "AGFA_relative_film_factor_times_existing_D7_curve",
-          "factorRelativeToD7": 0.6,
-          "status": "derived_not_independently_verified",
-          "sourcePage": 13
-        }
-      },
-      "filmFactorsRelativeD7": {
-        "D2": 8.0,
-        "D3": 5.0,
-        "D4": 3.0,
-        "D5": 1.5,
-        "D7": 1.0,
-        "D8": 0.6
+        "unresolved": "D5/D7 only checked at 20 and 50 mm; density curves checked at 20 mm only",
+        "method": "log_linear_interpolation_D4; empirical_film_factor_and_linear_density_by_film; inverse_activity_square_distance"
       }
     }
   },

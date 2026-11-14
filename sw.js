@@ -1,7 +1,7 @@
-/* Basic RT PRO 3.4 — network first; COMET references and resilient install */
-const CACHE='basic-rt-pro-v3.4-filmresponse-20261113';
+/* Basic RT PRO 3.8 BETA — network first; COMET references and resilient install */
+const CACHE='basic-rt-pro-v3.8-se75-ir192-d4d5d7-20261114';
 const ASSETS=['./','./index.html','./styles.css','./app.mjs','./reference-recovery.mjs',
-'./rt-core.mjs','./film-response.mjs','./iqi.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
+'./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',
 './manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./brand-logo.png',
