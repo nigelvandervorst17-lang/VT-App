@@ -19,13 +19,13 @@ let syncing = false;
 
 const translations = {
   nl:{activity:'Activiteit (Ci)',current:'Stroom (mA)',thickness:'Staaldikte t (mm)',penetrated:'Doorstraalde dikte w (mm)',
-      locked:'Certificaatmodus actief: wijzig activiteit onder Extra instellingen.',noRuntime:'Geen vrijgegeven belichtingstijd. Controleer de volledige geometrie en brongegevens.',xray:'X-ray: toestel, spanning en stroom moeten met de fabrikantcurve overeenkomen.',
+      locked:'Certificaatmodus actief: wijzig activiteit onder Extra instellingen.',noRuntime:'Geen vrijgegeven belichtingstijd. Controleer de volledige geometrie en brongegevens.',xray:'X-ray: kies merk, model en kV onder Extra instellingen.',
       summary:'Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding',details:'Meer over onderzoek en beperkingen',title:'Snelle onderzoeksberekening',film:'Filmtype',distance:'Bron-/focus-filmafstand (mm)',density:'Doelzwarting (D)',plate:'Plaat / Las',pipe:'Buis / Pijp',outside:'Buitendiameter Ø (mm)',wall:'Gemeten wanddikte t (mm)',nominal:'Nominaal 2 × t',pipeCaution:'2 × t is een benadering, geen kalibratie. Controleer de werkelijke stralingsweg, IQI en goedgekeurde opnametechniek.',pipeInvalid:'Ongeldige buisgeometrie: controleer Ø, t en w. Er kan geen onderbouwde berekening worden gegeven.',pipeNote:'Nominale dubbele wand',pipeW:'Gekozen doorstraalde dikte w'},
   en:{activity:'Activity (Ci)',current:'Current (mA)',thickness:'Steel thickness t (mm)',penetrated:'Penetrated thickness w (mm)',
-      locked:'Certificate mode: edit activity under Advanced settings.',noRuntime:'No approved exposure time. Check geometry and source data.',xray:'X-ray: model, voltage and current must match manufacturer chart.',
+      locked:'Certificate mode: edit activity under Advanced settings.',noRuntime:'No approved exposure time. Check geometry and source data.',xray:'X-ray: select brand, model and kV under Advanced settings.',
       summary:'Advanced settings · geometry, IQI and preparation',details:'Research limitations',title:'Quick research estimate',film:'Film type',distance:'Source/focus-to-film (mm)',density:'Target optical density (D)',plate:'Plate / Weld',pipe:'Pipe / Tube',outside:'Outside diameter Ø (mm)',wall:'Measured wall thickness t (mm)',nominal:'Nominal 2 × t',pipeCaution:'2 × t is an approximation, not a calibration. Verify the actual beam path, IQI and approved technique.',pipeInvalid:'Invalid pipe geometry: check Ø, t and w. No supported exposure estimate.',pipeNote:'Nominal double wall',pipeW:'Selected penetrated thickness w'},
   pl:{activity:'Aktywność (Ci)',current:'Prąd (mA)',thickness:'Grubość stali t (mm)',penetrated:'Grubość prześwietlana w (mm)',
-      locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'RTG: model, napięcie i prąd muszą odpowiadać wykresowi producenta.',
+      locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'RTG: wybierz markę, model i kV w ustawieniach dodatkowych.',
       summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej',title:'Szybkie obliczenie badawcze',film:'Typ błony',distance:'Odległość źródło/błona (mm)',density:'Docelowa gęstość (D)',plate:'Blacha / Spoina',pipe:'Rura',outside:'Średnica zewnętrzna Ø (mm)',wall:'Zmierzona grubość ścianki t (mm)',nominal:'Nominalnie 2 × t',pipeCaution:'2 × t to przybliżenie, nie kalibracja. Zweryfikuj rzeczywistą drogę wiązki, IQI i zatwierdzoną technikę.',pipeInvalid:'Nieprawidłowa geometria rury: sprawdź Ø, t i w. Brak wiarygodnego oszacowania.',pipeNote:'Nominalnie dwie ścianki',pipeW:'Wybrana grubość prześwietlana w'}
 };
 const lang=()=>['nl','en','pl'].includes($('language')?.value)?$('language').value:'nl';
@@ -73,8 +73,6 @@ function sync(){
     copy($('film'),film);
     copy($('distance'),distance);
     copy($('density'),density);
-    const equipment=$('rtCompactXrayEquipment');
-    if(equipment)equipment.hidden=g;
     const note=$('rtCompactModeNote');
     if(note)note.textContent=disabled?tr('locked'):g?tr('noRuntime'):tr('xray');
     const summary=$('rtCompactAdvancedLabel');
@@ -151,11 +149,6 @@ function init(){
   for(const el of [...screen.children]){
     if(!keep.has(el))advancedBody.append(el);
   }
-  // Place device selectors, kV, and current original elements in the compact X-ray area;
-  // their original event handlers stay attached. Other X-ray explanations remain under details.
-  const xrayControls=$('xrayFields')?.querySelector(':scope > .fields-grid');
-  const xrayEquipment=$('rtCompactXrayEquipment');
-  if(xrayControls&&xrayEquipment)xrayEquipment.append(xrayControls);
   panel.hidden=false;advanced.hidden=false;screen.classList.add('rt-compact-ready');
   $('rtCompactSe')?.addEventListener('click',()=>selectMode('Se-75'));
   $('rtCompactIr')?.addEventListener('click',()=>selectMode('Ir-192'));
