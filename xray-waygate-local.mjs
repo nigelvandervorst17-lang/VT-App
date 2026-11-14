@@ -130,6 +130,7 @@ function useReference(){
  if(!current)return;
  const c=current.conditions;
  if($('modeXray')?.getAttribute('aria-pressed')!=='true')$('rtCompactXray')?.click();
+ if($('rtCompactPipe')?.getAttribute('aria-pressed')==='true')$('rtCompactPlate')?.click();
  setProxy('rtCompactKv',c.energyKv);
  setProxy('rtCompactActivity',c.currentMa);
  setProxy('rtCompactThickness',c.thicknessMm);
@@ -159,7 +160,7 @@ function render(){
  const context=document.createElement('p');context.className='small-muted';
  context.textContent='Waygate-software · '+fmt(c.energyKv)+' kV · '+fmt(c.currentMa)+' mA · '+
   fmt(c.thicknessMm)+' mm Fe · '+c.film+' · Source to Detector '+fmt(c.sourceDetectorMm)+
-  ' mm'+(c.equipmentModel?' · '+c.equipmentModel:' · buismodel onbekend');
+  ' mm'+(c.equipmentModel?' · '+c.equipmentModel:'');
  container.append(context);
  const scroll=document.createElement('div');scroll.className='rt-waygate-table-wrap';
  const table=document.createElement('table');table.className='rt-waygate-table';
@@ -236,7 +237,7 @@ function receiveSharedSoftwarePoints(){
   }
   if(save(reference.data)){
    render();
-   message('Vijf softwarepunten uit jouw screenshots lokaal geladen. Geen buismodel nodig en geen wijzigingen aan RT-curves.');
+   message(reference.data.points.length+' softwarepunten uit de link lokaal geladen. Geen modelkeuze en geen wijzigingen aan RT-curves.');
    // Geometry and main calculator modules initialize after the viewer.
    setTimeout(useReference,150);
   }
