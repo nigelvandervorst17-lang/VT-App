@@ -186,7 +186,9 @@ function renderCurveList(){
  picker.value=choices.some(c=>c.value===prev)?prev:'Se-75';
 }
 let curveInteraction=null;
+let curveSelection=null;
 function renderCurvePreview(){
+ const transfer=$('curveUseInCalc');if(transfer)transfer.disabled=true;curveSelection=null;
  const picker=$('curveDevicePicker');if(!picker.options.length)renderCurveList();
  const which=picker.value||'Se-75',isGamma=!!curves.gamma[which],source=isGamma?curves.gamma[which]:curves.xray[which];
  const filmPicker=$('curveFilmPicker'),kvPicker=$('curveKvPicker'),filmLabel=document.querySelector('label[for="curveFilmPicker"]'),kvLabel=$('curveKvLabel');
@@ -243,6 +245,8 @@ function inspectCurve(event){
  svg.querySelector('#chartCrosshair').setAttribute('x1',z.x(mm));svg.querySelector('#chartCrosshair').setAttribute('x2',z.x(mm));svg.querySelector('#chartCrosshair').setAttribute('visibility','visible');
  svg.querySelector('#chartMarker').setAttribute('cx',z.x(mm));svg.querySelector('#chartMarker').setAttribute('cy',z.y(exposure));svg.querySelector('#chartMarker').setAttribute('visibility','visible');
  $('curveReadout').textContent=`${z.which} · ${z.seriesName} · ${mm.toFixed(2)} mm Fe ≈ ${exposure.toFixed(3)} ${z.unit} · ${state.language==='en'?'Not validated':state.language==='pl'?'Niezweryfikowane':'Niet gevalideerd'}`;
+ curveSelection=curves.gamma[z.which]?{mm,source:z.which,film:z.seriesName}:null;
+ if($('curveUseInCalc'))$('curveUseInCalc').disabled=!curveSelection;
 }
 function addRecord(){if(!lastResult?.ok||!lastSnapshot)return;records.unshift({id:'RT-'+Date.now(),createdAt:new Date().toISOString(),status:'RESEARCH_ONLY_NOT_VALIDATED',...lastSnapshot,minutes:lastResult.minutes,exposure:lastResult.exposure,exposureUnit:lastResult.exposureUnit,datasetId:lastResult.datasetId,referenceDensity:lastResult.referenceDensity,referenceDistanceMm:lastResult.referenceDistanceMm});records=records.slice(0,50);saveRecords();$('resultReason').textContent=t('saved');}
 function renderRecords(){const list=$('recordList');if(!records.length){list.innerHTML=`<div class="empty">${htmlEscape(t('noSaved'))}</div>`;return;}list.innerHTML=records.map(r=>`<div class="record-item"><h3>${htmlEscape(r.mode==='gamma'?r.isotope:r.model)} · ${htmlEscape(r.film)} <span class="status-chip">${htmlEscape(t('researchOnly'))}</span></h3><p>${htmlEscape(r.createdAt?.slice(0,16).replace('T',' ')||'')} · ${htmlEscape(MATERIALS[r.material]||'Staal')}: ${htmlEscape(r.thicknessMm)} mm · ${htmlEscape(t('timeLabel'))}: ${hms(r.minutes)}</p><p>${htmlEscape(r.datasetId||'')}</p></div>`).join('');}
@@ -263,6 +267,21 @@ function bind(){ if(!['D4','D5','D7'].includes(state.film))state.film='D4'; $('l
  $('curveFilmPicker').addEventListener('change',renderCurvePreview);
  $('curveKvPicker').addEventListener('change',renderCurvePreview);
  $('curveSVG').addEventListener('pointerdown',inspectCurve);
+ $('curveUseInCalc')?.addEventListener('click',()=>{
+   if(!curveSelection||!curves.gamma[curveSelection.source])return;
+   const chosen={...curveSelection};
+   // Alleen expliciet geselecteerde invoerwaarden, geen berekende belichtingstijd.
+   state.mode='gamma';modeView({resetDefaults:false});
+   radioSet('isotope',chosen.source);state.isotope=chosen.source;
+   state.film=chosen.film;fill('film',chosen.film);
+   const isPipe=$('workPipe')?.getAttribute('aria-pressed')==='true';
+   const target=isPipe?$('workPenetrated'):$('workWall');
+   if(!target)return;
+   target.value=String(Number(chosen.mm.toFixed(2)));
+   target.dispatchEvent(new Event('input',{bubbles:true}));
+   gather();renderIQI();clearResult();nav('calc');
+   $('workShapePanel')?.scrollIntoView({block:'start',behavior:'smooth'});
+ });
  $('curveList').addEventListener('click',e=>{const b=e.target.closest('[data-curve-select]');if(!b)return;$('curveDevicePicker').value=b.dataset.curveSelect;renderCurvePreview();$('curvePreviewPanel').scrollIntoView({behavior:'smooth',block:'start'});});
  $('moreToggle').addEventListener('click',()=>{const menu=$('moreMenu');menu.hidden=!menu.hidden;$('moreToggle').setAttribute('aria-expanded',String(!menu.hidden));});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('moreMenu')&&!$('moreMenu').hidden){$('moreMenu').hidden=true;$('moreToggle').setAttribute('aria-expanded','false');}});$('exportRecords').onclick=()=>{if(records.length)download('basic-rt-pro-research-records.json',JSON.stringify({warning:'NOT VALIDATED FOR EXPOSURES',version:'2.4.0',records},null,2),'application/json');else alert(t('emptyExport'))};
