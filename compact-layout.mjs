@@ -158,6 +158,11 @@ function init(){
   for(const el of [...screen.children]){
     if(!keep.has(el))advancedBody.append(el);
   }
+  // Reuse the existing ISO IQI selectors and norm-table result in the quick
+  // area; no duplicate lookup logic or changes to the exposure engines.
+  const iqiMount=$('rtCompactIqiMount');
+  const iqiPanel=$('iqiPanel'),iqiResult=$('iqiResult');
+  if(iqiMount&&iqiPanel&&iqiResult)iqiMount.append(iqiPanel,iqiResult);
   panel.hidden=false;advanced.hidden=false;screen.classList.add('rt-compact-ready');
   $('rtCompactSe')?.addEventListener('click',()=>selectMode('Se-75'));
   $('rtCompactIr')?.addEventListener('click',()=>selectMode('Ir-192'));
