@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=390">
+<link rel="stylesheet" href="./styles.css?v=391">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -316,7 +316,7 @@
 <section class="screen" data-screen="curves" id="screen-curves" hidden><div class="section-heading"><p class="overline" data-i18n="traceable">HERLEIDBAAR</p><h1 data-i18n="curves">Grafieken & dekking</h1><p class="subtitle" data-i18n="curvesSub">Welke onderzoeksgegevens zijn beschikbaar — en waar blokkeren we?</p></div><div class="panel"><strong data-ui-i18n="interactiveCurves">Interactieve belichtingscurves</strong><p class="small-muted" data-ui-i18n="curvesIntro">D4, D5 en D7 voor Se-75 en Ir-192. Niet voor echte RT-belichtingen vrijgegeven.</p><a class="outline-button" style="display:block;text-align:center;text-decoration:none;min-height:48px" href="./curveatlas.html" data-ui-i18n="openCurveAtlas">Open interactieve curveatlas</a><a class="outline-button" style="display:block;text-align:center;text-decoration:none;min-height:48px" href="./curveatlas.pdf" data-ui-i18n="openPdfAtlas">Open curveatlas als PDF</a></div><div class="panel" id="curveList"></div><div class="panel" id="curvePreviewPanel"><h2 data-i18n="curvePreview">Grafiekvoorbeeld</h2>
 <label for="curveDevicePicker" class="ref-label" data-ui-i18n="pickDevice">Kies bron of toestel</label><select id="curveDevicePicker" class="ref-select"></select>
 <div class="rt-chart-options"><label for="curveFilmPicker" data-ui-i18n="chooseFilm">Film</label><select id="curveFilmPicker"><option>D4</option><option>D5</option><option>D7</option></select><label id="curveKvLabel" for="curveKvPicker" data-ui-i18n="chooseKv" hidden>Spanning (kV)</label><select id="curveKvPicker" hidden></select></div>
-<div id="curveSVG" class="curve-svg" tabindex="0" role="img" aria-label="Interactieve referentiegrafiek"></div><p id="curveReadout" class="ref-result" aria-live="polite" data-ui-i18n="tapCurve">Tik op de curve om mm en Ci·h of mA·min af te lezen.</p><p class="small-muted" data-i18n="curveDisclaimer">Gegenereerd uit gedigitaliseerde onderzoeksdata; geen onafhankelijke validatie.</p></div><div class="panel"><h2 data-i18n="licenseHeading">Herkomst & rechten</h2><p class="small-muted" data-i18n="licenseText">De data zijn afgeleid van fabrikantsdocumenten. Controleer toestemming voor publiek hergebruik; dit is geen OEM-goedkeuring.</p><a href="./PROVENANCE.md" target="_blank" rel="noopener" data-i18n="provenanceFile">Bekijk herkomstbestand</a></div></section>
+<div id="curveSVG" class="curve-svg" tabindex="0" role="img" aria-label="Interactieve referentiegrafiek"></div><p id="curveReadout" class="ref-result" aria-live="polite" data-ui-i18n="tapCurve">Tik op de curve om mm en Ci·h of mA·min af te lezen.</p><button type="button" id="curveUseInCalc" class="outline-button" disabled>Gebruik geselecteerde dikte in Rekenen</button><p class="small-muted">Alleen invoer wordt overgenomen. Bereken zelf opnieuw en controleer de procedure; geen vrijgave.</p><p class="small-muted" data-i18n="curveDisclaimer">Gegenereerd uit gedigitaliseerde onderzoeksdata; geen onafhankelijke validatie.</p></div><div class="panel"><h2 data-i18n="licenseHeading">Herkomst & rechten</h2><p class="small-muted" data-i18n="licenseText">De data zijn afgeleid van fabrikantsdocumenten. Controleer toestemming voor publiek hergebruik; dit is geen OEM-goedkeuring.</p><a href="./PROVENANCE.md" target="_blank" rel="noopener" data-i18n="provenanceFile">Bekijk herkomstbestand</a></div></section>
 
 
 <section class="screen" data-screen="procedure" id="screen-procedure" hidden>
@@ -378,6 +378,7 @@
 <section class="screen" data-screen="refs" id="screen-refs" hidden>
  <div id="refHealth" role="status" hidden class="panel ref-panel" style="border:1px solid #deaa4e;background:#2d2420;color:#fff4da;padding:16px"><strong>Naslag controle</strong><p id="refHealthText" style="margin:8px 0 0"></p></div>
  <div class="section-heading"><p class="overline" data-ref-key="over">PRAKTIJKHULPMIDDELEN</p><h1 data-ref-key="heading">Tabellen & naslag</h1><p class="subtitle" data-ref-key="sub">Originele bronnen, geen vrijgave voor belichting.</p></div>
+  <div class="ref-search-wrap"><label for="refQuickSearch">Zoeken in naslag</label><input type="search" id="refQuickSearch" placeholder="Zoek D4, zwarting, IQI…" autocomplete="off"><p id="refSearchStatus" class="small-muted" role="status" aria-live="polite"></p></div>
  <div class="panel ref-panel"><h2>Nieuwe RT-procedurehulp</h2><p>Welke IQI-draad en hoe verdeel je de films langs een las? ISO-lassen en ASME-gietstukken apart.</p><button class="outline-button" type="button" data-proc-open>Open IQI &amp; filmverdeling</button></div>
  <div class="panel ref-panel" id="legacySchedulePanel" hidden>
   <h2 data-ref-key="pipe">Buismaten · NPS / Schedule</h2>
@@ -556,10 +557,32 @@
 
 <!-- AI Expert — uitleghulp met expliciete, alleen-lezen context uit rt-core.mjs-resultaat -->
 <section class="screen" data-screen="ai" id="screen-ai" hidden>
-  <div class="section-heading"><p class="overline">ONLINE · RT-NDO NASLAG</p><h1>AI Expert</h1>
+  <div class="section-heading"><p class="overline">ONLINE · RT-NDO NASLAG</p><div class="ai-heading-row"><h1>AI Expert</h1><button type="button" id="aiSettingsButton" class="ai-settings-button" aria-label="AI-verbinding en privacyinstellingen openen" title="AI-instellingen">⚙ Instellingen</button></div>
     <p class="subtitle">Vragen over normen, IQI, filmafwijkingen en de huidige onderzoeksberekening.</p></div>
   <div class="panel ai-warning" role="note"><strong>AI Expert · Onderzoeksassistent</strong>
     <p>Geen RT-vrijgave. Controleer technische adviezen altijd met de geldende norm, goedgekeurde procedure en bevoegde deskundige.</p></div>
+  <div class="panel ai-chat">
+    <div id="aiMessages" role="log" aria-live="polite" aria-label="AI-gesprek">
+      <div class="ai-message ai-model"><strong>AI Expert</strong><p>Stel bijvoorbeeld: “Welke geometrische gegevens ontbreken voor klasse B?” of “Welke oorzaken zijn mogelijk bij halvemaanvormige vlekken op film?”</p></div>
+    </div>
+    <div class="ai-quick-questions" role="group" aria-label="Voorbeeldvragen">
+      <button type="button" data-ai-example="Welke gegevens moet ik controleren voor opnameklasse B?">Klasse B</button>
+      <button type="button" data-ai-example="Wat zijn mogelijke oorzaken van halvemaanvormige filmvlekken?">Filmfouten</button>
+      <button type="button" data-ai-example="Leg geometrische onscherpte Ug uit.">Ug uitleg</button>
+    </div>
+    <label for="aiQuestion">Jouw vraag</label>
+    <div class="ai-compose">
+      <textarea id="aiQuestion" rows="2" maxlength="1500" placeholder="Stel je RT-vraag…" aria-label="Stel je RT-vraag"></textarea>
+      <button type="button" id="aiAsk" class="ai-send" aria-label="Verstuur vraag" title="Verstuur vraag">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <p class="small-muted ai-desktop-hint">Tip: Ctrl+Enter om op een computer te versturen.</p>
+    <div class="ai-turnstile-label">Beveiligingscontrole</div><div id="aiTurnstile"></div>
+    <p id="aiStatus" role="status" aria-live="polite">Beveiligingscontrole wordt voorbereid…</p>
+    <div class="ai-actions"><button type="button" id="aiClearChat" class="ghost-button">Wis chat</button></div>
+    <p class="small-muted">Deze chat werkt alleen online. Het gesprek blijft tijdelijk op dit toestel zolang het scherm openstaat; de app slaat de chat niet op.</p>
+  </div>
   <div class="panel ai-config"><details id="aiConfigDetails"><summary>Verbinding instellen · Gemini via Cloudflare Worker</summary>
     <label for="aiWorkerUrl">Publieke Worker-URL (geen API-sleutel)</label>
     <input id="aiWorkerUrl" type="url" autocomplete="url" placeholder="https://basic-rt-pro-ai.jouwnaam.workers.dev">
@@ -573,23 +596,6 @@
     <div class="ai-actions"><button type="button" id="aiRecalculate" class="ghost-button">Reken opnieuw met app</button>
     <button type="button" id="aiPreviewToggle" class="ghost-button" aria-expanded="false">Bekijk context</button></div>
     <pre id="aiPreview" hidden aria-label="Voorbeeld meegestuurde RT-gegevens"></pre>
-  </div>
-  <div class="panel ai-chat">
-    <div id="aiMessages" role="log" aria-live="polite" aria-label="AI-gesprek">
-      <div class="ai-message ai-model"><strong>AI Expert</strong><p>Stel bijvoorbeeld: “Welke geometrische gegevens ontbreken voor klasse B?” of “Welke oorzaken zijn mogelijk bij halvemaanvormige vlekken op film?”</p></div>
-    </div>
-    <label for="aiQuestion">Jouw vraag</label>
-    <div class="ai-compose">
-      <textarea id="aiQuestion" rows="2" maxlength="1500" placeholder="Stel je RT-vraag…" aria-label="Stel je RT-vraag"></textarea>
-      <button type="button" id="aiAsk" class="ai-send" aria-label="Verstuur vraag" title="Verstuur vraag">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-    <p class="small-muted ai-desktop-hint">Tip: Ctrl+Enter om op een computer te versturen.</p>
-    <div class="ai-turnstile-label">Beveiligingscontrole</div><div id="aiTurnstile"></div>
-    <p id="aiStatus" role="status" aria-live="polite">Stel eerst de veilige verbinding in.</p>
-    <div class="ai-actions"><button type="button" id="aiClearChat" class="ghost-button">Wis chat</button></div>
-    <p class="small-muted">Deze chat werkt alleen online. Het gesprek blijft tijdelijk op dit toestel zolang het scherm openstaat; de app slaat de chat niet op.</p>
   </div>
 </section>
 <section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.6 BETA · AI Expert · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">De standaardrekenmodule slaat gegevens lokaal op. Als je AI Expert gebruikt, worden je vraag en optioneel geselecteerde RT-invoer via jouw Worker naar Google Gemini verstuurd.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
@@ -659,10 +665,10 @@
   window.BasicRtCometCatalog={models:items.map(x=>x.model),mode:'reference-only',datasetValidated:false};
 })();
 </script>
-<script type="module" src="./app.mjs?v=386"></script>
-<script type="module" src="./ai-expert.mjs?v=390"></script>
-<script type="module" src="./ui-polish.mjs?v=385"></script>
-<script type="module" src="./workflow-shape.mjs?v=385"></script>
+<script type="module" src="./app.mjs?v=391"></script>
+<script type="module" src="./ai-expert.mjs?v=391"></script>
+<script type="module" src="./ui-polish.mjs?v=391"></script>
+<script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=385"></script>
 <script id="rt29-clean-calculator">
 (function(){
