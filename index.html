@@ -462,46 +462,28 @@
     <details id="ftFormDetails" class="ft-details" open>
       <summary>+ Fysieke filmtest toevoegen of bewerken</summary>
       <form id="ftForm" autocomplete="off">
-        <div class="ft-grid">
+        <div class="ft-grid ft-core">
           <label>Testnummer *<input id="ftTestId" maxlength="72" required placeholder="Eigen uniek testnummer"></label>
           <label>Werkelijke opnamedatum *<input id="ftDate" type="date" required></label>
           <label>Stralingsbron / toestel *<select id="ftSource" required>
             <option value="">Kies de bron</option><option value="Se-75">Se-75</option>
             <option value="Ir-192">Ir-192</option><option value="Co-60">Co-60</option>
             <option value="X-ray">Röntgen</option><option value="other">Overig</option></select></label>
-          <label>Bronreferentie / toestelmodel<input id="ftSourceRef" maxlength="80" placeholder="Optioneel"></label>
           <label>Materiaal *<select id="ftMaterial" required><option value="">Kies materiaal</option>
             <option value="Fe">Staal (Fe)</option><option value="RVS">RVS</option>
             <option value="Al">Aluminium</option><option value="other">Overig</option></select></label>
           <label>Werkelijke materiaaldikte (mm) *<input id="ftThickness" inputmode="decimal" required placeholder="mm"></label>
           <label>Filmtype *<select id="ftFilm" required><option value="">Kies film</option>
             <option>D4</option><option>D5</option><option>D7</option><option value="other">Andere film</option></select></label>
-          <label>Filmnummer / batch<input id="ftFilmBatch" maxlength="90" placeholder="Optioneel"></label>
           <label>Werkelijke belichtingstijd *<input id="ftExposure" required inputmode="text" placeholder="mm:ss of seconden"></label>
-          <label>Werkelijke SFD / FFD (mm)<input id="ftDistance" inputmode="decimal" placeholder="mm"></label>
-          <label>Bronactiviteit op opnamedatum (Ci)<input id="ftActivity" inputmode="decimal" placeholder="Voor gamma"></label>
-          <label>Röntgenspanning (kV)<input id="ftKv" inputmode="decimal" placeholder="Voor röntgen"></label>
-          <label>Röntgenstroom (mA)<input id="ftMa" inputmode="decimal" placeholder="Voor röntgen"></label>
-          <label>Opnametechniek<select id="ftGeometry"><option value="">Niet geregistreerd</option>
-            <option>SWSI</option><option>DWDI</option><option>DWSI</option><option value="other">Anders</option></select></label>
-          <label>Schermen<select id="ftScreens"><option value="">Niet geregistreerd</option>
-            <option value="Pb">Lood (Pb)</option><option value="none">Geen</option><option value="other">Anders</option></select></label>
         </div>
-        <h3>Gemeten filmzwarting met densitometer</h3>
+        <h3>Werkelijk gemeten filmzwarting (densitometer)</h3>
         <div class="ft-grid ft-density-grid">
           <label>D-meting 1 *<input id="ftD1" required inputmode="decimal" placeholder="D, werkelijk gemeten"></label>
           <label>D-meting 2<input id="ftD2" inputmode="decimal" placeholder="Optioneel"></label>
           <label>D-meting 3<input id="ftD3" inputmode="decimal" placeholder="Optioneel"></label>
-          <label>Meetpositie(s)<input id="ftReadPosition" maxlength="120" placeholder="Bijv. lasgebied of basismateriaal"></label>
-          <label>Densitometer-ID<input id="ftDensitometer" maxlength="80" placeholder="Optioneel"></label>
         </div>
-        <h3>Verwerking en filmbeoordeling</h3>
-        <div class="ft-grid">
-          <label>Filmverwerking<select id="ftProcessing"><option value="">Niet geregistreerd</option>
-            <option value="manual">Handmatig</option><option value="automatic">Automatisch</option>
-            <option value="other">Anders</option></select></label>
-          <label>Ontwikkeltemperatuur (°C)<input id="ftTemp" inputmode="decimal" placeholder="Optioneel"></label>
-          <label>Ontwikkeltijd (min)<input id="ftDevelopMin" inputmode="decimal" placeholder="Optioneel"></label>
+        <div class="ft-grid ft-qa-grid">
           <label>Visuele filmbeoordeling<select id="ftFilmCheck">
             <option value="not-reviewed">Niet vastgelegd</option><option value="looks-good">Visueel goed volgens registratie</option>
             <option value="anomaly">Afwijking gemeld</option></select></label>
@@ -510,7 +492,30 @@
             <option value="visible">Zichtbaar genoteerd</option>
             <option value="not-visible">Niet zichtbaar</option></select></label>
         </div>
-        <label class="ft-notes">Opmerkingen / afwijkingen<textarea id="ftNotes" maxlength="800" rows="3" placeholder="Bijvoorbeeld filmfout, gebruikte procedure of bijzonderheden"></textarea></label>
+        <details class="ft-extra">
+          <summary>Aanvullende opname- en verwerkingsgegevens (optioneel)</summary>
+          <p class="small-muted">Vul zoveel mogelijk echte opnamecondities in; die zijn nodig voor een verantwoorde vergelijking met de softwarecurves.</p>
+          <div class="ft-grid">
+          <label>Bronreferentie / toestelmodel<input id="ftSourceRef" maxlength="80" placeholder="Optioneel"></label>
+          <label>Filmnummer / batch<input id="ftFilmBatch" maxlength="90" placeholder="Optioneel"></label>
+          <label>Werkelijke SFD / FFD (mm)<input id="ftDistance" inputmode="decimal" placeholder="mm"></label>
+          <label>Bronactiviteit op opnamedatum (Ci)<input id="ftActivity" inputmode="decimal" placeholder="Voor gamma"></label>
+          <label>Röntgenspanning (kV)<input id="ftKv" inputmode="decimal" placeholder="Voor röntgen"></label>
+          <label>Röntgenstroom (mA)<input id="ftMa" inputmode="decimal" placeholder="Voor röntgen"></label>
+          <label>Opnametechniek<select id="ftGeometry"><option value="">Niet geregistreerd</option>
+            <option>SWSI</option><option>DWDI</option><option>DWSI</option><option value="other">Anders</option></select></label>
+          <label>Schermen<select id="ftScreens"><option value="">Niet geregistreerd</option>
+            <option value="Pb">Lood (Pb)</option><option value="none">Geen</option><option value="other">Anders</option></select></label>
+          <label>Meetpositie(s)<input id="ftReadPosition" maxlength="120" placeholder="Bijv. lasgebied of basismateriaal"></label>
+          <label>Densitometer-ID<input id="ftDensitometer" maxlength="80" placeholder="Optioneel"></label>
+          <label>Filmverwerking<select id="ftProcessing"><option value="">Niet geregistreerd</option>
+            <option value="manual">Handmatig</option><option value="automatic">Automatisch</option>
+            <option value="other">Anders</option></select></label>
+          <label>Ontwikkeltemperatuur (°C)<input id="ftTemp" inputmode="decimal" placeholder="Optioneel"></label>
+          <label>Ontwikkeltijd (min)<input id="ftDevelopMin" inputmode="decimal" placeholder="Optioneel"></label>
+          </div>
+          <label class="ft-notes">Opmerkingen / afwijkingen<textarea id="ftNotes" maxlength="800" rows="3" placeholder="Bijvoorbeeld filmfout, gebruikte procedure of bijzonderheden"></textarea></label>
+        </details>
         <div class="ft-actions">
           <button type="submit" id="ftSave" class="calculate-button">Praktijktest opslaan</button>
           <button type="button" id="ftNew" class="ghost-button">Nieuw / leeg formulier</button>
