@@ -774,3 +774,76 @@ body{font-synthesis:none}
 #screen-calc .rt-waygate-live .rt-waygate-live-caution{
   margin-top:11px;
 }
+
+
+/* IQI Snelcontrole: reuse existing ISO wire tables, compact mobile UI. */
+#screen-calc .rt-iqi-quick{
+  margin:14px 0 12px;padding:13px 12px;
+  background:#112b3f;border:1px solid #486f88;border-radius:14px;
+  color:#e7f4fc;box-sizing:border-box;
+}
+#screen-calc .rt-iqi-quick-title{
+  display:flex;flex-wrap:wrap;align-items:baseline;
+  gap:3px 12px;justify-content:space-between;
+  border-bottom:1px solid #36576e;padding-bottom:10px;
+}
+#screen-calc .rt-iqi-quick-title strong{
+  font-size:16px;letter-spacing:.01em;
+}
+#screen-calc .rt-iqi-quick-title span{
+  font-size:11px;color:#c2d6e6;line-height:1.5;
+}
+#screen-calc .rt-iqi-quick #iqiPanel{
+  margin:10px 0 0;padding:0;
+}
+#screen-calc .rt-iqi-quick #iqiPanel>.group-label{display:none}
+#screen-calc .rt-iqi-quick .iqi-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;margin-bottom:6px;
+}
+#screen-calc .rt-iqi-quick .iqi-grid>.field-card{
+  min-width:0;margin:0;padding:0;
+}
+#screen-calc .rt-iqi-quick .iqi-grid>.field-card select,
+#screen-calc .rt-iqi-quick .iqi-grid>.field-card input{
+  width:100%;max-width:100%;min-height:44px;box-sizing:border-box;
+}
+#screen-calc .rt-iqi-quick #iqiThicknessHelp{
+  font-size:11px;line-height:1.5;
+}
+#screen-calc .rt-iqi-quick #iqiResult{
+  margin:12px 0 0;padding:13px 12px;border-radius:11px;
+}
+#screen-calc .rt-iqi-quick .iqi-wire{
+  font-size:clamp(28px,8vw,40px);
+}
+#screen-calc .rt-iqi-observed{
+  margin-top:12px;padding:11px;
+  background:#163a50;border:1px solid #517c98;border-radius:11px;
+}
+#screen-calc .rt-iqi-observed label{
+  display:block;color:#e5f3fc;font-size:12px;
+  line-height:1.5;font-weight:780;margin-bottom:7px;
+}
+#screen-calc #rtIqiObserved{
+  width:100%;min-height:46px;box-sizing:border-box;border-radius:9px;
+  background:#1d3e57;color:#fff;border:1px solid #678fa8;
+  font-size:16px;padding:9px 10px;
+}
+#screen-calc .rt-iqi-observed-status{
+  font-size:12px;line-height:1.55;
+  color:#d7e9f7;margin:10px 0 0;
+}
+#screen-calc .rt-iqi-observed-status.rt-iqi-observed-higher{
+  color:#bfeee1;
+}
+#screen-calc .rt-iqi-observed-status.rt-iqi-observed-lower{
+  color:#ffdebf;
+}
+#screen-calc .rt-iqi-quick-caution{
+  color:#d2deea;font-size:11px;line-height:1.55;
+  border-top:1px solid #46647b;padding-top:9px;margin:11px 0 0;
+}
+@media(max-width:380px){
+  #screen-calc .rt-iqi-quick .iqi-grid{grid-template-columns:1fr}
+}
