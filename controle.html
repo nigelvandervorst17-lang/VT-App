@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Basic RT PRO – herstelcontrole</title>
+<style>body{background:#0c1d2d;color:#f2f7ff;font:16px/1.5 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;max-width:560px;margin:0 auto;padding:26px 18px}h1{font-size:24px;margin:0 0 8px}.sub{color:#adc3d5}.line{border:1px solid #304e64;border-radius:12px;padding:12px 14px;margin:10px 0}.good{color:#83e6b5}.bad{color:#ffb199}button,a.action{color:#062039;background:#8bdfc5;border:0;border-radius:12px;padding:13px 18px;font-size:16px;font-weight:700;display:inline-block;margin:10px 5px 10px 0}code{color:#bfe8e3}small{display:block;color:#abc1d3;margin-top:10px}.warn{color:#ffd28c}</style></head><body>
+<h1>Basic RT PRO – herstelcontrole</h1><p class="sub">Controle of de benodigde bestanden geladen kunnen worden en of Se-75 en Ir-192 weer rekenen.</p><button id="run">Opnieuw testen</button><a class="action" href="./index.html">Open de app</a><div id="out" aria-live="polite"></div>
+<p class="warn">Dit is een technische softwarecontrole, geen validatie van RT-belichtingen.</p>
+<script type="module">
+const out=document.getElementById('out');
+function line(ok,text){const el=document.createElement('div');el.className='line '+(ok?'good':'bad');el.textContent=(ok?'✓ ':'✕ ')+text;out.append(el)}
+async function run(){out.replaceChildren();
+const files=['material-equivalence.mjs','app.mjs','rt-core.mjs','rt-curves.mjs','iqi.mjs','procedure-ui.mjs','rt-procedure.mjs','reference-tools.mjs','reference-data.mjs','film-response.mjs','xray-extra-curves.mjs'];
+let missing=false;for(const name of files){try{const r=await fetch('./'+name+'?health=381',{cache:'no-store'});const ok=r.ok&&!String(r.headers.get('content-type')||'').includes('text/html');if(!ok){line(false,name+' ontbreekt of is niet bereikbaar (HTTP '+r.status+')');missing=true}}catch(e){line(false,name+': '+e.message);missing=true}}
+if(!missing)line(true,'Alle 11 benodigde JavaScript-modules bereikbaar');
+try{const [{calculateGamma},{curves}]=await Promise.all([import('./rt-core.mjs?v=381'),import('./rt-curves.mjs?v=381')]);
+for(const [iso,mm,expected] of [['Se-75',10,868],['Ir-192',20,667]]){const r=calculateGamma({isotope:iso,film:'D4',density:2,thicknessMm:mm,distanceMm:800,activityCi:40},curves);let sec=Math.round(r.minutes*60);line(r.ok&&sec===expected,iso+' D4 '+mm+' mm: '+(r.ok?Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'):'BEREKENING GEWEIGERD')+' (verwacht '+Math.floor(expected/60)+':'+String(expected%60).padStart(2,'0')+')')}}catch(e){line(false,'Rekenmotor start niet: '+e.message)}
+}
+document.getElementById('run').addEventListener('click',run);run();
+</script></body></html>

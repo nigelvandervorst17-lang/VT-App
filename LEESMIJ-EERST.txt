@@ -1,0 +1,23 @@
+BASIC RT PRO — NOODHERSTEL 3.8.1 (14 november 2026)
+
+Oorzaak gevonden: in de openbare GitHub-hoofdmap van VT-App ontbreekt
+material-equivalence.mjs. Zowel app.mjs als rt-core.mjs importeren deze module.
+Als die module ontbreekt, wordt de JavaScript-app niet gestart en werken
+navigatie en berekening niet.
+
+DIRECT OPLOSSEN
+1. Pak deze ZIP uit.
+2. Upload material-equivalence.mjs en controle.html naar de HOOFDMAP
+   van GitHub-repository VT-App (geen extra submap!).
+3. Commit changes.
+4. Open in Safari een nieuw privévenster en ga naar:
+   https://nigelvandervorst17-lang.github.io/VT-App/controle.html
+5. Groen bij beide calculators? Open dan de app via de link.
+
+TESTPUNTEN:
+Se-75, D4, 10 mm, 40 Ci, 800 mm, zwarting 2,0: 14:28
+Ir-192, D4, 20 mm, 40 Ci, 800 mm, zwarting 2,0: 11:07
+
+Als controle.html fouten meldt, stuur de tekst van het rode vak door.
+
+Technische softwarebenchmark, geen vrijgave voor werkelijke RT-opnames.
