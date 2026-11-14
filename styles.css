@@ -324,3 +324,12 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-stat
 #screen-records .ft-research-heading h2{font-size:18px}
 #screen-records{padding-bottom:calc(155px + env(safe-area-inset-bottom))}
 @media(max-width:420px){#screen-records .ft-grid{grid-template-columns:1fr}#screen-records .ft-export-grid{grid-template-columns:1fr}#screen-records .ft-panel{padding:12px}}
+/* Physical film test advanced options */
+#screen-records .ft-extra{margin:17px 0;border:1px solid #446981;border-radius:12px;background:#142f44;padding:11px 12px}
+#screen-records .ft-extra>summary{min-height:39px;cursor:pointer;font-size:13px;font-weight:800;color:#d7eaf9;line-height:1.45}
+#screen-records .ft-extra .ft-grid{margin-top:10px}
+#screen-records .ft-qa-grid{margin:12px 0}
+#screen-records #ftForm{scroll-margin-top:130px}
+#screen-curves .ft-curve-link{border:1px solid #476f8c}
+#screen-curves .ft-curve-link h2{margin-bottom:7px}
+
