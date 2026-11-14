@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=407">
+<link rel="stylesheet" href="./styles.css?v=408">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -253,6 +253,22 @@
       <p class="rt-waygate-live-caution">Alleen een bekende Waygate-softwaretijd. Niet gevalideerd als belichtingsadvies.</p>
     </section>
     <div class="rt-compact-result-mount" id="rtCompactResultMount"></div>
+    <section id="rtCompactIqiQuick" class="rt-iqi-quick" aria-label="IQI Snelcontrole">
+      <div class="rt-iqi-quick-title">
+        <strong>IQI Snelcontrole</strong>
+        <span>Klasse · techniek · positie</span>
+      </div>
+      <div id="rtCompactIqiMount"></div>
+      <div class="rt-iqi-observed">
+        <label for="rtIqiObserved">Fijnste duidelijk zichtbare IQI-draad op de film</label>
+        <select id="rtIqiObserved">
+          <option value="">Nog niet beoordeeld</option>
+          <option value="1">W1</option><option value="2">W2</option><option value="3">W3</option><option value="4">W4</option><option value="5">W5</option><option value="6">W6</option><option value="7">W7</option><option value="8">W8</option><option value="9">W9</option><option value="10">W10</option><option value="11">W11</option><option value="12">W12</option><option value="13">W13</option><option value="14">W14</option><option value="15">W15</option><option value="16">W16</option><option value="17">W17</option><option value="18">W18</option><option value="19">W19</option>
+        </select>
+        <p id="rtIqiObservedStatus" class="rt-iqi-observed-status" role="status" aria-live="polite">Kies de werkelijk waargenomen draad om deze met de IQI-eis te vergelijken.</p>
+        <p class="rt-iqi-quick-caution">Vergelijkingshulpmiddel, geen formele acceptatie. Controleer IQI-beeld, werkelijke zichtbaarheid, norm, materiaal en goedgekeurde RT-procedure.</p>
+      </div>
+    </section>
     <details id="rtWaygateLibrary" class="rt-waygate-library" hidden>
       <summary>Waygate-grafiek en referenties <span>(optioneel)</span></summary>
       <div class="rt-waygate-library-body">
@@ -896,7 +912,8 @@
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
-<script type="module" src="./compact-layout.mjs?v=407"></script>
+<script type="module" src="./compact-layout.mjs?v=408"></script>
+<script type="module" src="./iqi-quick.mjs?v=408"></script>
 <script type="module" src="./xray-waygate-local.mjs?v=407"></script>
 <script type="module" src="./xray-waygate-atlas.mjs?v=406"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
