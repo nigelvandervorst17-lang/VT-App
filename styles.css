@@ -749,3 +749,28 @@ body{font-synthesis:none}
   background:#145983;border:1px solid #65a1c5;color:#f1fcff;
   font-size:12px;font-weight:850;
 }
+
+/* Isotope-style X-ray quick entry, research graph tools optional. */
+#screen-calc .rt-waygate-library{
+  margin:12px 0 2px;background:#102b40;border:1px solid #496f89;
+  border-radius:12px;color:#e1f2fe;
+}
+#screen-calc .rt-waygate-library>summary{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:13px;font-size:12px;line-height:1.4;font-weight:800;
+}
+#screen-calc .rt-waygate-library>summary span{
+  color:#b2cddd;margin-left:auto;font-weight:650;font-size:10px;
+}
+#screen-calc .rt-waygate-library-body{
+  border-top:1px solid #406580;padding:0 10px 12px;
+}
+#screen-calc .rt-waygate-library-body>.rt-waygate-reference{
+  margin:10px 0 0;
+}
+#screen-calc .rt-waygate-live>.rt-waygate-use{
+  margin:11px auto 10px;max-width:100%;
+}
+#screen-calc .rt-waygate-live .rt-waygate-live-caution{
+  margin-top:11px;
+}
