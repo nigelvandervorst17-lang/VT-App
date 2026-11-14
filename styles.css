@@ -245,3 +245,21 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-stat
 #screen-ai #aiTurnstile{max-width:100%;min-height:45px;overflow:hidden}
 .bottom-nav .nav[data-nav="ai"] span{white-space:nowrap}
 @media(max-width:390px){.bottom-nav .nav{font-size:8px;min-height:56px;padding-left:0;padding-right:0}.bottom-nav .nav svg{width:19px;height:19px}}
+
+/* AI Expert mobile UX — veilige opmaak, duimvriendelijke invoer en vrije ruimte boven navigatie */
+#screen-ai{padding-bottom:calc(170px + env(safe-area-inset-bottom))}
+#screen-ai .ai-chat{padding-bottom:24px}
+#screen-ai .ai-compose{display:flex;align-items:flex-end;gap:9px;width:100%;min-width:0;margin-top:6px}
+#screen-ai .ai-compose #aiQuestion{flex:1 1 auto;min-width:0;min-height:57px;max-height:180px;font-size:16px;line-height:1.45;padding:12px;resize:vertical}
+#screen-ai .ai-send{display:grid;place-items:center;flex:0 0 55px;width:55px;height:57px;padding:0;border:1px solid #70b8ff;border-radius:13px;background:linear-gradient(135deg,#0066ec,#168eff);color:white;box-shadow:0 4px 12px #064d9940;cursor:pointer}
+#screen-ai .ai-send svg{width:25px;height:25px;display:block}
+#screen-ai .ai-send:disabled{opacity:.45;cursor:not-allowed}
+#screen-ai .ai-send:focus-visible{outline:3px solid #d7f1ff;outline-offset:3px}
+#screen-ai .ai-desktop-hint{display:none;margin:6px 0}
+@media(hover:hover) and (pointer:fine){#screen-ai .ai-desktop-hint{display:block}}
+#screen-ai .ai-message p strong{display:inline;font-size:inherit;margin:0;color:inherit}
+#screen-ai .ai-message p em{font-style:italic}
+#screen-ai .ai-message p sub{font-size:.75em;vertical-align:sub}
+#screen-ai #aiTurnstile{scroll-margin-bottom:160px}
+#screen-ai .ai-turnstile-label{margin-top:18px}
+@media(max-width:420px){#screen-ai{padding-bottom:calc(182px + env(safe-area-inset-bottom))}#screen-ai #aiMessages{max-height:350px}}
