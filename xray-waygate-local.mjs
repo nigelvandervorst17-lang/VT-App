@@ -64,27 +64,81 @@ function save(data){
 function tableCell(value,header=false){
  const el=document.createElement(header?'th':'td');el.textContent=String(value);return el;
 }
+// Exact screenshot-point lookup only. No interpolation, scaling or new exposure model.
+function exactMatch(reference,values){
+ if(!reference||!reference.conditions)return {ok:false,reason:'missing'};
+ const c=reference.conditions,missing=[];
+ const same=(a,b)=>Number.isFinite(a)&&Math.abs(a-Number(b))<0.000001;
+ if(!same(values.kv,c.energyKv))missing.push('kV');
+ if(!same(values.ma,c.currentMa))missing.push('mA');
+ if(!same(values.thickness,c.thicknessMm))missing.push('staaldikte');
+ if(values.film!==c.film)missing.push('filmtype');
+ if(!same(values.distance,c.sourceDetectorMm))missing.push('afstand');
+ if(values.material!=='Fe')missing.push('materiaal');
+ if(values.pipe)missing.push('buis-/dubbelwandige geometrie');
+ if(missing.length)return {ok:false,reason:'conditions',missing};
+ const pt=reference.points.find(p=>same(values.density,p.density));
+ return pt?{ok:true,seconds:pt.timeSeconds}:{ok:false,reason:'density'};
+}
+function liveInputs(){
+ return {
+  kv:decimal($('rtCompactKv')?.value),
+  ma:decimal($('rtCompactActivity')?.value),
+  thickness:decimal($('rtCompactThickness')?.value),
+  film:$('rtCompactFilm')?.value,
+  distance:decimal($('rtCompactDistance')?.value),
+  density:decimal($('rtCompactDensity')?.value),
+  material:$('material')?.value,
+  pipe:$('rtCompactPipe')?.getAttribute('aria-pressed')==='true'
+ };
+}
 function compare(){
- const box=$('rtWaygateMatch');if(!box||!current)return;
- const c=current.conditions;
- const checks=[
-  ['kV',$('kv')?.value,c.energyKv],
-  ['mA',$('ma')?.value,c.currentMa],
-  ['staaldikte',$('thickness')?.value,c.thicknessMm],
-  ['film',$('film')?.value,c.film],
-  ['afstand',$('distance')?.value,c.sourceDetectorMm]
- ];
- const mismatch=checks.filter(([name,a,b])=>a===undefined||a===null||a===''||
-  (name==='film'?a!==b:Math.abs(decimal(a)-Number(b))>0.000001)).map(([name])=>name);
- const model=$('xrayModel')?.value||'onbekend';
- if(mismatch.length){
-  box.textContent='Niet dezelfde invoer: '+mismatch.join(', ')+'. Basic RT PRO gebruikt '+model+
-   '. De Waygate-softwaretijden mogen niet op dit model worden toegepast.';
- }else{
-  box.textContent='De ingevoerde getallen komen overeen met de Waygate-screenshots. '+
-   'Het buismodel is niet vastgelegd in de referentie en “Source to Detector” is nog niet onafhankelijk gelijkgesteld aan FFD. '+
-   'Dit is geen kalibratie of vrijgegeven belichtingstijd.';
+ const box=$('rtWaygateMatch'),live=$('rtWaygateLiveTime'),messageEl=$('rtWaygateLiveMessage');
+ if(!box||!live||!messageEl)return;
+ if($('modeXray')?.getAttribute('aria-pressed')!=='true')return;
+ live.textContent='—';
+ if(!current){
+  const messageText='Nog geen Waygate-softwarepunten op dit toestel. Importeer eerst het JSON-bestand uit je eigen screenshots.';
+  box.textContent=messageText;messageEl.textContent=messageText;return;
  }
+ const status=exactMatch(current,liveInputs());
+ if(status.ok){
+  live.textContent=hms(status.seconds);
+  const msg='Exact overgenomen Waygate-softwarepunt bij deze ingevoerde waarden (geen interpolatie). '+
+   'Het toesteltype en de opnametechniek zijn niet onafhankelijk bevestigd; NIET gebruiken als belichtingsadvies.';
+  messageEl.textContent=msg;
+  box.textContent='Invoer komt numeriek overeen met het screenshot. De vergelijking is onafhankelijk van de fabrikantkeuze in Basic RT PRO. '+
+   '“Source to Detector” en FFD zijn niet automatisch dezelfde meetdefinitie.';
+ }else if(status.reason==='conditions'){
+  const msg='Geen passende Waygate-softwaretijd. Afwijkende gegevens: '+status.missing.join(', ')+'. '+
+    'Voeg voor deze combinatie een eigen Waygate-screenshot toe; geen tijd berekend.';
+  messageEl.textContent=msg;box.textContent=msg;
+ }else{
+  const available=current.points.map(p=>fmt(p.density)).join(' / ');
+  const msg='Geen exact Waygate-punt voor deze doelzwarting. Beschikbaar D: '+available+'. '+
+    'Er wordt niet geïnterpoleerd of een tijd verzonnen.';
+  messageEl.textContent=msg;box.textContent=msg;
+ }
+}
+function setProxy(id,value){
+ const el=$(id);if(!el)return;
+ el.value=String(value);
+ el.dispatchEvent(new Event('input',{bubbles:true}));
+ el.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function useReference(){
+ if(!current)return;
+ const c=current.conditions;
+ if($('modeXray')?.getAttribute('aria-pressed')!=='true')$('rtCompactXray')?.click();
+ setProxy('rtCompactKv',c.energyKv);
+ setProxy('rtCompactActivity',c.currentMa);
+ setProxy('rtCompactThickness',c.thicknessMm);
+ setProxy('rtCompactFilm',c.film);
+ setProxy('rtCompactDistance',c.sourceDetectorMm);
+ setProxy('rtCompactDensity',current.points[0].density);
+ setProxy('material','Fe');
+ setTimeout(compare,90);
+ message('Waygate-softwaregegevens overgenomen voor vergelijking. Controleer zelf de geometrie en broncondities.');
 }
 function render(){
  const container=$('rtWaygateBody');if(!container)return;
@@ -92,14 +146,16 @@ function render(){
  const count=$('rtWaygateCount');
  if(!current){
   if(count)count.textContent='Nog geen privésoftwarepunten geïmporteerd';
+  if($('rtWaygateUseReference'))$('rtWaygateUseReference').hidden=true;
   const note=document.createElement('p');note.className='small-muted';
   note.textContent='Importeer de JSON met de Waygate-screenshotpunten. Deze getallen staan niet in de openbare GitHub-code.';
   container.append(note);
-  if($('rtWaygateMatch'))$('rtWaygateMatch').textContent='';
+  compare();
   return;
  }
  const c=current.conditions;
  if(count)count.textContent=current.points.length+' lokale softwarepunten';
+ if($('rtWaygateUseReference'))$('rtWaygateUseReference').hidden=false;
  const context=document.createElement('p');context.className='small-muted';
  context.textContent='Waygate-software · '+fmt(c.energyKv)+' kV · '+fmt(c.currentMa)+' mA · '+
   fmt(c.thicknessMm)+' mm Fe · '+c.film+' · Source to Detector '+fmt(c.sourceDetectorMm)+
@@ -149,13 +205,15 @@ function init(){
  $('rtWaygateImport')?.addEventListener('change',importFile);
  $('rtWaygateExport')?.addEventListener('click',exportJson);
  $('rtWaygateForget')?.addEventListener('click',forget);
- for(const id of ['kv','ma','thickness','film','distance','xrayModel']){
+ $('rtWaygateUseReference')?.addEventListener('click',useReference);
+ for(const id of ['rtCompactKv','rtCompactActivity','rtCompactThickness','rtCompactFilm','rtCompactDistance','rtCompactDensity','material']){
   $(id)?.addEventListener('change',compare);
   $(id)?.addEventListener('input',compare);
  }
- for(const id of ['modeGamma','modeXray','rtCompactSe','rtCompactIr','rtCompactXray']){
-  $(id)?.addEventListener('click',()=>setTimeout(compare,0));
+ for(const id of ['rtCompactPlate','rtCompactPipe','modeGamma','modeXray','rtCompactSe','rtCompactIr','rtCompactXray']){
+  $(id)?.addEventListener('click',()=>setTimeout(compare,90));
  }
+ window.addEventListener('rt-language-changed',compare);
  render();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
