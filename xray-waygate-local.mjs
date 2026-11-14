@@ -92,16 +92,39 @@ function liveInputs(){
   pipe:$('rtCompactPipe')?.getAttribute('aria-pressed')==='true'
  };
 }
+// Extra observed Waygate points; exact match only, no curve interpolation.
+function localAtlasLookup(values){
+ try{
+  const stored=JSON.parse(localStorage.getItem('basic-rt-pro-waygate-atlas-v1')||'[]');
+  if(!Array.isArray(stored))return null;
+  const same=(a,b)=>typeof a==='number'&&typeof b==='number'&&Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<0.000001;
+  const selected=stored.filter(p=>p?.kind==='waygate_software_output'&&
+   p.material==='Fe'&&values.material==='Fe'&&!values.pipe&&p.film===values.film&&
+   ['D4','D5','D7'].includes(p.film)&&
+   same(p.energyKv,values.kv)&&same(p.currentMa,values.ma)&&
+   same(p.thicknessMm,values.thickness)&&same(p.sourceDetectorMm,values.distance)&&
+   same(p.density,values.density)&&
+   Number.isFinite(p.timeSeconds)&&p.timeSeconds>0&&p.timeSeconds<=2592000);
+  if(!selected.length)return null;
+  if(selected.some(p=>!same(p.timeSeconds,selected[0].timeSeconds)))return {ok:false,reason:'conflict'};
+  return {ok:true,seconds:selected[0].timeSeconds};
+ }catch(_){return null;}
+}
 function compare(){
  const box=$('rtWaygateMatch'),live=$('rtWaygateLiveTime'),messageEl=$('rtWaygateLiveMessage');
  if(!box||!live||!messageEl)return;
  if($('modeXray')?.getAttribute('aria-pressed')!=='true')return;
  live.textContent='—';
- if(!current){
-  const messageText='Nog geen Waygate-softwarepunten op dit toestel. Importeer eerst het JSON-bestand uit je eigen screenshots.';
-  box.textContent=messageText;messageEl.textContent=messageText;return;
+ const input=liveInputs(),atlas=localAtlasLookup(input),imported=exactMatch(current,input);
+ if(imported.ok&&atlas?.ok&&Math.abs(imported.seconds-atlas.seconds)>0.000001){
+  const msg='Tegenstrijdige Waygate-softwaretijden bij dezelfde invoer. Controleer de brongegevens; resultaat geblokkeerd.';
+  messageEl.textContent=msg;box.textContent=msg;return;
  }
- const status=exactMatch(current,liveInputs());
+ if(atlas?.reason==='conflict'){
+  const msg='Tegenstrijdige lokale Waygate-softwaretijden. Controleer je gegevens; geen resultaat.';
+  messageEl.textContent=msg;box.textContent=msg;return;
+ }
+ const status=imported.ok?imported:(atlas?.ok?atlas:imported);
  if(status.ok){
   live.textContent=hms(status.seconds);
   const msg='Exact overgenomen Waygate-softwarepunt bij deze ingevoerde waarden (geen interpolatie). '+
@@ -109,6 +132,9 @@ function compare(){
   messageEl.textContent=msg;
   box.textContent='Invoer komt numeriek overeen met het screenshot. De vergelijking is onafhankelijk van de fabrikantkeuze in Basic RT PRO. '+
    '“Source to Detector” en FFD zijn niet automatisch dezelfde meetdefinitie.';
+ }else if(!current){
+  const msg='Geen exact Waygate-softwarepunt voor deze instellingen. Voeg alleen werkelijk overgenomen software-uitkomsten toe onder Eigen Waygate-grafiek.';
+  messageEl.textContent=msg;box.textContent=msg;
  }else if(status.reason==='conditions'){
   const msg='Geen passende Waygate-softwaretijd. Afwijkende gegevens: '+status.missing.join(', ')+'. '+
     'Voeg voor deze combinatie een eigen Waygate-screenshot toe; geen tijd berekend.';
@@ -152,6 +178,7 @@ function render(){
   note.textContent='Importeer de JSON met de Waygate-screenshotpunten. Deze getallen staan niet in de openbare GitHub-code.';
   container.append(note);
   compare();
+  window.dispatchEvent(new Event('rt-waygate-reference-updated'));
   return;
  }
  const c=current.conditions;
@@ -174,6 +201,7 @@ function render(){
   'geen vervanging van fabrikantgrafieken of gevalideerde RT-procedure.';
  container.append(caveat);
  compare();
+ window.dispatchEvent(new Event('rt-waygate-reference-updated'));
 }
 async function importFile(event){
  const file=event.target.files?.[0];event.target.value='';
@@ -265,6 +293,7 @@ function init(){
   $(id)?.addEventListener('click',()=>setTimeout(compare,90));
  }
  window.addEventListener('rt-language-changed',compare);
+ window.addEventListener('rt-waygate-atlas-updated',compare);
  render();
  receiveSharedSoftwarePoints();
 }
