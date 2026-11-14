@@ -74,6 +74,7 @@ function sync(){
     copy($('distance'),distance);
     copy($('density'),density);
     const wg=$('rtWaygateReference');if(wg)wg.hidden=g;
+    const atlas=$('rtWaygateAtlas');if(atlas)atlas.hidden=g;
     const kvField=$('rtCompactKvField');if(kvField)kvField.hidden=g;
     document.querySelectorAll('[data-rt-xray-density]').forEach(el=>{el.hidden=g;});
     document.querySelectorAll('[data-rt-gamma-density]').forEach(el=>{el.hidden=!g;});
