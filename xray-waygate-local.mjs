@@ -133,7 +133,7 @@ function compare(){
   box.textContent='Invoer komt numeriek overeen met het screenshot. De vergelijking is onafhankelijk van de fabrikantkeuze in Basic RT PRO. '+
    '“Source to Detector” en FFD zijn niet automatisch dezelfde meetdefinitie.';
  }else if(!current){
-  const msg='Geen exact Waygate-softwarepunt voor deze instellingen. Voeg alleen werkelijk overgenomen software-uitkomsten toe onder Eigen Waygate-grafiek.';
+  const msg='Nog geen Waygate-referentie voor deze invoer. Vul een bekend punt in of voeg een bestaande Waygate-uitkomst toe bij Grafiek en referenties.';
   messageEl.textContent=msg;box.textContent=msg;
  }else if(status.reason==='conditions'){
   const msg='Geen passende Waygate-softwaretijd. Afwijkende gegevens: '+status.missing.join(', ')+'. '+
@@ -280,6 +280,10 @@ function receiveSharedSoftwarePoints(){
 
 function init(){
  const panel=$('rtWaygateReference');if(!panel)return;
+ // The same one-tap example control stays next to the live time, not in the charts.
+ const example=$('rtWaygateUseReference'),live=$('rtWaygateLive');
+ const caution=live?.querySelector('.rt-waygate-live-caution');
+ if(example&&caution)live.insertBefore(example,caution);
  const loaded=read();if(!loaded.ok)message(loaded.error,true);else current=loaded.data;
  $('rtWaygateImport')?.addEventListener('change',importFile);
  $('rtWaygateExport')?.addEventListener('click',exportJson);
