@@ -1,7 +1,7 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='basic-rt-pro-v3.9.4-isotope-like-xray-20261115-o';
+const CACHE='basic-rt-pro-v3.9.5-iqi-quick-20261115-p';
 const ASSETS=['./','./index.html','./styles.css','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./xray-waygate-local.mjs','./xray-waygate-atlas.mjs','./workflow-shape.mjs','./reference-recovery.mjs',
-'./ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
+'./ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./iqi-quick.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',
 './controle.html','./curveatlas.html','./curveatlas.pdf','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./brand-logo.png',
