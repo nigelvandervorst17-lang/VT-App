@@ -1,8 +1,13 @@
 /* Research-only offline shell. No offline Supabase authorization or released exposures. */
-const CACHE='ndt-company-suite-shell-v1';
+const CACHE='ndt-company-suite-shell-v2';
 const SHELL=['./','./index.html','./styles.css','./company-app.mjs',
  './supabase-rest.mjs','./offline-cache.mjs','./research-physics-preview.mjs',
- './manifest.webmanifest'];
+ './manifest.webmanifest',
+ './workbench-ui.mjs','./trial-50.mjs','./field-calculators.mjs',
+ '../xray-core.mjs','../gamma-nine-point-review.mjs',
+ '../../rt-core.mjs','../../rt-curves.mjs','../../film-response.mjs',
+ '../../material-equivalence.mjs','../../xray-extra-curves.mjs',
+ '../../iqi.mjs','../../procedure-runtime/planning/filmPlanning.js'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));
 });
