@@ -613,8 +613,8 @@ body{font-synthesis:none}
   #screen-calc .rt-compact-pipe-assist button{max-width:none;width:100%;min-height:40px}
 }
 
-/* In compact X-ray mode, the legacy model-choice panel remains hidden. */
-#screen-calc.rt-compact-ready #xrayFields{display:none!important}
+/* Keep the device-specific X-ray settings accessible under Extra instellingen.
+ * The selected source curve cannot be hidden when an X-ray estimate is displayed. */
 #screen-calc #rtCompactKvField>input{font-variant-numeric:tabular-nums}
 
 /* IQI Snelcontrole: reuse existing ISO wire tables, compact mobile UI. */
