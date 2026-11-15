@@ -55,7 +55,10 @@ export function calculateFilmPlan(input, p) {
 }
 /** ISO 17636-1:2022 section 7.6 (general configuration; not a full norm-compliance verdict). */
 export function evaluateSourceObjectGeometry(input, p) {
-    const d = input.geometry.sourceSizeMm, b = input.geometry.objectToFilmMm;
+    const d = input.geometry.sourceSizeMm;
+    const measuredB = input.geometry.objectToFilmMm;
+    const inferredB = measuredB === null;
+    const b = inferredB ? input.penetratedThicknessMm : measuredB;
     if (d === null || b === null || !Number.isFinite(d) || !Number.isFinite(b) || d <= 0 || b < 0) {
         return [{ code: 'SOD_GEOMETRY', status: 'orange', message: 'Bepalende bron-/focusgrootte d en object-film-afstand b vereist voor ISO 7.6.' }];
     }
@@ -65,6 +68,7 @@ export function evaluateSourceObjectGeometry(input, p) {
     const classForGeom = p.class === 'B' || p.planarDefectsRequired ? 'B' : 'A';
     const effectiveB = b < 1.2 * input.thicknessMm ? input.thicknessMm : b;
     const fMin = (classForGeom === 'B' ? 15 : 7.5) * d * Math.pow(effectiveB, 2 / 3);
-    const status = f >= fMin - 1e-8 ? 'green' : 'red';
-    return [{ code: 'SOD_GEOMETRY', status, message: `ISO 7.6: f=${f.toFixed(1)} mm; vereist ≥ ${fMin.toFixed(1)} mm voor geometrieklasse ${classForGeom}${p.class === 'A' && p.planarDefectsRequired ? ' (vlakke defecten)' : ''}. d=${d} mm, b effectief=${effectiveB.toFixed(1)} mm. Controleer eventuele toepasselijke speciale geometrieën/uitzonderingen.` }];
+    const satisfies = f >= fMin - 1e-8;
+    const status = satisfies ? (inferredB ? 'orange' : 'green') : 'red';
+    return [{ code: 'SOD_GEOMETRY', status, message: `ISO 7.6: f=${f.toFixed(1)} mm; vereist ≥ ${fMin.toFixed(1)} mm voor geometrieklasse ${classForGeom}${p.class === 'A' && p.planarDefectsRequired ? ' (vlakke defecten)' : ''}. d=${d} mm, b effectief=${effectiveB.toFixed(1)} mm.${inferredB ? ' b = w voorlopig aangenomen bij film tegen het object; bevestig de werkelijke afstand vóór vrijgave.' : ''} Controleer eventuele toepasselijke speciale geometrieën/uitzonderingen.` }];
 }

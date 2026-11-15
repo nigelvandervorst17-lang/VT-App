@@ -1,7 +1,7 @@
 {
   "name": "ndt-radiography-pro-procedure-suite",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Procedure reader, Level 3 confirmation, plan checks, and local records; existing RT calculation engine is read-only",
   "scripts": {

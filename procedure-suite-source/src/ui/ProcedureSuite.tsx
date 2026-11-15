@@ -10,7 +10,7 @@ import './procedureSuite.css';
 type Tab='read'|'library'|'planner'|'history';
 const blankDraft=():Partial<DraftCandidate>=>({code:'',customer:'',revision:'',norm:'ISO 17636-1:2022',class:'B',planarDefectsRequired:false,
  sources:[],films:[],techniques:[],thickness:{minMm:Number.NaN,maxMm:Number.NaN},density:{min:Number.NaN,max:Number.NaN},
- iqi:{side:'source',extraFinerWires:0,filmSideComparisonVerified:false,approvedRules:[]},
+ iqi:{side:'source',extraFinerWires:Number.NaN,filmSideComparisonVerified:false,approvedRules:[]},
  planning:{minimumFilmOverlapMm:null,approvedExposureRules:[]},source:{kind:'text'}});
 const baseInput=():ExposureInput=>({source:'Se-75',film:'D4',technique:'SWSI',thicknessMm:Number.NaN,penetratedThicknessMm:null,maximumPathThicknessMm:null,density:Number.NaN,sfdMm:Number.NaN,activityCi:undefined,model:'',kv:undefined,ma:undefined,material:'Fe',iqiSide:'source',
  geometry:{shape:'plate',diameterMm:null,sourcePlacement:null,sourceSizeMm:null,objectToFilmMm:null,filmUsableLengthMm:null,filmWrapped:false}});
@@ -65,7 +65,8 @@ function SelectField<T extends string>({label,options,selected,onChange}:{label:
 }
 function IqiRulesEditor({rows,onChange}:{rows:ApprovedIqiRule[];onChange:(rows:ApprovedIqiRule[])=>void}){
  const patch=(idx:number,p:Partial<ApprovedIqiRule>)=>onChange(rows.map((r,i)=>i===idx?{...r,...p}:r));
- return <details className="ndt-detail"><summary>IQI-regels — door Level 3 gecontroleerde normtabellen ({rows.length})</summary>
+ if(rows.length===0)return <div className="ndt-empty-rule-action"><button type="button" className="ndt-secondary" onClick={()=>onChange([{id:newId(),technique:'SWSI',side:'source',class:'B',basis:'nominal',aboveMm:0,upToMm:0,wireNumber:0,reference:''}])}>+ IQI-regel toevoegen</button><small>Voeg alleen een gecontroleerde tabelregel toe.</small></div>;
+ return <details className="ndt-detail" open><summary>IQI-regels — door Level 3 gecontroleerde normtabellen ({rows.length})</summary>
    <p className="ndt-help">Leg per techniek, klasse, zijde en diktegebied de vereiste W-draad vast. Geen standaardwaarden worden gegokt. Bij dubbelwandige opnamen is de doorstraalde dikte doorgaans bepalend; kies de juiste tabel.</p>
    {rows.map((r,i)=><div className="ndt-rule" key={r.id}>
     <div className="ndt-grid">
@@ -84,7 +85,8 @@ function IqiRulesEditor({rows,onChange}:{rows:ApprovedIqiRule[];onChange:(rows:A
 }
 function ShotRulesEditor({rows,onChange}:{rows:ApprovedExposureCountRule[];onChange:(rows:ApprovedExposureCountRule[])=>void}){
  const patch=(idx:number,p:Partial<ApprovedExposureCountRule>)=>onChange(rows.map((r,i)=>i===idx?{...r,...p}:r));
- return <details className="ndt-detail"><summary>Goedgekeurde opnameaantallen (bijlage A / geometrie) ({rows.length})</summary>
+ if(rows.length===0)return <div className="ndt-empty-rule-action"><button type="button" className="ndt-secondary" onClick={()=>onChange([{id:newId(),technique:'SWSI',class:'B',minDiameterMm:0,maxDiameterMm:0,minWallMm:0,maxWallMm:0,minSfdMm:0,maxSfdMm:0,minimumExposures:0,sourcePlacement:'external',reference:''}])}>+ Opnameregel toevoegen</button><small>Alleen met geverifieerde bijlage-A- of geometriegegevens.</small></div>;
+ return <details className="ndt-detail" open><summary>Goedgekeurde opnameaantallen (bijlage A / geometrie) ({rows.length})</summary>
   <p className="ndt-help">Vul uitsluitend een door jou geverifieerde minimumwaarde met bijbehorende geldigheidsgrenzen in. De 10%/20%-regel levert niet zelfstandig een opnameaantal op.</p>
   {rows.map((r,i)=><div className="ndt-rule" key={r.id}><div className="ndt-grid">
    <SelectField label="Techniek" options={ALL_TECHNIQUES} selected={r.technique} onChange={v=>patch(i,{technique:v})}/>
@@ -195,7 +197,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
     {([['code','Procedurecode / documentnummer'],['customer','Klantnaam'],['revision','Revisie']] as const).map(([k,label])=><label key={k} className="ndt-field"><span>{label}</span><input value={String(draft[k]??'')} onChange={e=>patch({[k]:e.target.value})}/></label>)}
     <label className="ndt-field"><span>Norm</span><input readOnly value="ISO 17636-1:2022" title="Deze versie ondersteunt alleen ISO filmradiografie"/></label>
     <ChoiceGroup label="Testklasse" items={['A','B'] as const} selected={draft.class??'B'} onChange={v=>patch({class:v})}/>
-    <label className="ndt-check ndt-wide"><input type="checkbox" checked={draft.planarDefectsRequired??false} onChange={e=>patch({planarDefectsRequired:e.target.checked})}/>Vlakke defecten relevant: geometrie van klasse B verplicht, ook bij testklasse A</label>
+    <label className="ndt-toggle-card ndt-wide"><input type="checkbox" checked={draft.planarDefectsRequired??false} onChange={e=>patch({planarDefectsRequired:e.target.checked})}/><span className="ndt-toggle-content"><span className="ndt-toggle-mark" aria-hidden="true">✓</span><span>Vlakke defecten relevant: geometrie van klasse B verplicht, ook bij testklasse A</span></span></label>
    </div>
    <CheckGroup label="Toegestane stralingsbronnen" items={ALL_SOURCES} selected={draft.sources??[]} onChange={v=>patch({sources:v})}/>
    <CheckGroup label="Toegestane filmtypes" items={ALL_FILMS} selected={draft.films??[]} onChange={v=>patch({films:v})}/>
@@ -206,15 +208,15 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
     <FloatField label="Minimale zwarting D" value={draft.density?.min} placeholder="Bijv. 2.0" onChange={v=>patch({density:{...draft.density!,min:v??Number.NaN}})}/>
     <FloatField label="Maximale zwarting D" value={draft.density?.max} placeholder="Bijv. 3.5" onChange={v=>patch({density:{...draft.density!,max:v??Number.NaN}})}/>
     <ChoiceGroup label="IQI-zijde" items={['source','film','either'] as const} selected={draft.iqi?.side??'source'} onChange={v=>patch({iqi:{...draft.iqi!,side:v}})}/>
-    <FloatField label="Extra fijnere draden t.o.v. tabel" value={draft.iqi?.extraFinerWires} onChange={v=>patch({iqi:{...draft.iqi!,extraFinerWires:v??0}})}/>
-    <FloatField label="Minimale filmoverlap (mm), indien bekend" value={draft.planning?.minimumFilmOverlapMm} onChange={v=>patch({planning:{...draft.planning!,minimumFilmOverlapMm:v}})} allowEmpty/>
-    <label className="ndt-check"><input type="checkbox" checked={draft.iqi?.filmSideComparisonVerified??false} onChange={e=>patch({iqi:{...draft.iqi!,filmSideComparisonVerified:e.target.checked}})}/>Filmzijde-IQI vergelijkingsopname/afspraak gecontroleerd</label>
+    <FloatField label="Extra fijnere draden t.o.v. tabel" value={draft.iqi?.extraFinerWires} placeholder="Bijv. 0" onChange={v=>patch({iqi:{...draft.iqi!,extraFinerWires:v??Number.NaN}})}/>
+    <FloatField label="Minimale filmoverlap (mm), indien bekend" value={draft.planning?.minimumFilmOverlapMm} placeholder="Bijv. 25" onChange={v=>patch({planning:{...draft.planning!,minimumFilmOverlapMm:v}})} allowEmpty/>
+    <label className="ndt-toggle-card"><input type="checkbox" checked={draft.iqi?.filmSideComparisonVerified??false} onChange={e=>patch({iqi:{...draft.iqi!,filmSideComparisonVerified:e.target.checked}})}/><span className="ndt-toggle-content"><span className="ndt-toggle-mark" aria-hidden="true">✓</span><span>Filmzijde-IQI vergelijkingsopname/afspraak gecontroleerd</span></span></label>
    </div>
    <IqiRulesEditor rows={draft.iqi?.approvedRules??[]} onChange={rows=>patch({iqi:{...draft.iqi!,approvedRules:rows}})}/>
    <ShotRulesEditor rows={draft.planning?.approvedExposureRules??[]} onChange={rows=>patch({planning:{...draft.planning!,approvedExposureRules:rows}})}/>
    {currentValidations.length>0&&<div className="ndt-alert ndt-orange"><strong>Controleer voor opslag:</strong>{currentValidations.map((e,i)=><p key={i}>{e}</p>)}</div>}
    <label className="ndt-field"><span>Naam / personeelscode bevestigende onderzoeker</span><input value={who} onChange={e=>setWho(e.target.value)} placeholder="Naam of personeelscode" autoComplete="name"/></label><p className="ndt-help ndt-stored-note">Wordt na succesvolle bevestiging onthouden op dit apparaat. Niet automatisch gedeeld.</p>
-   <label className="ndt-check ndt-ack"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/>Ik heb alle velden en proceduregrenzen met het originele document vergeleken. Deze opslag is geen automatische normgoedkeuring.</label>
+   <label className="ndt-toggle-card ndt-ack"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/><span className="ndt-toggle-content"><span className="ndt-toggle-mark" aria-hidden="true">✓</span><span>Ik heb alle velden en proceduregrenzen met het originele document vergeleken. Deze opslag is geen automatische normgoedkeuring.</span></span></label>
    <button type="button" disabled={busy||!ack||currentValidations.length>0} onClick={save}>Procedure bevestigen & opslaan</button>
   </section>}
   {tab==='library'&&<section className="ndt-card"><h3>Procedure-Bibliotheek</h3>
@@ -253,7 +255,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
       <FloatField label="Röntgenspanning (kV)" value={input.kv} placeholder="Bijv. 160" onChange={v=>changeInput({kv:v??undefined})} allowEmpty/>
       <FloatField label="Buisstroom (mA)" value={input.ma} placeholder="Bijv. 5.0" onChange={v=>changeInput({ma:v??undefined})} allowEmpty/>
     </>:<FloatField label="Bronactiviteit (Ci)" value={input.activityCi} placeholder="Bijv. 40.0" onChange={v=>changeInput({activityCi:v??undefined})} allowEmpty/>}
-    <FloatField label="Maximale doorstraalde dikte aan rand (mm)" value={input.maximumPathThicknessMm} placeholder="Bijv. 22.0" onChange={v=>changeInput({maximumPathThicknessMm:v})} allowEmpty/>
+    {input.geometry.shape==='pipe'&&<FloatField label="Maximale doorstraalde dikte aan rand (mm)" value={input.maximumPathThicknessMm} placeholder="Bijv. 11.0" onChange={v=>changeInput({maximumPathThicknessMm:v})} allowEmpty/>}
     {input.geometry.shape==='pipe'&&<>
       <FloatField label="Pijpbuitendiameter Ø (mm)" value={input.geometry.diameterMm} placeholder="Bijv. 114.3" onChange={v=>changeGeometry({diameterMm:v})} allowEmpty/>
       <SelectField label="Bronpositie" options={['onbekend','internal-central','external','internal-offset'] as const} selected={input.geometry.sourcePlacement??'onbekend'} onChange={v=>changeGeometry({sourcePlacement:v==='onbekend'?null:v})}/>
@@ -261,7 +263,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
       <label className="ndt-check ndt-wide"><input type="checkbox" checked={input.geometry.filmWrapped} onChange={e=>changeGeometry({filmWrapped:e.target.checked})}/>Film volgt de buisomtrek (omgelegde film)</label>
     </>}
     <FloatField label="Bron-/focusgrootte d, grootste afmeting (mm)" value={input.geometry.sourceSizeMm} placeholder="Bijv. 2.5" onChange={v=>changeGeometry({sourceSizeMm:v})} allowEmpty/>
-    <FloatField label="Object-film-afstand b (mm)" value={input.geometry.objectToFilmMm} placeholder="Bijv. 10.0" onChange={v=>changeGeometry({objectToFilmMm:v})} allowEmpty/>
+    <div className="ndt-optional-geometry"><FloatField label="Object-film-afstand b (mm) · optioneel" value={input.geometry.objectToFilmMm} placeholder="Standaard = w" onChange={v=>changeGeometry({objectToFilmMm:v})} allowEmpty/><small>Leeg = voorlopig b = w (alleen bij film tegen het object). Bij andere filmplaatsing de werkelijke b invullen; onbevestigde aanname geeft een waarschuwing.</small></div>
    </div>
    <p className="ndt-help ndt-w-caution">Let op: w = t of 2 × t is alleen een <strong>nominale schatting</strong> voor de procedure-/IQI-controles. Bij schuine, excentrische en elliptische opnamen kan de werkelijke stralingsweg afwijken. Controleer deze afzonderlijk. De belichtingsmotor blijft de oorspronkelijke wanddikte t gebruiken.</p>
    {result&&<div className="ndt-output" aria-live="polite">
@@ -270,7 +272,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
      <p><small>Filmsegmenten</small><strong>{input.geometry.shape==='plate'?'n.v.t. (plaat)':fmt(result.filmPlan.filmSegments)}</strong></p>
      <p><small>Min. opnamen</small><strong>{fmt(result.filmPlan.minimumExposures)}</strong></p>
      <p><small>Vereiste IQI</small><strong>{result.iqi.wireNumber?`W${result.iqi.wireNumber} (${result.iqi.wireDiameterMm} mm)`:'Onbekend'}</strong></p></div>
-    <p className="ndt-help">IQI-positie: {result.iqi.position==='film'?'filmzijde':'bronzijde'} · Gemeten zichtbaarheid en daadwerkelijke filmdekking moeten apart worden beoordeeld.</p>
+    <p className="ndt-help">IQI-positie: {result.iqi.position==='film'?'Filmzijde (Film)':'Bronzijde (Source)'} · Gemeten zichtbaarheid en daadwerkelijke filmdekking moeten apart worden beoordeeld.</p>
     <ul className="ndt-checklist">{result.checks.map((c,i)=><li key={`${c.code}-${i}`} className={`ndt-${c.status}`}><strong>{c.status==='red'?'STOP':c.status==='orange'?'CONTROLE':'OK'}</strong> {c.message}</li>)}</ul>
     <label className="ndt-field"><span>Logboeknaam</span><input value={planName} onChange={e=>setPlanName(e.target.value)} placeholder="Project / lasnummer / opname-ID"/></label>
     <button type="button" disabled={!planName.trim()} onClick={async()=>{try{if(!active)return;await savePlan(createSavedPlan(planName,active,result));setPlanName('');await refresh();setMessage('Opnameplan inclusief status en snapshot opgeslagen in het lokale logboek.');}catch(e){setError(String(e));}}}>Bewaar opnameplan in logboek</button>
