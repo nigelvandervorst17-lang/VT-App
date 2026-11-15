@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081827">
+<title>Mijn Röntgenbuizen — NDT Research</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#081827;color:#eaf5ff;line-height:1.45}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(150deg,#081827 2%,#152c44 60%,#0a192b)}
+main{max-width:800px;margin:0 auto;padding:12px 12px calc(70px + env(safe-area-inset-bottom))}
+header{padding:16px 6px 10px}
+h1{font-size:clamp(1.5rem,5vw,2rem);line-height:1.2;margin:.35rem 0}
+h2{font-size:1.15rem;margin:0 0 12px}
+h3{font-size:1rem;margin:0 0 10px}
+small,.hint{color:#b1c5d9;font-size:.86rem}
+p{margin:8px 0 12px}
+section{border:1px solid #335575;background:#10263d;border-radius:17px;padding:17px 14px;margin:14px 0;box-shadow:0 8px 22px #00101c36}
+.notice{background:#3b3026;border:1px solid #bd864f;border-radius:12px;padding:12px 14px;color:#ffdec0}
+.notice strong{color:#ffe7bd}
+.notice small{color:#ffddbe}
+.warning-card{padding:13px;border:1px solid #bb914c;border-radius:12px;background:#3a3022;color:#ffe0b1}
+.status{font-weight:800;color:#ffc978}
+.label{display:block;font-size:.87rem;font-weight:700;margin:8px 0 6px}
+.field{display:flex;flex-direction:column;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid.full{grid-template-columns:1fr}
+@media(max-width:430px){.grid{grid-template-columns:1fr}section{padding:14px 12px}h1{font-size:1.65rem}}
+input,select,button{font:inherit}
+input:not([type=checkbox]),select{width:100%;min-height:49px;border-radius:11px;border:1px solid #65819d;background:#082033;color:#f7fbff;padding:11px 12px;font-size:16px}
+input::placeholder{color:#a0b3c4}
+input:focus,select:focus{outline:3px solid #308cf18c;outline-offset:1px}
+button{min-height:53px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border:1px solid #6da5db;background:#145b98;color:white;font-weight:800;border-radius:12px;padding:11px 17px}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.secondary{background:#17364e;border-color:#52718d}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0}
+.actions button{flex:1 1 180px}
+label.tile{display:flex;align-items:center;gap:11px;padding:12px;border:2px solid #526d87;border-radius:13px;min-height:57px;font-weight:700;background:#102d46;cursor:pointer}
+label.tile:has(input:checked){border-color:#5cb3ff;background:#075aa0;box-shadow:inset 0 0 0 1px #aedaff}
+label.tile input{width:22px;height:22px;flex:0 0 auto;accent-color:#41a5ff}
+fieldset{border:1px solid #365875;border-radius:14px;padding:12px;margin:10px 0;min-width:0}
+legend{font-weight:800;padding:0 8px}
+.output{margin-top:14px;padding:12px;border-radius:12px;background:#061b2d;border:1px solid #456989;white-space:pre-wrap;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;min-height:54px}
+.error{border-color:#ca7070;color:#ffd5d5}
+.ok{border-color:#48a397}
+a{color:#96d3ff}
+a.back{display:inline-block;margin-bottom:7px}
+.switch{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0}
+hr{border:0;border-top:1px solid #355470;margin:17px 0}
+footer{color:#b4c6d4;padding:24px 8px;font-size:.86rem}
+</style>
+</head>
+<body>
+<main>
+<header>
+<a class="back" href="../index.html">‹ Terug naar de app</a>
+<small>ONDERZOEK · X-RAY · PR #7</small>
+<h1>Mijn Röntgenbuizen</h1>
+<p>Toestelprofielen, één- of tweepuntsmetingen en een voorlopige <strong>k_tube</strong>-vergelijking. De live-rekenmotor blijft ongewijzigd.</p>
+</header>
+<div class="notice" role="note">
+<strong>Geen kalibratie- of RT-vrijgave.</strong>
+<p>Dit proefscherm berekent alleen <em>voorlopige</em> factoren. Een geslaagde opname is onvoldoende om een buis automatisch als CALIBRATED vrij te geven. Beoordeling en onafhankelijke kalibratiebewijzen blijven vereist.</p>
+<small>Gegevens worden uitsluitend in de opslag van deze browser bewaard, niet versleuteld. Gebruik in deze online test geen echte serienummers, vertrouwelijke klantgegevens of echte broncertificaten.</small>
+</div>
+<section>
+<h2>1. Mijn opgeslagen toestellen</h2>
+<label class="label" for="tubeChoice">Kies toestel</label>
+<select id="tubeChoice"><option value="">Nog geen toestel gekozen</option></select>
+<div id="currentStatus" class="warning-card" role="status">Nog geen toestel opgeslagen.</div>
+</section>
+<section>
+<h2>2. Toestelprofiel toevoegen</h2>
+<form id="profileForm">
+<div class="grid">
+<div class="field"><label class="label" for="manufacturer">Merk / fabrikant</label><input id="manufacturer" required placeholder="Bijv. Comet"></div>
+<div class="field"><label class="label" for="tubeModel">Model</label><input id="tubeModel" required placeholder="Bijv. MXR-300HP"></div>
+<div class="field"><label class="label" for="tubeSerial">Serienummer (alleen testgegevens)</label><input id="tubeSerial" required placeholder="Bijv. TEST-001"></div>
+<div class="field"><label class="label" for="generatorType">Spanningsvorm</label><select id="generatorType"><option value="CONSTANT_POTENTIAL">Constant Potential</option><option value="HALF_WAVE">Half-wave</option></select></div>
+<div class="field"><label class="label" for="beamType">Stralingsrichting</label><select id="beamType"><option value="RICHTSTRALER">Richtstraler</option><option value="RONDSTRALER">Rondstraler</option></select></div>
+<div class="field"><label class="label" for="maxKv">Maximale spanning (kV)</label><input id="maxKv" inputmode="decimal" required placeholder="Bijv. 300"></div>
+<div class="field"><label class="label" for="maxMa">Maximale stroom (mA)</label><input id="maxMa" inputmode="decimal" required placeholder="Bijv. 10"></div>
+<div class="field"><label class="label" for="focalSpot">Brandvlekgrootte d (mm)</label><input id="focalSpot" inputmode="decimal" required placeholder="Bijv. 2.0"></div>
+<div class="field"><label class="label" for="maxKw">Max. vermogen (kW, optioneel)</label><input id="maxKw" inputmode="decimal" placeholder="Alleen indien onderbouwd"></div>
+</div>
+<hr>
+<p class="hint">Een eigen merk/model heeft niet automatisch dezelfde curve als een ander toestel. Een vergelijkingscurve mag alleen met vastgelegde herkomst worden gekozen; zonder passende curve blijft de berekening geblokkeerd.</p>
+<div class="grid">
+<div class="field"><label class="label" for="referenceModel">Gekoppelde onderzoeksreferentie (optioneel)</label><select id="referenceModel"><option value="">Geen referentie — blokkeren</option></select></div>
+<div class="field"><label class="label" for="referenceEvidence">Onderbouwing curve-koppeling (dossier-ID)</label><input id="referenceEvidence" placeholder="Bijv. TEST-MATCH-001"></div>
+</div>
+<div class="actions"><button type="submit">Toestel lokaal opslaan</button></div>
+</form>
+<div id="profileOutput" class="output" role="status">Vul een onderzoeksprofiel in.</div>
+</section>
+<section>
+<h2>3. Eén- of tweepuntsijking (onderzoek)</h2>
+<p class="hint">Vul alleen een geregistreerde, gecontroleerde proefopname in. De automatisch berekende factor blijft <strong>voorlopig</strong> en verandert de profielstatus niet naar CALIBRATED.</p>
+<form id="calibrationForm">
+<label class="label" for="countShots">Aantal meetpunten</label>
+<select id="countShots"><option value="1">1 meetpunt</option><option value="2">2 meetpunten</option></select>
+<div id="shotInputs">
+<fieldset id="shot1Fieldset">
+<legend>Meetpunt 1</legend>
+<div class="grid">
+<div class="field"><label class="label" for="s1_id">Meetdossier-ID</label><input id="s1_id" placeholder="Bijv. TEST-MEET-1"></div>
+<div class="field"><label class="label" for="s1_thickness">Staal t (mm)</label><input id="s1_thickness" inputmode="decimal" placeholder="Bijv. 20"></div>
+<div class="field"><label class="label" for="s1_kv">Gebruikte kV</label><input id="s1_kv" inputmode="decimal" placeholder="Bijv. 225"></div>
+<div class="field"><label class="label" for="s1_ma">Gebruikte mA</label><input id="s1_ma" inputmode="decimal" placeholder="Bijv. 5"></div>
+<div class="field"><label class="label" for="s1_sfd">SFD (mm)</label><input id="s1_sfd" inputmode="decimal" placeholder="Bijv. 800"></div>
+<div class="field"><label class="label" for="s1_film">Filmtype</label><select id="s1_film"><option>D4</option><option>D5</option><option>D7</option></select></div>
+<div class="field"><label class="label" for="s1_density">Gemeten zwarting D</label><input id="s1_density" inputmode="decimal" placeholder="Bijv. 2,5"></div>
+<div class="field"><label class="label" for="s1_time">Werkelijke belichtingstijd (uu:mm:ss)</label><input id="s1_time" inputmode="text" placeholder="00:01:40"></div>
+<div class="field"><label class="label" for="s1_screens">Pb-schermen volgens referentie</label><input id="s1_screens" placeholder="Bijv. Pb 0.027 mm"></div>
+<div class="field"><label class="label" for="s1_quality">Kwaliteitsbewijs / goedgekeurde film (dossier-ID)</label><input id="s1_quality" placeholder="Bijv. TEST-IQI-1"></div>
+</div>
+<label class="tile"><input type="checkbox" id="s1_passed"><span>Meetpunt 1: proefopname en beeldkwaliteit gecontroleerd</span></label>
+</fieldset>
+<fieldset id="shot2Fieldset" hidden>
+<legend>Meetpunt 2</legend>
+<div class="grid">
+<div class="field"><label class="label" for="s2_id">Meetdossier-ID</label><input id="s2_id" placeholder="Bijv. TEST-MEET-2"></div>
+<div class="field"><label class="label" for="s2_thickness">Staal t (mm)</label><input id="s2_thickness" inputmode="decimal" placeholder="Bijv. 25"></div>
+<div class="field"><label class="label" for="s2_kv">Gebruikte kV</label><input id="s2_kv" inputmode="decimal" placeholder="Bijv. 225"></div>
+<div class="field"><label class="label" for="s2_ma">Gebruikte mA</label><input id="s2_ma" inputmode="decimal" placeholder="Bijv. 5"></div>
+<div class="field"><label class="label" for="s2_sfd">SFD (mm)</label><input id="s2_sfd" inputmode="decimal" placeholder="Bijv. 800"></div>
+<div class="field"><label class="label" for="s2_film">Filmtype</label><select id="s2_film"><option>D4</option><option>D5</option><option>D7</option></select></div>
+<div class="field"><label class="label" for="s2_density">Gemeten zwarting D</label><input id="s2_density" inputmode="decimal" placeholder="Bijv. 2,5"></div>
+<div class="field"><label class="label" for="s2_time">Werkelijke belichtingstijd (uu:mm:ss)</label><input id="s2_time" placeholder="00:03:00"></div>
+<div class="field"><label class="label" for="s2_screens">Pb-schermen volgens referentie</label><input id="s2_screens" placeholder="Bijv. Pb 0.027 mm"></div>
+<div class="field"><label class="label" for="s2_quality">Kwaliteitsbewijs (dossier-ID)</label><input id="s2_quality" placeholder="Bijv. TEST-IQI-2"></div>
+</div>
+<label class="tile"><input type="checkbox" id="s2_passed"><span>Meetpunt 2: proefopname en beeldkwaliteit gecontroleerd</span></label>
+</fieldset>
+</div>
+<div class="actions"><button type="submit">Bereken voorlopige k_tube</button></div>
+</form>
+<div id="calibrationOutput" class="output" role="status">Geen metingen ingevoerd.</div>
+</section>
+<section>
+<h2>4. Vergelijking & geometrie (alleen onderzoek)</h2>
+<p class="hint">Een getal op dit scherm is geen belichtingsinstructie. Het profiel levert automatisch brandvlekgrootte d voor de afzonderlijke geometriecontrole.</p>
+<form id="previewForm">
+<div class="grid">
+<div class="field"><label class="label" for="p_thickness">Staal t (mm)</label><input id="p_thickness" inputmode="decimal" placeholder="Bijv. 20"></div>
+<div class="field"><label class="label" for="p_kv">kV</label><input id="p_kv" inputmode="decimal" placeholder="Bijv. 225"></div>
+<div class="field"><label class="label" for="p_ma">mA</label><input id="p_ma" inputmode="decimal" placeholder="Bijv. 5"></div>
+<div class="field"><label class="label" for="p_sfd">SFD (mm)</label><input id="p_sfd" inputmode="decimal" placeholder="Bijv. 800"></div>
+<div class="field"><label class="label" for="p_film">Film</label><select id="p_film"><option>D4</option><option>D5</option><option>D7</option></select></div>
+<div class="field"><label class="label" for="p_density">Zwarting D</label><input id="p_density" inputmode="decimal" placeholder="Bijv. 2,5"></div>
+<div class="field"><label class="label" for="p_gap">Object-film-afstand b (mm)</label><input id="p_gap" inputmode="decimal" placeholder="Bijv. 10"></div>
+<div class="field"><label class="label" for="p_screens">Referentie-Pb-schermen</label><input id="p_screens" placeholder="Bijv. Pb 0.027 mm"></div>
+</div>
+<label class="tile"><input type="checkbox" id="p_pending"><span>Toon voorlopige factor uit meetpunten (niet gevalideerd)</span></label>
+<hr>
+<h3>ISO 17636-1 — f_min (alleen met bronverwijzing)</h3>
+<p class="hint">Geen ingebouwde ISO-grens. Als je een gecontroleerde f_min uit een goedgekeurde procedure hebt, vul waarde én bronverwijzingen in; anders blijft de controle 'niet beoordeeld'.</p>
+<div class="grid">
+<div class="field"><label class="label" for="p_fmin">f_min uit goedgekeurde procedure (mm)</label><input id="p_fmin" inputmode="decimal" placeholder="Geen automatische waarde"></div>
+<div class="field"><label class="label" for="p_doc">Documentnummer</label><input id="p_doc" placeholder="Gecontroleerd document-ID"></div>
+<div class="field"><label class="label" for="p_rev">Documentrevisie</label><input id="p_rev" placeholder="Bijv. rev. A"></div>
+<div class="field"><label class="label" for="p_standard">Norm en editie</label><input id="p_standard" placeholder="Bijv. ISO 17636-1: [editie]"></div>
+<div class="field"><label class="label" for="p_approval">Proceduregoedkeuring</label><input id="p_approval" placeholder="Goedkeuringsreferentie"></div>
+</div>
+<div class="actions"><button type="submit">Onderzoeksvergelijking tonen</button></div>
+</form>
+<div id="previewOutput" class="output" role="status">Nog geen vergelijking gemaakt.</div>
+</section>
+<footer>Alleen voor onderzoek en softwarecontrole. Meet- en kalibratiegegevens blijven onder de verantwoordelijkheid van de bevoegde organisatie. <a href="./XRAY-RESEARCH-NL.md">Lees de X-ray-onderbouwing</a>.</footer>
+</main>
+<script type="module" src="./xray-tube-ui.mjs"></script>
+</body>
+</html>
