@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=412">
+<link rel="stylesheet" href="./styles.css?v=416">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -246,12 +246,7 @@
       </div>
     </div>
     <p class="rt-compact-note" id="rtCompactModeNote" role="status">Onderzoeksberekening: geen vrijgegeven belichtingstijd.</p>
-    <section class="rt-waygate-live" id="rtWaygateLive" aria-label="Waygate-softwarevergelijking" hidden>
-      <div class="rt-waygate-live-head">WAYGATE · SOFTWAREVERGELIJKING</div>
-      <div class="rt-waygate-live-time" id="rtWaygateLiveTime">—</div>
-      <p id="rtWaygateLiveMessage" class="rt-waygate-live-message" role="status" aria-live="polite">Importeer eerst je Waygate-softwarepunten.</p>
-      <p class="rt-waygate-live-caution">Alleen een bekende Waygate-softwaretijd. Niet gevalideerd als belichtingsadvies.</p>
-    </section>
+    
     <div class="rt-compact-result-mount" id="rtCompactResultMount"></div>
     <section id="rtCompactIqiQuick" class="rt-iqi-quick" aria-label="IQI Snelcontrole">
       <div class="rt-iqi-quick-title">
@@ -269,54 +264,7 @@
         <p class="rt-iqi-quick-caution">Vergelijkingshulpmiddel, geen formele acceptatie. Controleer IQI-beeld, werkelijke zichtbaarheid, norm, materiaal en goedgekeurde RT-procedure.</p>
       </div>
     </section>
-    <details id="rtWaygateLibrary" class="rt-waygate-library" hidden>
-      <summary>Waygate-grafiek en referenties <span>(optioneel)</span></summary>
-      <div class="rt-waygate-library-body">
-    <details id="rtWaygateAtlas" class="rt-waygate-reference rt-waygate-atlas" hidden>
-      <summary>Eigen Waygate-grafiek <span id="rtWaygateGraphCount">Referentiepunten</span></summary>
-      <div class="rt-waygate-content">
-        <p class="small-muted"><strong>Onderzoeksgrafiek op basis van overgenomen Waygate-softwaregegevens.</strong> Alleen bekende punten, geen voorspelde belichtingstijden.</p>
-        <label class="rt-waygate-import" for="rtWaygateGraphAxis">Wat wil je vergelijken?</label>
-        <select id="rtWaygateGraphAxis" class="rt-waygate-axis">
-          <option value="density">Doelzwarting D → softwaretijd</option>
-          <option value="thickness">Staaldikte (mm) → softwaretijd</option>
-          <option value="kv">Spanning (kV) → softwaretijd</option>
-          <option value="semilog">Semi-log: staaldikte → mA·min (kV-curves)</option>
-        </select>
-        <div id="rtWaygateGraph" class="rt-waygate-graph" role="img" aria-label="Waygate-referentiepunten uit de software"></div>
-        <p id="rtWaygateGraphNote" class="small-muted" role="status">Er worden alleen bekende Waygate-softwarepunten getoond; geen interpolatie.</p>
-        <div class="rt-waygate-newpoint">
-          <label class="rt-waygate-import" for="rtWaygatePointTime">Nieuwe softwaretijd uit Waygate bij de huidige X-ray-invoer</label>
-          <input id="rtWaygatePointTime" type="text" inputmode="numeric" autocomplete="off" placeholder="uu:mm:ss">
-          <button id="rtWaygatePointAdd" type="button">Waygate-punt lokaal toevoegen</button>
-        </div>
-        <p class="small-muted">Neem uitsluitend de tijd over die Waygate daadwerkelijk toont. De overige velden komen uit het X-ray-scherm. Je hoeft geen buismodel te kiezen. Geen echte film- of densitometerwaarden invoeren.</p>
-        <div class="rt-waygate-actions">
-          <button id="rtWaygatePointExport" type="button">Exporteer extra punten</button>
-          <button id="rtWaygatePointClear" type="button">Wis extra punten</button>
-        </div>
-        <p id="rtWaygatePointStatus" class="rt-waygate-status" role="status" aria-live="polite"></p>
-      </div>
-    </details>
-    <details id="rtWaygateReference" class="rt-waygate-reference" hidden>
-      <summary>Waygate X-ray-softwarepunten <span id="rtWaygateCount">Nog geen lokale punten</span></summary>
-      <div class="rt-waygate-content">
-        <p class="small-muted"><strong>Alleen softwarevergelijking, geen fysieke filmmeting of gekalibreerde belichtingstijd.</strong> Met opgeslagen Waygate-punten kun je automatisch exact bekende softwaretijden vergelijken. Geen buismodel nodig. Voor overige combinaties is eerst een Waygate-referentie nodig.</p>
-        <button type="button" id="rtWaygateUseReference" class="rt-waygate-use" hidden>Gebruik opgeslagen Waygate-voorbeeld</button>
-        <div id="rtWaygateBody" aria-live="polite"></div>
-        <p id="rtWaygateMatch" class="rt-waygate-match" role="status" aria-live="polite"></p>
-        <label class="rt-waygate-import" for="rtWaygateImport">Importeer eigen Waygate-vergelijking (JSON, alleen lokaal)</label>
-        <input type="file" id="rtWaygateImport" accept=".json,application/json">
-        <div class="rt-waygate-actions">
-          <button type="button" id="rtWaygateExport">Exporteer JSON-back-up</button>
-          <button type="button" id="rtWaygateForget">Wis lokale softwarepunten</button>
-        </div>
-        <p class="small-muted">De originele opname- en densitometerregistraties horen apart bij Praktijkmetingen. Importeer alleen softwaregegevens waarvan de herkomst bekend is. Dit onderdeel verandert geen rekenmodel.</p>
-        <p id="rtWaygateStatus" class="rt-waygate-status" role="status" aria-live="polite"></p>
-      </div>
-    </details>
-      </div>
-    </details>
+    
   </section>
   <details id="rtCompactAdvanced" class="rt-compact-advanced" hidden>
     <summary id="rtCompactAdvancedLabel">Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding</summary>
@@ -478,41 +426,36 @@
 
 
 <section class="screen" data-screen="procedure" id="screen-procedure" hidden>
- <div class="section-heading"><p class="overline">RT LEVEL 3 · CONCEPT / WERKHULP</p><h1 id="procViewTitle">IQI-controle</h1>
- <p class="subtitle" id="procViewIntro">Bepaal de vereiste IQI-draad voor de gekozen procedure. Geen vrijgegeven werkprocedure.</p></div>
+ <div class="section-heading">
+  <p class="overline">BASIC RT PRO · CONTROLEHULPMIDDEL</p>
+  <h1 id="procViewTitle">IQI-controle</h1>
+  <p class="subtitle" id="procViewIntro">Controle van IQI-draden voor staal, los van de filmverdeling.</p>
+ </div>
  <div class="proc-view-switch" role="group" aria-label="Kies IQI of filmverdeling">
   <button type="button" id="procTabIqi" class="active" data-proc-tab="iqi" aria-pressed="true">IQI</button>
   <button type="button" id="procTabFilm" data-proc-tab="film" aria-pressed="false">Filmverdeling</button>
  </div>
  <button type="button" id="procBack" class="outline-button proc-top-back">Terug naar rekenen</button>
  <div class="panel procedure-panel" id="procIqiSection" data-proc-pane="iqi">
-  <h2>IQI · norm en draadeis</h2>
+  <h2>IQI · zichtbare draad</h2>
+  <p class="small-muted">Draadeis uit de beschikbare ISO-referentietabel voor staal. Controleer de toepasselijke normeditie en goedgekeurde procedure.</p>
   <div class="fields-grid">
-   <div class="field-card"><label for="procNorm">Norm / materiaal</label><select id="procNorm"><option value="iso">ISO 17636-1 · lassen</option><option value="asme">ASME V · stalen gietstukken</option></select></div>
-   <div class="field-card" id="procClassWrap"><label for="procClass">ISO opnameklasse</label><select id="procClass"><option value="B">Klasse B</option><option value="A">Klasse A</option></select></div>
-   <div class="field-card" id="procMaterialWrap"><label for="procMaterial">Materiaal</label><select id="procMaterial"><option value="steel">Staal / Fe</option><option value="titanium">Titanium / Ti</option><option value="nickel">Nikkel / legering (controleren)</option></select></div>
-   <div class="field-card"><label for="procMme">MME techniek</label><select id="procMme"><option value="1">1 · vlak / langslas SWSI</option><option value="2" selected>2 · panoramisch SWSI</option><option value="3">3 · excentrisch SWSI</option><option value="4">4 · DWSI</option><option value="5">5 · langslas DWSI</option><option value="6">6 · DWDI ASME</option><option value="6A">6A · ellips ISO</option><option value="6B">6B · superimposed ISO</option><option value="7">7 · SWSI buitenbron</option><option value="8">8 · set-in SWSI</option><option value="9">9 · set-on SWSI</option><option value="10">10 · set-in SWSI</option><option value="11">11 · set-on SWSI</option><option value="12">12 · set-in DWSI</option></select></div>
-   <div class="field-card" id="procTechniqueWrap"><label for="procTechnique">Stralingsgeometrie</label><select id="procTechnique"><option value="sw">SWSI · enkelwandig / enkelbeeld</option><option value="dwsi">DWSI · dubbelwandig / enkelbeeld</option><option value="dwdi">DWDI · dubbelwandig / dubbelbeeld</option></select></div>
+   <div class="field-card"><label for="procClass">Opnameklasse</label><select id="procClass"><option value="B">Klasse B</option><option value="A">Klasse A</option></select></div>
+   <div class="field-card"><label for="procTechnique">Opnametechniek</label><select id="procTechnique"><option value="sw">SWSI · enkelwandig</option><option value="dwsi">DWSI · dubbelwandig, enkelbeeld</option><option value="dwdi">DWDI · dubbelwandig, dubbelbeeld</option></select></div>
    <div class="field-card"><label for="procSide">IQI-positie</label><select id="procSide"><option value="source">Bronzijde</option><option value="film">Filmzijde</option></select></div>
-   <div class="field-card"><label for="procT">Nominale enkelwandige dikte t (mm)</label><input id="procT" inputmode="decimal" type="text" value="10"></div>
+   <div class="field-card"><label for="procT">Nominale staaldikte t (mm)</label><input id="procT" inputmode="decimal" type="text" value="10"></div>
    <div class="field-card"><label for="procW">Werkelijk doorstraalde dikte w (mm)</label><input id="procW" inputmode="decimal" type="text" value="20"></div>
   </div>
-  <p class="small-muted" id="procMetalScope"></p>
-  <div id="procIqiOutput" class="procedure-answer" aria-live="polite"></div>
+  <div id="procIqiOutput" class="procedure-answer" role="status" aria-live="polite"></div>
  </div>
  <div class="panel procedure-panel" id="procFilmSection" data-proc-pane="film" hidden>
-  <h2>Filmverdeling · aantal films en middelpunt</h2>
-  <p class="small-muted">Kies het filmformaat en de werkelijke bruikbare lengte. Je ziet het aantal filmstroken, de afstand tussen de middens en de plaatsing vanaf het 0-punt langs de buitenomtrek of de rechte las.</p>
-  <div class="fields-grid proc-film-settings">
-   <div class="field-card"><label for="procFilmNorm">Norm</label><select id="procFilmNorm" aria-label="Norm voor filmverdeling"></select></div>
-   <div class="field-card"><label for="procFilmMme">Opnametechniek (MME)</label><select id="procFilmMme" aria-label="MME voor filmverdeling"></select></div>
-  </div>
+  <h2>Filmverdeling · aantal, afstand en middelpunt</h2>
+  <p class="small-muted">Kies een filmformaat en de werkelijk bruikbare filmlengte. De app berekent de gelijkmatige filmverdeling in cm vanaf het 0-punt. Dit is geen opnameschema.</p>
   <div class="fields-grid">
-   <div class="field-card"><label for="procShape">Objectgeometrie / lasverloop</label><select id="procShape"><option value="ring">Rondlas / omtrek</option><option value="straight">Rechte las / langslas</option></select></div>
+   <div class="field-card"><label for="procShape">Lasverloop</label><select id="procShape"><option value="ring">Rondlas / buisomtrek</option><option value="straight">Rechte las / langslas</option></select></div>
    <div class="field-card" id="procODWrap"><label for="procOD">Buitendiameter De (mm)</label><input id="procOD" type="text" inputmode="decimal" value="219,1"></div>
-   <div class="field-card" id="procLengthWrap" hidden><label for="procLength">Te inspecteren lengte (mm)</label><input id="procLength" type="text" inputmode="decimal" value="1000"></div>
-   <div class="field-card">
-    <label for="procFilmFormat">Filmformaat uit voorraad (breedte × lengte, cm)</label>
+   <div class="field-card" id="procLengthWrap" hidden><label for="procLength">Te verdelen laslengte (mm)</label><input id="procLength" type="text" inputmode="decimal" value="1000"></div>
+   <div class="field-card"><label for="procFilmFormat">Filmformaat uit voorraad (breedte × lengte, cm)</label>
     <select id="procFilmFormat" aria-describedby="procFilmFormatHelp">
      <optgroup label="D4 · PB VAC">
       <option value="D4:6x16">D4 · 6 × 16 cm</option>
@@ -536,42 +479,21 @@
      <option value="custom">Ander formaat / D7 / Rollpack · lengte zelf invoeren</option>
     </select>
    </div>
-   <div class="field-card"><label for="procFilmLen">Bruikbare film-/beeldlengte (mm) · aanpasbaar</label><input id="procFilmLen" inputmode="decimal" type="text" value="240" aria-describedby="procFilmFormatHelp"></div>
-   <p class="small-muted proc-film-format-help" id="procFilmFormatHelp">D4 · 10 × 24 cm: nominale lengte 240 mm. De werkelijke bruikbare beeldlengte kan kleiner zijn door randen en markeringen; pas die zelf aan. Het filmformaat wijzigt geen belichtingsberekening.</p>
-   <div class="field-card"><label for="procOverlap">Geplande overlap (mm)</label><input id="procOverlap" inputmode="decimal" type="text" value="10"></div>
-   <div class="field-card" id="procSfdWrap"><label for="procSfd">SFD (mm) · nodig voor MME 1/5</label><input id="procSfd" inputmode="decimal" type="text" value="700"></div>
+   <div class="field-card"><label for="procFilmLen">Bruikbare film-/beeldlengte (mm)</label><input id="procFilmLen" inputmode="decimal" type="text" value="240" aria-describedby="procFilmFormatHelp"></div>
+   <p class="small-muted proc-film-format-help" id="procFilmFormatHelp">Bruikbare lengte aanpassen voor randen, markeringen en lasdekking. Overlap afzonderlijk invullen.</p>
+   <div class="field-card"><label for="procOverlap">Gewenste overlap (mm)</label><input id="procOverlap" inputmode="decimal" type="text" value="10"></div>
   </div>
-  <div id="procSketch" class="proc-sketch" role="img" aria-label="Schets filmplaatsing"></div>
-  <div id="procFilmOutput" class="procedure-answer" aria-live="polite"></div>
-  <button id="procExport" class="outline-button" type="button">Exporteer filmposities als CSV (CONCEPT)</button>
-  <p class="small-muted proc-red">Een theoretische filmverdeling is GEEN bepaling van het minimale aantal exposures. Bij ISO MME 3/4/7 gelden aparte nomogrammen, bij 6A/6B andere opname-eisen. Controleer de resultaten altijd aan de praktijkgeometrie en de getekende filmmap.</p>
+  <div id="procSketch" class="proc-sketch" role="img" aria-label="Schematische filmposities"></div>
+  <div id="procFilmOutput" class="procedure-answer" role="status" aria-live="polite"></div>
+  <button id="procExport" class="outline-button" type="button">Exporteer filmverdeling als CSV (CONCEPT)</button>
+  <p class="small-muted proc-red">Dit is alleen geometrische filmverdeling. Controleer overlap, beelddekking, IQI en het aantal vereiste belichtingen afzonderlijk.</p>
  </div>
- <details class="panel procedure-panel proc-checklist">
-  <summary>Controle vóór RT · optioneel</summary>
-  <p class="checkline">Correcte procedure, revisie, objectsoort, klasse en acceptatie-eisen geselecteerd</p>
-  <p class="checkline">Buitendiameter, enkelwandige dikte en doorstraalde dikte gecontroleerd</p>
-  <p class="checkline">IQI-positie, materiaal en vereiste zichtbare draad bevestigd</p>
-  <p class="checkline">Overlappen, markeringen, registratie en volledige dekking op film aangetoond</p>
-  <p class="checkline">Minimaal aantal exposures apart bepaald met normgrafieken, geometrie en SFD</p>
-  <p class="checkline">Stralingsveiligheid volgens bedrijfsvoorschrift en wettelijke regels</p>
-  <p class="small-muted">Bronnen: MM 00102 E r04; MM 18100 E r22; MM 11400 E r23. Een ASME-gietstukprocedure is geen ASME-lasprocedure. Alle uitkomsten vereisen RT Level 3-controle en formele vrijgave.</p>
-  <a class="outline-button proc-pdf-link" href="./RT_IQI_Filmverdeling_Concept_Procedure.pdf" target="_blank" rel="noopener">Open conceptwerkinstructie (PDF)</a>
- </details>
-
-<section id="rt30Dwdi" data-proc-pane="iqi" aria-label="Techniekcontrole DWDI">
-  <div class="rt30-label">Aanvullende controle · ISO film RT</div>
-  <h2>Automatisch advies: DWDI, IQI en opnames</h2>
-  <p>Bij dubbelwandige opnames is 2 × t de nominale referentie voor de doorstraalde dikte. Bij een schuine opname kan de werkelijke stralingsweg groter zijn.</p>
-  <div id="rt30DwdiStatus" class="rt30-state" role="status">Selecteer de opnametechniek en de buisdiameter.</div>
-  <div class="rt30-actions"><button id="rt30UseW" type="button" class="rt30-button">Neem nominale 2 × t over als w</button></div>
-  <p class="rt30-sm">MM 18100 E r22 §11.4.7 en §12. Bij ontbrekende geometrie of normvoorwaarden blijft dit een advies, geen definitief opnameschema.</p>
-</section>
 </section>
 <section class="screen" data-screen="refs" id="screen-refs" hidden>
  <div id="refHealth" role="status" hidden class="panel ref-panel" style="border:1px solid #deaa4e;background:#2d2420;color:#fff4da;padding:16px"><strong>Naslag controle</strong><p id="refHealthText" style="margin:8px 0 0"></p></div>
  <div class="section-heading"><p class="overline" data-ref-key="over">PRAKTIJKHULPMIDDELEN</p><h1 data-ref-key="heading">Tabellen & naslag</h1><p class="subtitle" data-ref-key="sub">Originele bronnen, geen vrijgave voor belichting.</p></div>
   <div class="ref-search-wrap"><label for="refQuickSearch">Zoeken in naslag</label><input type="search" id="refQuickSearch" placeholder="Zoek D4, zwarting, IQI…" autocomplete="off"><p id="refSearchStatus" class="small-muted" role="status" aria-live="polite"></p></div>
- <div class="panel ref-panel"><h2>Nieuwe RT-procedurehulp</h2><p>Welke IQI-draad en hoe verdeel je de films langs een las? ISO-lassen en ASME-gietstukken apart.</p><div class="proc-quicklinks">
+ <div class="panel ref-panel"><h2>IQI en filmverdeling</h2><p>Controleer de vereiste IQI-draad en plan filmstroken als twee afzonderlijke functies.</p><div class="proc-quicklinks">
  <button class="outline-button" type="button" data-proc-open data-proc-view="iqi">Open IQI</button>
  <button class="outline-button" type="button" data-proc-open data-proc-view="film">Open Filmverdeling</button>
  </div></div>
@@ -738,32 +660,8 @@
   <p class="rt31-navinfo"><strong>Let op:</strong> Voor röntgen- en gamma-belichtingstijden gebruik je <strong>Rekenen</strong>. Stralingsveiligheid, zonering en afscherming moeten altijd worden vastgesteld volgens de vergunde werkwijze, door bevoegd personeel en met metingen op locatie.</p>
   <h2 class="rt31-category">Belichting & geometrie</h2>
 
-<details class="rt31-tool" id="rt32-shooting-technique">
- <summary>🎯 Snelkeuze schiettechniek 6A / 6B (ISO)</summary>
- <div class="rt31-content">
-  <p class="rt31-note">Volgens jouw MM 18100 E r22 §11.4.7. Alleen voor kleine buislassen met buitendiameter ≤100 mm. Dit is een opnameadvies voor MME 6, geen automatische normvrijgave.</p>
-  <div class="rt31-grid">
-   <label>Buitendiameter De (mm)<input id="rt32OD" type="text" inputmode="decimal" value="21,3"></label>
-   <label>Enkelwandige dikte t (mm)<input id="rt32T" type="text" inputmode="decimal" value="2,77"></label>
-   <label>Lasbreedte (mm)<input id="rt32Weld" type="text" inputmode="decimal" placeholder="werkelijk gemeten"></label>
-   <label>Techniek<select id="rt32Mode"><option value="auto">Automatisch beoordelen</option><option value="6A">6A · elliptisch</option><option value="6B">6B · loodrecht</option></select></label>
-  </div>
-  <button class="rt31-run" type="button" id="rt32Compute">Controleer opnameconfiguratie</button>
-  <output id="rt32Result" class="rt31-result" aria-live="polite"></output>
-  <button class="rt31-secondary" type="button" id="rt32ToProcedure" disabled>Open IQI- en filmplan met deze gegevens</button>
-  <p class="rt31-warning">Bij DWDI 6A/6B hoort de IQI normaal aan bronzijde. Filmzijde alleen na afspraak tussen partijen; bij filmzijde is de loodletter F nodig. De nominale doorstraalde dikte is 2 × t; bij schuine stralingsrichting kan de werkelijke weg groter zijn. Controleer schietrichting, filmdekking en IQI altijd tegen de originele procedure.</p>
- </div>
-</details>
-<details class="rt31-tool" id="rt32-standards">
- <summary>📚 IQI- en schiettabellen: welke norm geldt?</summary>
- <div class="rt31-content">
-  <p class="rt31-note"><strong>ISO-lassen:</strong> MM 18100 E r22 met ISO 17636-1:2022 en draad-IQI volgens ISO 19232-1. De tabel 'NF EN 462-1' uit de NDT Radio-screenshot is een oudere referentie, geen vervanging voor de tabellen per klasse, techniek en IQI-positie.</p>
-  <p class="rt31-note"><strong>ASME-gietstukken:</strong> MM 11400 E r23 / ASTM E747. ASTM E747-24 regelt de draad-IQI; de vereiste zichtbare draad volgt uit de toepasselijke ASME-procedure. Gebruik de gietstuk-IQI-tabel niet automatisch voor ISO-lassen.</p>
-  <p class="rt31-note"><strong>Schiettechniek:</strong> de opnameschema's 4/5/6 en panoramisch op NDT Radio zijn niet universeel toepasbaar. Voor MME 6A/6B gebruiken we je eigen §11.4.7; voor MME 3/4/7 blijven de normnomogrammen en SFD vereist.</p>
-  <p class="rt31-note"><strong>Tijd overzetten:</strong> de TRACE NDT-formule is al aanwezig onder 'Belichting overzetten' hieronder; geen dubbele calculator.</p>
-  <div class="rt31-links"><a href="https://www.iso.org/standard/57710.html" target="_blank" rel="noopener noreferrer">ISO 19232-1</a><a href="https://store.astm.org/e0747-24.html" target="_blank" rel="noopener noreferrer">ASTM E747-24</a><a href="https://www.tracendt.com/tools/calculators/exposure-time" target="_blank" rel="noopener noreferrer">TRACE NDT formule</a><a href="https://ndtradio.com" target="_blank" rel="noopener noreferrer">NDT Radio naslag</a></div>
- </div>
-</details>
+
+
 
   <details class="rt31-tool" id="rt31-geometry"><summary>📐 Geometrische onscherpte en minimale FFD</summary><div class="rt31-content">
     <p class="rt31-note">Ug = f × b / (FFD − b). f is effectieve bron-/focusgrootte, b object-tot-film, FFD bron-tot-film. Voor geometrische minimumwaarden altijd de gekozen norm en procedure controleren.</p>
@@ -948,14 +846,12 @@
   window.BasicRtCometCatalog={models:items.map(x=>x.model),mode:'reference-only',datasetValidated:false};
 })();
 </script>
-<script type="module" src="./app.mjs?v=412"></script>
+<script type="module" src="./app.mjs?v=416"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./compact-layout.mjs?v=408"></script>
 <script type="module" src="./iqi-quick.mjs?v=408"></script>
-<script type="module" src="./xray-waygate-local.mjs?v=407"></script>
-<script type="module" src="./xray-waygate-atlas.mjs?v=406"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
 <script id="rt29-clean-calculator">
@@ -1299,36 +1195,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-<script id="rt32-technique">
-/* Basic RT PRO 3.2 — check MME 6A/6B against supplied MM 18100 E r22 §11.4.7 */
-(()=>{'use strict';
- const $=id=>document.getElementById(id);
- const number=id=>{const raw=String($(id)?.value??'').trim().replace(/\s/g,'').replace(',','.');return raw===''?NaN:Number(raw)};
- const fmt=v=>Number(v).toLocaleString('nl-NL',{maximumFractionDigits:3});
- function evaluate({de,t,weld,mode}){
-   if(![de,t,weld].every(x=>Number.isFinite(x)&&x>0))return {ok:false,message:'Vul de werkelijk gemeten buitendiameter, wanddikte en lasbreedte (>0 mm) in.'};
-   if(t>=de/2 || weld>=de)return {ok:false,message:'Onmogelijke buisgeometrie: controleer De, t en de lasbreedte.'};
-   if(de>100)return {ok:false,message:'MME 6A/6B buiten dit toepassingsgebied: De >100 mm. Kies een andere opnametechniek en bepaal het aantal opnames volgens de toepasselijke nomogrammen.'};
-   const ratio=t/de, allowed6a=t<=8 && weld<=de/4;
-   const chosen=mode==='auto'?(allowed6a?'6A':'6B'):mode;
-   if(!['6A','6B'].includes(chosen))return {ok:false,message:'Onbekende techniek.'};
-   if(chosen==='6A'&&!allowed6a)return {ok:false,message:`Elliptisch 6A valt buiten het toepassingsgebied: ${t>8?'t >8 mm. ':''}${weld>de/4?'lasbreedte > De/4. ':''}Beoordeel 6B volgens de procedure.`};
-   if(chosen==='6A'){
-     const count=ratio<0.12-1e-10?2:3;
-     return {ok:true,mode:chosen,count,ratio,w:2*t,message:`MME 6A · DWDI elliptisch\nMinimaal ${count} opnames${count===2?' onderling 90° verdraaid':' (hoekposities volgens procedure controleren)'}\nt / De = ${fmt(ratio)}; grens 0,12\nNominale doorstraalde dikte w = 2 × t = ${fmt(2*t)} mm\nIQI normaliter bronzijde · ISO klasse A/B en vereiste W-draad via IQI-module.`};
-   }
-   return {ok:true,mode:chosen,count:3,ratio,w:2*t,message:`MME 6B · DWDI loodrecht\nMinimaal 3 opnames bij onderlinge hoekverschuiving van 60° of 120° afhankelijk van toegang\nNominale doorstraalde dikte w = 2 × t = ${fmt(2*t)} mm\nIQI normaliter bronzijde · ISO klasse A/B en vereiste W-draad via IQI-module.`};
- }
- let last=null;
- function run(){const result=evaluate({de:number('rt32OD'),t:number('rt32T'),weld:number('rt32Weld'),mode:$('rt32Mode')?.value});last=result.ok?result:null;$('rt32Result').textContent=result.message;$('rt32ToProcedure').disabled=!result.ok;return result;}
- function openProcedure(){if(!last)return;const de=number('rt32OD'),t=number('rt32T');document.querySelector('[data-proc-open]')?.click();
-  const change=(id,value)=>{const el=$(id);if(!el)return;el.value=String(value);el.dispatchEvent(new Event('change',{bubbles:true}));};
-  change('procNorm','iso');change('procMme',last.mode);change('procTechnique','dwdi');change('procSide','source');change('procShape','ring');change('procOD',String(de).replace('.',','));change('procT',String(t).replace('.',','));change('procW',String(2*t).replace('.',','));
- }
- function init(){if(!$('rt32Compute'))return;$('rt32Compute').addEventListener('click',run);$('rt32ToProcedure').addEventListener('click',openProcedure);
- for(const id of ['rt32OD','rt32T','rt32Weld','rt32Mode'])$(id)?.addEventListener('input',()=>{$('rt32Result').textContent='';$('rt32ToProcedure').disabled=true;last=null});
- }
- window.BasicRT32={evaluate}; // pure function exposed for local QA
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-})();
-</script></body></html>
+</body></html>
