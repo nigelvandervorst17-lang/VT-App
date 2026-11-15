@@ -9,7 +9,7 @@ import {calculateResearchXray,researchDatabase} from '../xray-core.mjs';
 import {researchDensityFactors} from '../gamma-nine-point-review.mjs';
 import {lookupWireIqi} from '../../iqi.mjs';
 import {calculateFilmPlan} from '../../procedure-runtime/planning/filmPlanning.js';
-import {equivalentSteelPreview} from './research-physics-preview.mjs';
+import {equivalentSteelPreview,isoFMinResearch} from './research-physics-preview.mjs';
 
 const finite=Number.isFinite;
 const pos=v=>finite(v)&&v>0;
@@ -56,7 +56,8 @@ export function xrayPreview({model,film,kv,ma,thicknessMm,distanceMm,density,mat
  ],{minutes:r.minutes});
 }
 export function pipePreview({diameterMm,thicknessMm,usableFilmMm,overlapMm,
- maximumPathThicknessMm=null,penetratedThicknessMm=null,qualityClass='B'}={}){
+ maximumPathThicknessMm=null,penetratedThicknessMm=null,qualityClass='B',
+ dMm=null,bMm=null,sfdMm=null,planarDefects=false}={}){
  if(![diameterMm,thicknessMm,usableFilmMm,overlapMm].every(finite)
     ||diameterMm<=0||thicknessMm<=0||thicknessMm>=diameterMm/2
     ||usableFilmMm<=overlapMm||overlapMm<=0||!['A','B'].includes(qualityClass))
@@ -73,13 +74,23 @@ export function pipePreview({diameterMm,thicknessMm,usableFilmMm,overlapMm,
  const result=calculateFilmPlan(input,profile);
  if(!finite(result.plan.circumferenceMm)||!Number.isInteger(result.plan.filmSegments))
    return blocked('Filmdekking onvolledig of ongeldig');
- return okay('pipe','Pijp · filmdekking',[
+ const lines=[
   'Pijpomtrek: '+result.plan.circumferenceMm.toFixed(1)+' mm',
   'Omgelegde filmsegmenten (geometrische indicatie): '+result.plan.filmSegments,
   'Minimum aantal RT-opnamen: ONBEKEND zonder goedgekeurde bijlage-A-regel',
-  ...result.checks.map(x=>x.message),
-  RELEASE
- ],{filmSegments:result.plan.filmSegments});
+  ...result.checks.map(x=>x.message)
+ ];
+ if([dMm,bMm,sfdMm].every(finite)){
+  const geometry=isoFMinResearch({classification:qualityClass,dMm,bMm,tMm:thicknessMm,
+   sfdMm,planarDefects});
+  lines.push(geometry.ok?
+   'Geometrie-onderzoek: f_min='+geometry.fMinMm.toFixed(1)+
+    ' mm; f='+geometry.actualFmm.toFixed(1)+' mm; '+geometry.comparison+
+    '. Procedure en ISO-toepasbaarheid afzonderlijk toetsen.':
+   'Geometrie niet berekend: '+geometry.error);
+ }else lines.push('f_min niet berekend: brandvlek, object-film-afstand of SFD ontbreekt.');
+ lines.push(RELEASE);
+ return okay('pipe','Pijp · filmdekking',lines,{filmSegments:result.plan.filmSegments});
 }
 export function iqiPreview({nominalThicknessMm,penetratedThicknessMm=null,technique='sw',
  iqiSide='source',qualityClass='B',isotope='Se-75',observedWire=null}={}){
