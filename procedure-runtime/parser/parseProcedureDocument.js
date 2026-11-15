@@ -114,7 +114,7 @@ export function parseProcedureText(text, source = { kind: 'text' }) {
             continue;
         candidate[k] = v;
     }
-    candidate.iqi = { side: effective.iqiSide ?? 'source', extraFinerWires: effective.extraFinerWires ?? 0, filmSideComparisonVerified: false, approvedRules: suggestedIqiRules };
+    candidate.iqi = { side: effective.iqiSide ?? 'source', extraFinerWires: effective.extraFinerWires ?? Number.NaN, filmSideComparisonVerified: false, approvedRules: suggestedIqiRules };
     if (suggestedIqiRules.length)
         warnings.push(`${suggestedIqiRules.length} IQI-regels als VOORSTEL herkend; controleer elk bereik, zijde, klasse en normtabel bij de bevestiging.`);
     candidate.planning = { minimumFilmOverlapMm: effective.minimumFilmOverlapMm ?? null, approvedExposureRules: [] };

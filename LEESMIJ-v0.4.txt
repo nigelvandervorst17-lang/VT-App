@@ -1,0 +1,8 @@
+NDT Radiography Pro / BASIC RT PRO — Procedure Suite v0.4
+
+Open procedure-suite.html via een webserver of de aparte GitHub-testbranch.
+
+Nieuwe iPhone-UX: conditionele randdikte, placeholders, drie volledige toggle-kaarten, veilige ruimte onder vaste berekenknop, geen lege regeltabellen.
+De rekenmotor/curves zijn ongewijzigd. Geen vrijgave voor echte RT-opnamen.
+
+Zie CONTROLE-IPHONE-UX-v0.4.md voor tests en beperkingen.

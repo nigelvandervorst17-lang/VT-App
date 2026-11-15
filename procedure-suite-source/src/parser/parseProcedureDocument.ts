@@ -94,7 +94,7 @@ export function parseProcedureText(text:string, source:ProcedureDraft['source']=
     if(k==='iqiSide'||k==='extraFinerWires'||k==='minimumFilmOverlapMm')continue;
     (candidate as Record<string,unknown>)[k]=v;
   }
-  candidate.iqi={side:(effective.iqiSide as 'source'|'film'|'either'|undefined)??'source', extraFinerWires:(effective.extraFinerWires as number|undefined)??0, filmSideComparisonVerified:false,approvedRules:suggestedIqiRules};
+  candidate.iqi={side:(effective.iqiSide as 'source'|'film'|'either'|undefined)??'source', extraFinerWires:(effective.extraFinerWires as number|undefined)??Number.NaN, filmSideComparisonVerified:false,approvedRules:suggestedIqiRules};
   if(suggestedIqiRules.length)warnings.push(`${suggestedIqiRules.length} IQI-regels als VOORSTEL herkend; controleer elk bereik, zijde, klasse en normtabel bij de bevestiging.`);
   candidate.planning={minimumFilmOverlapMm:(effective.minimumFilmOverlapMm as number|undefined)??null, approvedExposureRules:[]};
   const required=['code','customer','revision','norm','class','planarDefectsRequired','sources','films','techniques','thickness','density'];

@@ -111,3 +111,24 @@
 .ndt-planner-sticky small{font-size:10px;text-align:center;color:#c8dbe9}
 @media(max-width:520px){.ndt-planner-sticky{width:calc(100% - 16px);bottom:calc(4px + env(safe-area-inset-bottom));padding:7px}.ndt-planner-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:360px){.ndt-planner-grid{grid-template-columns:1fr}}
+
+/* iPhone UX v0.4: full-width accessible selection cards, no clipped sticky footer. */
+.ndt-suite .ndt-toggle-card{position:relative;display:block;cursor:pointer;min-width:0;min-height:58px;margin:9px 0 14px;font-size:13px;font-weight:750;line-height:1.45}
+.ndt-suite .ndt-toggle-card input[type="checkbox"]{position:absolute;opacity:0;inline-size:1px;block-size:1px;pointer-events:none;inset-inline-start:13px;inset-block-start:13px}
+.ndt-suite .ndt-toggle-content{display:flex;gap:12px;align-items:center;padding:15px 14px;min-height:60px;border-radius:14px;color:#e4f3fd;background:#1b3852;border:1.5px solid #5684a4;box-shadow:0 3px 10px #0615253a;transition:background-color .15s,border-color .15s,box-shadow .15s}
+.ndt-suite .ndt-toggle-mark{width:28px;height:28px;border:2px solid #80a5bc;border-radius:9px;display:grid;place-items:center;flex:0 0 28px;color:transparent;background:#12293b;font-size:17px;font-weight:900}
+.ndt-suite .ndt-toggle-card input:checked + .ndt-toggle-content{background:linear-gradient(145deg,#217bd0,#0a5a9f);border:2px solid #a0e1ff;color:#fff;box-shadow:0 0 0 2px #5fbeff24,0 4px 14px #0856ae70}
+.ndt-suite .ndt-toggle-card input:checked + .ndt-toggle-content .ndt-toggle-mark{background:#dff7ff;color:#0760a0;border-color:#dff7ff}
+.ndt-suite .ndt-toggle-card input:focus-visible + .ndt-toggle-content{outline:3px solid #f7df83;outline-offset:3px}
+.ndt-suite .ndt-toggle-card.ndt-ack{background:none;border:0;padding:0}
+.ndt-suite .ndt-empty-rule-action{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.ndt-suite .ndt-empty-rule-action small{color:#bed7e9;line-height:1.4}
+.ndt-suite .ndt-optional-geometry{min-width:0}
+.ndt-suite .ndt-optional-geometry small{display:block;margin:-2px 0 12px;color:#c9deeb;font-size:11px;line-height:1.5}
+.ndt-suite{padding-bottom:calc(156px + env(safe-area-inset-bottom))}
+.ndt-suite .ndt-planner-card{padding-bottom:calc(158px + env(safe-area-inset-bottom))}
+@media (max-width:520px){
+ .ndt-suite{padding-bottom:calc(168px + env(safe-area-inset-bottom))}
+ .ndt-suite .ndt-planner-card{padding-bottom:calc(174px + env(safe-area-inset-bottom))}
+}
+@media (prefers-reduced-motion:reduce){.ndt-suite .ndt-toggle-content{transition:none}}
