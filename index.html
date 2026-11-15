@@ -883,7 +883,7 @@ function qualityMessage(){
   const stat=$('rt29StatusText');if(!stat)return;
   if($('gammaFields')&&!$('gammaFields').hidden){
     const isotope=document.querySelector('input[name="isotope"]:checked')?.value||'Se-75';
-    stat.textContent=isotope+' · D4, D5, D7 · gebruikersreferenties Waygate (Fe/Pb, D=2,0), film-specifieke zwartingscorrectie tot D=3,9. Afstand en activiteit wiskundig geschaald. NIET gevalideerd voor opnames; controleer certificaat, filmzwarting en IQI.';
+    stat.textContent=isotope+' · D4, D5, D7 · onderzoekscurves met filmreferenties; activiteit en afstand wiskundig geschaald. Deze gegevens zijn NIET fysiek gevalideerd voor opnames. Controleer certificaat, filmsysteem, zwarting en IQI.';
     return;
   }
   if(enabled()){
