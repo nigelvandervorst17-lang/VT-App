@@ -858,3 +858,49 @@ body{font-synthesis:none}
  border-radius:9px;background:#142f45;color:#cfdfec;
  font-size:12px;line-height:1.55;
 }
+
+/* Separate IQI and film distribution screens inside procedure. */
+#screen-procedure .proc-view-switch{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;margin:9px 0 13px;
+}
+#screen-procedure .proc-view-switch button{
+  min-height:52px;padding:11px 9px;border:1px solid #5e88a7;
+  border-radius:11px;background:#1b3e56;color:#d7eaf8;
+  font-size:15px;font-weight:800;
+}
+#screen-procedure .proc-view-switch button.active,
+#screen-procedure .proc-view-switch button[aria-pressed="true"]{
+  background:#1b6488;border-color:#95d6f5;color:#fff;
+  box-shadow:inset 0 -2px 0 #a1e9ff;
+}
+#screen-procedure [data-proc-pane][hidden]{display:none!important}
+#screen-procedure .proc-top-back{
+  display:block;min-height:44px;width:100%;margin:1px 0 13px;
+}
+#screen-procedure .proc-film-settings{
+  border-radius:12px;border:1px solid #416c89;background:#142e45;
+  padding:9px;margin:0 0 13px;
+}
+#screen-procedure .proc-checklist{
+  padding:0;margin:16px 0;
+}
+#screen-procedure .proc-checklist summary{
+  cursor:pointer;font-size:13px;font-weight:800;
+  padding:16px;color:#e8f6ff;list-style-position:inside;
+}
+#screen-procedure .proc-checklist[open]{padding-bottom:13px}
+#screen-procedure .proc-checklist[open]>:not(summary){margin-left:14px;margin-right:14px}
+#screen-calc .proc-quicklinks,#screen-refs .proc-quicklinks{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  margin:10px 0;
+}
+#screen-calc .proc-quicklinks button,#screen-refs .proc-quicklinks button{
+  font-size:12px;line-height:1.35;min-height:47px;
+  padding:9px 7px;white-space:normal;
+}
+@media(max-width:370px){
+ #screen-calc .proc-quicklinks,#screen-refs .proc-quicklinks{
+  grid-template-columns:1fr;
+ }
+}
