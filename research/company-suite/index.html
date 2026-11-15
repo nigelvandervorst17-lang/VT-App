@@ -21,7 +21,7 @@
  <button type="button" data-tab="account" aria-pressed="false">Account</button>
  <button type="button" data-tab="field" aria-pressed="true">Rekenen</button>
  <button type="button" data-tab="admin" aria-pressed="false" id="adminTab" hidden>Beheer</button>
- <button type="button" data-tab="tools" aria-pressed="false">Controles</button>
+ <button type="button" data-tab="tools" aria-pressed="false" hidden>Controles</button>
 </div>
 <section id="tab-account" class="tab" hidden>
  <article class="panel" id="connectionPanel">
@@ -153,7 +153,12 @@
      <label>Bruikbare filmlengte (mm)<input id="pipeFilmLength" inputmode="decimal" placeholder="Bijv. 300"></label>
      <label>Minimale filmoverlap (mm)<input id="pipeOverlap" inputmode="decimal" placeholder="Bijv. 25"></label>
      <label>Klasse<select id="pipeClass"><option value="A">A</option><option value="B">B</option></select></label>
-    </div><p class="help">Filmsegmenten worden geometrisch bepaald. Minimaal aantal opnamen blijft onbekend zonder goedgekeurde procedure/regel.</p>
+     <label>Brandvlek d (mm, optioneel)<input id="pipeSpot" inputmode="decimal" placeholder="Bijv. 2"></label>
+     <label>Object-film-afstand b (mm, optioneel)<input id="pipeB" inputmode="decimal" placeholder="Bijv. 8"></label>
+     <label>SFD (mm, optioneel)<input id="pipeSfd" inputmode="decimal" placeholder="Bijv. 800"></label>
+    </div>
+    <label class="checktile"><input id="pipePlanar" type="checkbox">Vlakke defecten relevant voor de geometrische controle</label>
+    <p class="help">Filmsegmenten worden geometrisch bepaald. Minimaal aantal opnamen blijft onbekend zonder goedgekeurde procedure/regel.</p>
    </div>
    <div class="workbench-module" id="calc-iqi" hidden>
     <h3>IQI · ISO-draadnummerhulp</h3><div class="grid">
