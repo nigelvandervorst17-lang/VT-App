@@ -847,3 +847,14 @@ body{font-synthesis:none}
 @media(max-width:380px){
   #screen-calc .rt-iqi-quick .iqi-grid{grid-template-columns:1fr}
 }
+
+/* Filmformaat-keuze voor de bestaande filmverdeling: nominale lengte is aanpasbaar. */
+#procFilmFormat{
+ box-sizing:border-box;width:100%;max-width:100%;min-height:48px;
+ font-size:16px;
+}
+#procFilmFormatHelp{
+ grid-column:1/-1;margin:0 0 8px;padding:8px 11px;
+ border-radius:9px;background:#142f45;color:#cfdfec;
+ font-size:12px;line-height:1.55;
+}
