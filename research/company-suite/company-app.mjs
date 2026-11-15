@@ -3,6 +3,7 @@
  * The client does not update the legacy engine or authorize RT exposures.
  */
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY} from './supabase-rest.mjs';
+import {DEFAULT_SUPABASE_PROJECT} from './project-config.mjs';
 import {openOfflineCache} from './offline-cache.mjs';
 import {MATERIAL_RESEARCH_FACTORS,equivalentSteelPreview,gammaDecayPreview,isoFMinResearch} from './research-physics-preview.mjs';
 import {mountResearchWorkbench} from './workbench-ui.mjs';
@@ -54,6 +55,7 @@ for(const btn of document.querySelectorAll('[data-tab]'))
 function applyConfig(){
  let config;
  try{config=JSON.parse(localStorage.getItem(PUBLIC_CONFIG_KEY)||'null')}catch{}
+ if(!config?.url||!config?.key)config=DEFAULT_SUPABASE_PROJECT;
  if(!config?.url||!config?.key)return false;
  $('projectUrl').value=config.url;$('projectKey').value=config.key;
  state.api=createSupabaseConnection(config);
