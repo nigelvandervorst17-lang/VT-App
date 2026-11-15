@@ -4,7 +4,7 @@
 **Branch:** \`research/integrated-company-suite\`. \`main\`, PR #6 en PR #7 worden niet samengevoegd of gewijzigd.  
 **Startpagina:** \`research/company-suite/index.html\`.
 
-Dit is een **werkende statische frontendimplementatie** van een Supabase Auth-/PostgREST-accountlaag, bedrijfsrollen, offline encryptie, conceptlogboek, en aparte iPhone-schermen. Om echt in te loggen is een **eigen Supabase-TESTproject met uitgevoerd SQL-script** vereist. Zonder dat project toont de testlink alleen de interface en onderzoekscontroles — geen verbonden accounts of echte bedrijfsgegevens.
+Dit is een statische onderzoeksfrontend met een live aangesloten Supabase-TESTproject **Basic NDT** (`olugdgrlfyrdyxclphlu`). De zeven tabellen, RLS en de beveiligde functies van schema v1 én v2 zijn **op 16 november 2026 toegepast**. Er zijn nog geen testgebruikers of bedrijven geregistreerd; e-mail-/Magic-Link redirects en echte accounttests vereisen verdere bevestiging.
 
 ## Startscherm op iPhone, Android en laptop — 50 proefberekeningen
 
@@ -15,15 +15,15 @@ Dit is een **werkende statische frontendimplementatie** van een Supabase Auth-/P
 - De knop **Inloggen / Registreren** brengt je rechtstreeks naar het scherm voor e-mail/wachtwoord, Magic Link, nieuw bedrijf of personeel dat met een Bedrijfscode toegang aanvraagt. Formulieren zijn zichtbaar; het uitvoeren ervan vereist eerst een Supabase-account.
 - Een online Hoofdgebruiker ziet **Beheer** en kan **toegangsaanvragen goedkeuren of afwijzen**. RLS op de server bepaalt wat daadwerkelijk toegestaan is.
 - De vijf grote rekenkeuzes blijven op **één mobiel veldscherm**. De aanvullende materiaalfactoren, IQI-tabelhulp en pijpberekening zijn **onderzoekshulpen** en geven geen formele RT-vrijgave.
-- Zonder een ingericht Supabase-testproject werken de **50 lokale proefberekeningen** wel, maar bedrijfsregistratie, echte personeelsaanvragen en synchronisatie nog **niet**.
+- De gekoppelde Supabase-backend is nu ingericht. De 50 gastproeven werken zonder account; registratie en personeelstoegang moeten nog met echte afzonderlijke testaccounts en geconfigureerde e-mailredirects worden geverifieerd.
 - Directe live-hosting via derden (zoals raw.githack) vereist bereikbare HTTPS-hosting; de bronbestanden staan gecontroleerd in GitHub, maar iPhone/Safari en publieke URL-respons zijn nog niet op een echt toestel geverifieerd.
 
 ## 1. Supabase inrichten (staging, geen productiegegevens)
 
-1. Maak een **nieuw, leeg Supabase-project**. Schakel Email Auth in; gebruik e-mailbevestiging en sterke wachtwoorden/MFA volgens eigen bedrijfsbeleid.
-2. Open de SQL Editor en voer het volledige bestand **\`research/company-suite/supabase-schema.sql\`** uit. Het maakt tabellen, RLS, drie beveiligde RPC-functies en grants aan. **Niet** uitvoeren op een bestaande productiedatabase zonder afzonderlijke migratie-/securityreview.
-3. Configureer in Supabase Auth → URL Configuration de **Site URL** en de exacte **Redirect URL** van de onderzoeks-testpagina, inclusief het GitHub Pages/raw.githack-pad. E-mailconfirmatie en Magic Links kunnen dan terugkomen in de testapp.
-4. Open de testlink op iPhone. Vul uitsluitend **Project URL** en de **publishable (of legacy anon)** sleutel in. **NOOIT** de \`service_role\`-sleutel, secret key of databasewachtwoord invoeren.
+1. **Basic NDT staat al ingesteld**, met de openbare publishable-sleutel en RLS. Voor een andere installatie maak je eerst een apart, leeg Supabase-project aan.
+2. **Voer het SQL-script niet opnieuw uit op Basic NDT.** Voor een **nieuw leeg project** gebruik je `research/company-suite/supabase-schema.sql` (v1+v2), en voor een reeds geïnstalleerde v1 uitsluitend `supabase-hardening-v2.sql`. Test vóór productie de migratie-/rechtenimpact.
+3. **Nog handmatig nodig:** voeg in Supabase → Authentication → URL Configuration de exacte Redirect URL `https://raw.githack.com/nigelvandervorst17-lang/VT-App/research/integrated-company-suite/research/company-suite/index.html` toe. Controleer de Site URL, e-mailbevestiging en Magic Links.
+4. Open de iPhone-testlink. De **publieke project-URL en publishable-sleutel** van Basic NDT zijn reeds als standaard ingesteld; gebruik **nooit** een service-role-sleutel of databasewachtwoord.
 5. Registreer een account met e-mail/wachtwoord, bevestig de e-mail, log in. Of vraag een Magic Link aan.
 6. Kies 'Nieuw bedrijf': gebruik het formulier om bedrijf en admin-lidmaatschap aan te maken. Noteer de 32-tekenige bedrijfscode **privé**.
 7. Een radiograaf registreert een **eigen** Auth-account en gebruikt de bedrijfscode om **een aanvraag** te doen. De admin keurt die aanvraag op het Beheer-scherm goed.
@@ -36,7 +36,7 @@ Dit is een **werkende statische frontendimplementatie** van een Supabase Auth-/P
 De hoofdnav toont **Account** en **Rekenen**. **Beheer** verschijnt voor online admins. De eerdere onderzoekscontroles staan nu geïntegreerd bij de vijf rekenkeuzes op het veldscherm.
 
 - Het veldscherm filtert de gesynchroniseerde lijst tot bedrijfsmiddelen met \`approval_status='approved'\`.
-- Supabase **RLS** bewaakt de serverrechten. Verbergen van admin-knoppen is alleen UX, geen beveiligingsmaatregel.
+- Supabase **RLS** bewaakt de serverrechten; het verbergen van admin-knoppen is alleen UX. De Hoofdgebruiker kan nu bestaande buizen/bronnen/procedures **bewerken**, medewerkers **blokkeren/heractiveren**, de Bedrijfscode via een admin-only RPC ophalen en het **gezamenlijke logboek bekijken**. Staff ziet via RLS alleen zijn eigen logs. Een bedrijfsrecord met administratieve goedkeuring is nog geen RT-vrijgave.
 - Er is géén integratie die onbewezen materiaal- of \`k_tube\`-factoren als effectieve waarde doorstuurt naar \`rt-core.mjs\`.
 - De originele Procedure Suite blijft bereikbaar als **aparte, ongewijzigde pagina**. Automatisch doorgeven van Supabase-records aan de oorspronkelijke belichtingscalculator is **niet** geactiveerd.
 - De gamma-onderzoeksbestanden uit PR #6 en de X-ray-onderzoeksmodule uit PR #7 zijn in deze aparte branch opgenomen. Hun originele pull requests zijn niet gewijzigd.
@@ -102,6 +102,6 @@ node research/xray-report.mjs
 
 Beschermde originele motor-/curve-/UI-bestanden worden met hun Git-blobhashes uit \`research/xray-baseline-shas.json\` gecontroleerd. Controleer ook de GitHub-PR-diff tegen \`main\`. De testdata in de Node.js-tests zijn **synthetisch** en zijn geen uit echte RT-belichtingen afgeleide kalibraties.
 
-**Nog te testen in een werkelijke staging-omgeving:** Supabase SQL-uitvoering, twee echte afzonderlijke Auth-accounts, RLS-rollen en bedrijfsscheiding, mailredirects, Safari/PWA offline, sleutelverlies/herstel, netwerkuitval tijdens upload, uitlog/verlopen token en certificaatbeheer. Zonder echte projectinstellingen zijn dat nog geen live bewezen functies.
+**Nog te testen:** daadwerkelijke Auth-registratie met twee verschillende testaccounts, bedrijfsscheiding, verzoek-/goedkeuringsflow, mailredirects, echte iPhone/Safari offline, sleutelverlies/herstel, netwerkuitval tijdens upload en bevoegdheidsintrekking. De **twee Supabase-migraties en 12/12 read-only RLS-grantcontroles zijn al geslaagd**; dit vervangt geen echte eindgebruikersproef. **Security-advisor:** bescherming tegen gelekte wachtwoorden staat nog uit en de bewust via `authenticated` toegankelijke SECURITY DEFINER-RPCs vereisen een onafhankelijke review. Volledige statusmatrix: `research/COMPLETE-STATUS-NDT-2026-11-16.md`.
 
 **Privacy / veiligheid:** geen geheimen of gevoelige klant-/brondata in GitHub of publiek te openen testpagina. Met echte klantprocedures of echte RT-opnamen pas werken na expliciete organisatorische, technische en wettelijke vrijgave.
