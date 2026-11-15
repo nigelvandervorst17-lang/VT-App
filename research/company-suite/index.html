@@ -73,8 +73,21 @@
 <section id="tab-admin" class="tab" hidden>
  <article class="panel"><h2>Hoofdgebruiker · Beheer</h2><p class="help">Beheeracties worden op de server met RLS gecontroleerd. Goedkeuren van een bedrijfsrecord betekent geen technische RT-/kalibratievrijgave.</p>
  <div class="actions"><button type="button" id="loadRequestsBtn" class="alt">Toegangsaanvragen ophalen</button></div>
- <div id="requestsList" class="list" aria-live="polite"></div></article>
+ <div id="requestsList" class="list" aria-live="polite"></div>
+ <hr>
+ <h3>Bedrijfscode — alleen Hoofdgebruiker</h3>
+ <p class="help">De code mag alleen aan geautoriseerde medewerkers worden gedeeld. Personeel krijgt de code niet via de bedrijfsgegevens.</p>
+ <button type="button" id="showCompanyCodeBtn" class="alt">Mijn Bedrijfscode tonen</button>
+ <div id="adminCompanyCode" class="readout">Alleen zichtbaar na admincontrole via Supabase.</div>
+ <hr>
+ <h3>Actieve en geblokkeerde medewerkers</h3>
+ <button type="button" id="loadStaffBtn" class="alt">Medewerkers ophalen</button>
+ <div id="staffList" class="list" aria-live="polite"></div>
+ </article>
  <article class="panel"><h2>Röntgenbuis beheren</h2>
+ <label>Bestaande buis wijzigen<select id="editTubeSelect"><option value="">Nieuwe buis</option></select></label>
+ <button type="button" id="newTubeBtn" class="ghost">Nieuwe buis / formulier leegmaken</button>
+ <p class="help">Bestaande records bewerken of administratief goedkeuren. Een goedgekeurd record is geen RT- of kalibratievrijgave.</p>
  <form id="tubeForm"><div class="grid">
  <label>Toestelnaam<input name="name" required placeholder="Bijv. Comet MXR-300HP"></label>
  <label>Merk<input name="manufacturer" required placeholder="Comet"></label>
@@ -89,6 +102,8 @@
  <label>Goedkeuringsreferentie<input name="approval_reference" placeholder="Verplicht bij goedkeuring"></label>
  </div><button type="submit">Buis opslaan</button></form></article>
  <article class="panel"><h2>Gammabron beheren</h2>
+ <label>Bestaande bron wijzigen<select id="editSourceSelect"><option value="">Nieuwe bron</option></select></label>
+ <button type="button" id="newSourceBtn" class="ghost">Nieuwe bron / formulier leegmaken</button>
  <form id="sourceForm"><div class="grid">
  <label>Bronnaam<input name="name" required placeholder="Bijv. Se-75 bron A"></label>
  <label>Isotoop<select name="isotope"><option>Se-75</option><option>Ir-192</option></select></label>
@@ -99,6 +114,8 @@
  <label>Goedkeuringsreferentie<input name="approval_reference" placeholder="Verplicht bij goedkeuring"></label>
  </div><button type="submit">Bron opslaan</button></form></article>
  <article class="panel"><h2>Procedure beheren</h2>
+ <label>Bestaande procedure wijzigen<select id="editProcedureSelect"><option value="">Nieuwe procedure</option></select></label>
+ <button type="button" id="newProcedureBtn" class="ghost">Nieuwe procedure / formulier leegmaken</button>
  <form id="procedureForm"><div class="grid">
  <label>Procedurenaam<input name="name" required placeholder="Bijv. PA lasinspectie"></label>
  <label>Revisie<input name="revision" required placeholder="Rev. 2"></label>
@@ -204,6 +221,11 @@
  <label>Werknotitie<textarea id="workNote" rows="3" placeholder="Geen persoonsgegevens of echte bronbedieningsinstructies in deze test"></textarea></label>
  <button type="submit">Concept lokaal opslaan</button></form>
  <div id="logStatus" class="readout">Nog geen conceptlog opgeslagen.</div>
+ <hr>
+ <h3>Gedeeld bedrijfslogboek</h3>
+ <p class="help">De Hoofdgebruiker kan het bedrijfslogboek zien. Personeel ziet alleen zijn eigen opnames. Alle toegang wordt opnieuw door Supabase RLS gecontroleerd.</p>
+ <button type="button" id="loadLogsBtn" class="alt">Opnamelogboek ophalen</button>
+ <div id="logsList" class="list" aria-live="polite"></div>
  </article>
  <article class="panel"><h2>Bestaande Procedure Suite</h2>
  <p>De bestaande procedure-uitlezer en opnamemodule zijn ongewijzigd. Deze onderzoeksversie levert de lijst met bedrijfsgegevens; automatische overdracht naar de oorspronkelijke belichtingsmotor is nog niet vrijgegeven.</p>
