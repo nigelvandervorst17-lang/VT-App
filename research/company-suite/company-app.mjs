@@ -7,10 +7,13 @@ import {DEFAULT_SUPABASE_PROJECT} from './project-config.mjs';
 import {openOfflineCache} from './offline-cache.mjs';
 import {MATERIAL_RESEARCH_FACTORS,equivalentSteelPreview,gammaDecayPreview,isoFMinResearch} from './research-physics-preview.mjs';
 import {mountResearchWorkbench} from './workbench-ui.mjs';
+import {saveCompanyAsset,loadAdminInviteCode,setStaffActive,fetchCompanyLogs} from './admin-workflows.mjs';
 const $=id=>document.getElementById(id);
 const state={api:null,user:null,memberships:[],member:null,company:null,cache:null,
  snapshot:null,mode:'signed-out',material:'Fe',companyCode:null};
 const STALE='OFFLINE · gegevens niet live gecontroleerd; ingetrokken rechten zijn mogelijk nog niet verwerkt';
+const adminContext=()=>({api:state.api,member:state.member,
+ userId:state.user?.id,online:atOnline()});
 const number=x=>{
  const s=String(x??'').trim().replace(',','.');
  return /^\+?(?:\d+(?:\.\d*)?|\.\d+)$/.test(s)?Number(s):NaN;
@@ -131,7 +134,8 @@ async function selectCompany(id){
  const m=state.memberships.find(x=>x.company_id===id);
  if(!m)throw Error('Dit bedrijf behoort niet tot je actieve lidmaatschappen');
  state.member=m;state.mode='online';
- const companies=await state.api.select('companies',{filters:{id}});
+ const companies=await state.api.select('companies',{filters:{id},
+  columns:'id,name,created_at'});
  state.company=companies[0]??null;
  localStorage.setItem('ndt-last-company-id',id);
  localStorage.setItem('ndt-last-user-id',state.user.id);
@@ -196,12 +200,84 @@ $('loadRequestsBtn').addEventListener('click',async()=>{
   if(!rows.length)list.textContent='Geen aanvragen';
  }catch(err){fail(err)}
 });
-async function saveRecord(table,data){
- if(!atOnline()||state.member?.role!=='admin')throw Error('Beheer alleen online voor admins');
- const payload={...data,company_id:state.member.company_id,created_by:state.user.id};
- await state.api.insert(table,payload);
- notice('Record opgeslagen in Supabase (administratieve status, geen RT-vrijgave).');
+const editorConfigs={
+ company_tubes:{formId:'tubeForm',selectId:'editTubeSelect',rows:'tubes'},
+ company_sources:{formId:'sourceForm',selectId:'editSourceSelect',rows:'sources'},
+ company_procedures:{formId:'procedureForm',selectId:'editProcedureSelect',rows:'procedures'}
+};
+function recordValues(table,row){
+ if(table==='company_tubes')return {
+  name:row.name,manufacturer:row.manufacturer,model:row.model,
+  serial_reference:row.serial_reference,generator_type:row.generator_type,
+  beam_type:row.beam_type,max_kv:row.max_kv,max_ma:row.max_ma,
+  focal_spot_mm:row.focal_spot_mm,approval_status:row.approval_status,
+  approval_reference:row.approval_reference
+ };
+ if(table==='company_sources'){
+  const dt=new Date(row.activity_reference_at);
+  const localDate=Number.isFinite(dt.valueOf())?
+   new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16):'';
+  return {name:row.name,isotope:row.isotope,activity_ci:row.activity_ci,
+   activity_reference_at:localDate,source_reference:row.source_reference,
+   approval_status:row.approval_status,approval_reference:row.approval_reference};
+ }
+ return {name:row.name,revision:row.revision,
+  procedure_reference:row.procedure_reference,
+  approval_status:row.approval_status,approval_reference:row.approval_reference,
+  description:row.data?.description??''};
+}
+function editSelected(table,recordId){
+ const cfg=editorConfigs[table],form=$(cfg.formId);
+ form.reset();delete form.dataset.editId;
+ if(!recordId)return;
+ const record=state.snapshot?.[cfg.rows]?.find(r=>r.id===recordId);
+ if(!record)throw Error('Het gekozen record is niet meer beschikbaar');
+ const values=recordValues(table,record);
+ for(const [name,val] of Object.entries(values)){
+  const field=form.elements.namedItem(name);
+  if(field)field.value=val??'';
+ }
+ form.dataset.editId=recordId;
+}
+function refreshEditorChoices(){
+ const permitted=state.member?.role==='admin'&&atOnline();
+ for(const [table,cfg] of Object.entries(editorConfigs)){
+  const selector=$(cfg.selectId);
+  const old=selector.value;
+  selector.replaceChildren();
+  const blank=document.createElement('option');
+  blank.value='';blank.textContent='Nieuw record';selector.append(blank);
+  if(permitted){
+   for(const row of state.snapshot?.[cfg.rows]??[]){
+    const option=document.createElement('option');
+    option.value=row.id;
+    option.textContent=row.name+' · '+row.approval_status;
+    selector.append(option);
+   }
+  }
+  if(old&&permitted&&state.snapshot?.[cfg.rows]?.some(r=>r.id===old))
+   selector.value=old;
+ }
+}
+for(const [table,cfg] of Object.entries(editorConfigs)){
+ $(cfg.selectId).addEventListener('change',event=>{
+  try{editSelected(table,event.target.value)}catch(err){fail(err)}
+ });
+ const buttonId=table==='company_tubes'?'newTubeBtn':
+   table==='company_sources'?'newSourceBtn':'newProcedureBtn';
+ $(buttonId).addEventListener('click',()=>{
+  $(cfg.selectId).value='';
+  editSelected(table,'');
+ });
+}
+async function saveRecord(table,data,form){
+ const recordId=form.dataset.editId||null;
+ await saveCompanyAsset({...adminContext(),table,data,recordId});
+ notice((recordId?'Bijgewerkt':'Toegevoegd')+
+  ' in Supabase. Administratieve status is geen RT- of kalibratievrijgave.');
  await syncOnline();
+ form.reset();delete form.dataset.editId;
+ const cfg=editorConfigs[table];$(cfg.selectId).value='';
 }
 function checkApprovalStatus(d){
  if(d.approval_status==='approved'&&!String(d.approval_reference||'').trim())
@@ -216,9 +292,8 @@ $('tubeForm').addEventListener('submit',async e=>{
    generator_type:d.generator_type,beam_type:d.beam_type,
    max_kv:number(d.max_kv),max_ma:number(d.max_ma),
    focal_spot_mm:number(d.focal_spot_mm),
-   approval_status:d.approval_status,approval_reference:d.approval_reference||null,
-   research_factor:1,data:{referenceStatus:'NOT_TECHNICALLY_CALIBRATED'}
-  });e.target.reset();
+   approval_status:d.approval_status,approval_reference:d.approval_reference||null
+  },e.target);
  }catch(err){fail(err)}
 });
 $('sourceForm').addEventListener('submit',async e=>{
@@ -230,7 +305,7 @@ $('sourceForm').addEventListener('submit',async e=>{
    name:d.name,isotope:d.isotope,activity_ci:number(d.activity_ci),
    activity_reference_at:dt.toISOString(),source_reference:d.source_reference||null,
    approval_status:d.approval_status,approval_reference:d.approval_reference||null
-  });e.target.reset();
+  },e.target);
  }catch(err){fail(err)}
 });
 $('procedureForm').addEventListener('submit',async e=>{
@@ -240,7 +315,7 @@ $('procedureForm').addEventListener('submit',async e=>{
    name:d.name,revision:d.revision,procedure_reference:d.procedure_reference||null,
    data:{description:d.description||''},
    approval_status:d.approval_status,approval_reference:d.approval_reference||null
-  });e.target.reset();
+  },e.target);
  }catch(err){fail(err)}
 });
 const approved=rows=>(rows||[]).filter(r=>r.approval_status==='approved');
@@ -308,6 +383,7 @@ async function syncOnline(){
    (count?' · '+count+' conceptlog(s) geüpload':''));
  }
  renderField();
+ refreshEditorChoices();
  notice('Online · Bedrijf '+state.snapshot.companyName+
   ' · '+(state.member.role==='admin'?'Hoofdgebruiker':'Personeel'));
 }
