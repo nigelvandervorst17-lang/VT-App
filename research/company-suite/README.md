@@ -6,6 +6,18 @@
 
 Dit is een **werkende statische frontendimplementatie** van een Supabase Auth-/PostgREST-accountlaag, bedrijfsrollen, offline encryptie, conceptlogboek, en aparte iPhone-schermen. Om echt in te loggen is een **eigen Supabase-TESTproject met uitgevoerd SQL-script** vereist. Zonder dat project toont de testlink alleen de interface en onderzoekscontroles — geen verbonden accounts of echte bedrijfsgegevens.
 
+## Startscherm op iPhone, Android en laptop — 50 proefberekeningen
+
+- De testpagina opent nu **direct op Opnameplan / Rekenwerkbank**. Bovenaan staat **Gratis proefversie: nog X van 50 berekeningen** met een voortgangsbalk.
+- Zonder account kan een bezoeker **50 geslaagde onderzoeksberekeningen** bekijken in **Gamma**, **X-ray**, **Pijp/filmdekking**, **IQI-draadnummerhulp** en **Materialen**. Ongeldige invoer en geblokkeerde combinaties worden niet geteld.
+- Na de vijftigste geslaagde berekening **schakelt de UI over naar het Account-tabblad** en wordt verder rekenen als gast geblokkeerd. Een ingelogde medewerker kan verder met onderzoeksberekeningen.
+- De teller staat in **localStorage op dit apparaat/deze browser** en is niet fraudebestendig; opslag wissen of een andere browser kan hem resetten. Dit is **geen server-side proefabonnement** en er is nog geen betaal- of licentiebeheer.
+- De knop **Inloggen / Registreren** brengt je rechtstreeks naar het scherm voor e-mail/wachtwoord, Magic Link, nieuw bedrijf of personeel dat met een Bedrijfscode toegang aanvraagt. Formulieren zijn zichtbaar; het uitvoeren ervan vereist eerst een Supabase-account.
+- Een online Hoofdgebruiker ziet **Beheer** en kan **toegangsaanvragen goedkeuren of afwijzen**. RLS op de server bepaalt wat daadwerkelijk toegestaan is.
+- De vijf grote rekenkeuzes blijven op **één mobiel veldscherm**. De aanvullende materiaalfactoren, IQI-tabelhulp en pijpberekening zijn **onderzoekshulpen** en geven geen formele RT-vrijgave.
+- Zonder een ingericht Supabase-testproject werken de **50 lokale proefberekeningen** wel, maar bedrijfsregistratie, echte personeelsaanvragen en synchronisatie nog **niet**.
+- Directe live-hosting via derden (zoals raw.githack) vereist bereikbare HTTPS-hosting; de bronbestanden staan gecontroleerd in GitHub, maar iPhone/Safari en publieke URL-respons zijn nog niet op een echt toestel geverifieerd.
+
 ## 1. Supabase inrichten (staging, geen productiegegevens)
 
 1. Maak een **nieuw, leeg Supabase-project**. Schakel Email Auth in; gebruik e-mailbevestiging en sterke wachtwoorden/MFA volgens eigen bedrijfsbeleid.
@@ -21,7 +33,7 @@ Dit is een **werkende statische frontendimplementatie** van een Supabase Auth-/P
 
 ## 2. Mobiel veldscherm
 
-De pagina bevat vier tabbladen: **Account**, **Opnameplan**, **Beheer** (alleen online admin) en **Controles**.
+De hoofdnav toont **Account** en **Rekenen**. **Beheer** verschijnt voor online admins. De eerdere onderzoekscontroles staan nu geïntegreerd bij de vijf rekenkeuzes op het veldscherm.
 
 - Het veldscherm filtert de gesynchroniseerde lijst tot bedrijfsmiddelen met \`approval_status='approved'\`.
 - Supabase **RLS** bewaakt de serverrechten. Verbergen van admin-knoppen is alleen UX, geen beveiligingsmaatregel.
