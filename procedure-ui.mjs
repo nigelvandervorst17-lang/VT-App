@@ -6,7 +6,7 @@ const num=id=>Number(String(e(id).value).replace(',','.'));
 const text=(parent,content)=>{const p=document.createElement('p');p.className='procedure-line';p.textContent=content;parent.appendChild(p);return p};
 const f=(id,msg)=>{e(id).textContent=msg};
 const filmFormatLengthMm=value=>{
- const match=/^\d{1,2}x(\d{1,2})$/.exec(String(value||''));
+ const match=/^(?:(?:D4|D5):)?\d{1,2}x(\d{1,2})$/.exec(String(value||''));
  return match?Number(match[1])*10:null;
 };
 function updateFilmFormatHelp(){
@@ -14,16 +14,16 @@ function updateFilmFormatHelp(){
  if(!format||!length||!note)return;
  const nominal=filmFormatLengthMm(format.value);
  if(nominal===null){
-  note.textContent='Eigen formaat: vul de werkelijk bruikbare lengte langs de las in millimeters in. De filmbreedte verandert dit plaatsingsplan niet.';
+  note.textContent='Ander formaat / D7 / Rollpack: vul zelf de werkelijk bruikbare lengte langs de las in mm in. Het filmformaat verandert geen belichtingsberekening.';
   return;
  }
  const actual=Number(String(length.value).trim().replace(',','.'));
  const label=format.options[format.selectedIndex]?.textContent||format.value;
  if(Number.isFinite(actual)&&actual>nominal+1e-6){
-  note.textContent='Let op: de ingevoerde bruikbare lengte is groter dan '+label+' ('+nominal+' mm in de gekozen richting). Controleer de richting of kies “Andere maat”.';
+  note.textContent='Let op: de ingevoerde bruikbare lengte is groter dan '+label+' ('+nominal+' mm in de gekozen richting). Controleer de richting of kies “Ander formaat”.';
   return;
  }
- note.textContent=label+' = nominale lengte '+nominal+' mm langs de las. Pas de bruikbare beeldlengte handmatig aan voor randen en markeringen; overlap wordt apart ingevoerd.';
+ note.textContent=label+' = nominale lengte '+nominal+' mm langs de las. Controleer randen en markeringen, pas de bruikbare beeldlengte zo nodig aan; overlap staat apart. Filmkeuze verandert de belichtingsberekening niet.';
 }
 let lastPlan=null;
 function update(){
@@ -53,7 +53,14 @@ function update(){
   overlapMm:num('procOverlap'),sourceFilmDistanceMm:num('procSfd')};
  e('procODWrap').hidden=film.shape!=='ring'; e('procLengthWrap').hidden=film.shape!=='straight';
  e('procSfdWrap').hidden=!(standard==='iso'&&['1','5'].includes(String(mme)));
- const p=planFilmPlacement(film),output=e('procFilmOutput');output.replaceChildren();lastPlan=p.ok?p:null;e('procExport').disabled=!p.ok;
+ // A nominal stock-film dimension is only an upper bound on useful image length.
+ // Do not produce a plan from a manually entered length longer than the strip itself.
+ const selectedNominalMm=filmFormatLengthMm(e('procFilmFormat')?.value);
+ const tooLong=selectedNominalMm!==null&&film.usableFilmLengthMm>selectedNominalMm+0.000001;
+ const p=tooLong
+  ?{ok:false,error:'Bruikbare film-/beeldlengte is groter dan de gekozen filmstrook. Corrigeer de lengte of kies Ander formaat.'}
+  :planFilmPlacement(film);
+ const output=e('procFilmOutput');output.replaceChildren();lastPlan=p.ok?p:null;e('procExport').disabled=!p.ok;
  if(!p.ok){output.className='procedure-answer invalid';const h=document.createElement('strong');h.textContent='Filmplan nog niet beschikbaar';output.append(h);text(output,p.error);e('procSketch').replaceChildren();return;}
  output.className='procedure-answer';const h=document.createElement('h3');h.textContent=`${p.filmCount} film${p.filmCount>1?'s':''} · ${fmt(p.spacingCm)} cm h.o.h.`;output.append(h);
  text(output,film.shape==='ring'?'Afstand gemeten langs buitenomtrek tussen film-middenpunten vanaf 0°; niet in rechte lijn.':'Afstand tussen de film-middenpunten langs de te beoordelen las.');
