@@ -6,6 +6,15 @@
 export const ASSET_TABLES=Object.freeze([
  'company_tubes','company_sources','company_procedures'
 ]);
+const SAFE_COLUMNS=Object.freeze({
+ company_tubes:new Set(['name','manufacturer','model','serial_reference',
+  'generator_type','beam_type','max_kv','max_ma','focal_spot_mm','data',
+  'approval_status','approval_reference']),
+ company_sources:new Set(['name','isotope','activity_ci','activity_reference_at',
+  'source_reference','data','approval_status','approval_reference']),
+ company_procedures:new Set(['name','revision','procedure_reference','data',
+  'approval_status','approval_reference'])
+});
 export function assertAdminContext({api,member,userId,online}){
  if(!api||!userId||!member?.company_id||member.role!=='admin'||online!==true)
    throw Error('Beheer vereist een online, goedgekeurd Hoofdgebruiker-account');
@@ -23,6 +32,8 @@ export async function saveCompanyAsset({
 }){
  const companyId=assertAdminContext({api,member,userId,online});
  if(!ASSET_TABLES.includes(table))throw Error('Niet-toegestane beheerresource');
+ if(!data||Object.keys(data).some(key=>!SAFE_COLUMNS[table].has(key)))
+   throw Error('Record bevat niet-toegestane of beveiligde velden');
  validateAdministrativeApproval(data);
  if(!String(data.name??'').trim())throw Error('Naam ontbreekt');
  let rows;
