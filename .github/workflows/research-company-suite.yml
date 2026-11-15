@@ -18,7 +18,7 @@ jobs:
           node-version: '22'
       - name: Gamma, X-ray, profiles, company-suite
         run: |
-          node --test research/gamma-nine-point-review.test.mjs research/xray-core.test.mjs research/xray-tube-profiles.test.mjs research/company-suite/company-suite.test.mjs research/company-suite/workbench-50.test.mjs
+          node --test research/gamma-nine-point-review.test.mjs research/xray-core.test.mjs research/xray-tube-profiles.test.mjs research/company-suite/company-suite.test.mjs research/company-suite/workbench-50.test.mjs research/company-suite/workbench-interaction.test.mjs
       - name: Install Procedure Suite build dependencies
         run: npm install --prefix procedure-suite-source --no-audit --no-fund
       - name: Existing procedure suite regressions
