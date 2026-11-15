@@ -11,7 +11,7 @@ export const PROFILE_STATUS=Object.freeze({
  CALIBRATED:'CALIBRATED'
 });
 export const GENERATOR_TYPES=Object.freeze(['CONSTANT_POTENTIAL','HALF_WAVE']);
-export const BEAM_TYPES=Object.freeze(['RICHTSTRALER','RON DSTRALER'.replace(' ','')]);
+export const BEAM_TYPES=Object.freeze(['RICHTSTRALER','RONDSTRALER']);
 export const REFERENCE_WARNING='Standaard referentiecurve — nog niet geijkt op deze specifieke röntgenbuis';
 export const RESEARCH_WARNING='Uitsluitend onderzoeksvergelijking; geen gevalideerde belichtingstijd of RT-vrijgave.';
 const isNum=Number.isFinite;
@@ -120,6 +120,8 @@ export function calibrateXrayTube(profile,observations,{updatedAt=nowString()}={
   const seconds=parseExposureSeconds(o.exposureTimeHms);
   if(seconds===null)return failure('MEASURED_TIME_INVALID',{point:index+1});
   if(!hasString(o.measurementId))return failure('MEASUREMENT_ID_REQUIRED',{point:index+1});
+  if(o.qualityAccepted!==true||!hasString(o.qualityEvidenceId))
+    return failure('SUCCESSFUL_SHOT_EVIDENCE_REQUIRED',{point:index+1});
   if(!isNum(o.measuredDensity)||o.measuredDensity<=0)
     return failure('MEASURED_DENSITY_INVALID',{point:index+1});
   if(!validPositive(o.thicknessMm)||!Number.isInteger(o.kv)||!validPositive(o.ma)
@@ -137,6 +139,7 @@ export function calibrateXrayTube(profile,observations,{updatedAt=nowString()}={
    measuredDensity:o.measuredDensity,exposureTimeHms:o.exposureTimeHms,
    referenceMinutes:base.referenceMinutes,measuredMinutes,kIndividual:k,
    datasetId:base.datasetId,
+   qualityAccepted:true,qualityEvidenceId:o.qualityEvidenceId,
    referenceScreens:o.referenceScreens??null
   });
  }
@@ -161,6 +164,32 @@ export function calibrateXrayTube(profile,observations,{updatedAt=nowString()}={
  * proof of independent calibration: users must verify documents off-system.
  * Even CALIBRATED is a research-profile status, NEVER RT exposure approval.
  */
+function checkApprovedScope(scope,input){
+ if(!plainObject(scope)||!Array.isArray(scope.films)||!Array.isArray(scope.kv)
+   ||!scope.films.includes(input.film)||!scope.kv.includes(input.kv))
+   return false;
+ const dimensions=[
+  ['thicknessMm',input.thicknessMm],
+  ['density',input.density],
+  ['ma',input.ma],
+  ['sfdMm',input.sfdMm]
+ ];
+ return dimensions.every(([name,value])=>{
+  const range=scope[name];
+  return plainObject(range)&&isNum(range.min)&&isNum(range.max)
+   &&range.min<=range.max&&isNum(value)&&value>=range.min&&value<=range.max;
+ });
+}
+function validScope(scope){
+ if(!plainObject(scope)||!Array.isArray(scope.films)||scope.films.length===0
+   ||!scope.films.every(hasString)||!Array.isArray(scope.kv)||scope.kv.length===0
+   ||!scope.kv.every(v=>Number.isInteger(v)&&v>0))return false;
+ return ['thicknessMm','density','ma','sfdMm'].every(name=>{
+  const range=scope[name];
+  return plainObject(range)&&isNum(range.min)&&isNum(range.max)
+   &&range.min>0&&range.min<=range.max;
+ });
+}
 export function approveTubeCalibration(profile,approval,{updatedAt=nowString()}={}){
  if(!plainObject(profile)||profile.pendingCalibration?.status!=='REVIEW_REQUIRED')
    return failure('NO_PENDING_CALIBRATION');
@@ -169,6 +198,7 @@ export function approveTubeCalibration(profile,approval,{updatedAt=nowString()}=
   approval.approvedProcedureId,approval.approvedScopeId,
   approval.authorizedReviewerId,approval.reviewDate,approval.reviewSignatureReference
  ].every(hasString))return failure('INDEPENDENT_REVIEW_DOCUMENTATION_REQUIRED');
+ if(!validScope(approval.approvedScope))return failure('CALIBRATION_SCOPE_MISSING');
  if(!approval.independentReviewConfirmed||!approval.scopeValidated)
    return failure('INDEPENDENT_REVIEW_NOT_CONFIRMED');
  if(!Number.isFinite(Date.parse(approval.reviewDate)))
@@ -192,6 +222,8 @@ export function previewTubeExposure(profile,input,{includePendingResearchFactor=
  if(profile.calibrationStatus===PROFILE_STATUS.CALIBRATED){
    if(!validPositive(profile.kTube)||!plainObject(profile.calibrationApproval))
      return failure('CALIBRATED_EVIDENCE_MISSING');
+   if(!checkApprovedScope(profile.calibrationApproval.approvedScope,input))
+     return failure('OUTSIDE_DOCUMENTED_CALIBRATION_SCOPE');
    kTube=profile.kTube;mode='CALIBRATED_RESEARCH_ONLY';
  }else if(includePendingResearchFactor&&validPositive(profile.pendingCalibration?.candidateKTUbe)){
    kTube=profile.pendingCalibration.candidateKTUbe;mode='PENDING_RESEARCH_SIMULATION';
