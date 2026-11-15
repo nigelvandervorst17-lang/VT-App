@@ -90,6 +90,8 @@ export interface ExposureInput {
   ma?: number;
   material?: string;
   geometry: {
+    /** Optional for backwards compatibility with older saved plans. */
+    shape?: 'plate' | 'pipe';
     diameterMm: number | null;
     sourcePlacement: 'internal-central' | 'external' | 'internal-offset' | null;
     sourceSizeMm: number | null; // larger of 2 dimensions

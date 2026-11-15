@@ -3,6 +3,7 @@ import type {CalculateExposure,ProcedureProfile,ProcedureDraft,DraftCandidate,Ap
 import {ALL_SOURCES,ALL_FILMS,ALL_TECHNIQUES,newId,validateProfile} from '../domain/validation.js';
 import {parseProcedureDocument} from '../parser/parseProcedureDocument.js';
 import {evaluateExposurePlan} from '../engine/evaluateExposurePlan.js';
+import {applyPlannerInputs,applyPlannerShape,applySourceSelection} from '../planning/plannerInput.js';
 import {listProcedures,loadActiveProcedure,saveProcedure,deleteProcedure,setActiveProcedure,exportBackup,downloadBackup,importBackup,createSavedPlan,savePlan,listPlans,deletePlan} from '../storage/procedureStorage.js';
 import './procedureSuite.css';
 
@@ -12,7 +13,7 @@ const blankDraft=():Partial<DraftCandidate>=>({code:'',customer:'',revision:'',n
  iqi:{side:'source',extraFinerWires:0,filmSideComparisonVerified:false,approvedRules:[]},
  planning:{minimumFilmOverlapMm:null,approvedExposureRules:[]},source:{kind:'text'}});
 const baseInput=():ExposureInput=>({source:'Se-75',film:'D4',technique:'SWSI',thicknessMm:Number.NaN,penetratedThicknessMm:null,maximumPathThicknessMm:null,density:Number.NaN,sfdMm:Number.NaN,activityCi:undefined,model:'',kv:undefined,ma:undefined,material:'Fe',iqiSide:'source',
- geometry:{diameterMm:null,sourcePlacement:null,sourceSizeMm:null,objectToFilmMm:null,filmUsableLengthMm:null,filmWrapped:false}});
+ geometry:{shape:'plate',diameterMm:null,sourcePlacement:null,sourceSizeMm:null,objectToFilmMm:null,filmUsableLengthMm:null,filmWrapped:false}});
 const num=(v:string)=>v.trim()===''?null:Number(v.replace(',','.'));
 const value=(n:number|null|undefined)=>n===null||n===undefined||!Number.isFinite(n)?'':String(n);
 const fmt=(n:number|null)=>n===null?'onbekend':new Intl.NumberFormat('nl-NL',{maximumFractionDigits:2}).format(n);
@@ -23,6 +24,7 @@ const getSavedResearcher=():string=>{
 };
 const optionLabel=(item:string):string=>({
  source:'Bronzijde (Source)',film:'Filmzijde (Film)',either:'Beide zijden',
+ plate:'Vlakke plaat',pipe:'Pijp / Rondlas',
  nominal:'Nominale dikte',penetrated:'Doorstraalde dikte',
  'DWDI-ELLIPSE':'DWDI ellips','internal-central':'Centraal binnen',
  external:'Buitenzijde','internal-offset':'Excentrisch binnen',
@@ -117,7 +119,9 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
  const savedBanner=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{if(readyToPlan&&tab==='library')savedBanner.current?.scrollIntoView({behavior:'smooth',block:'start'});},[readyToPlan,tab]);
  const patch=(data:Partial<DraftCandidate>)=>setDraft(old=>({...old,...data}));
- const changeInput=(data:Partial<ExposureInput>)=>{setResult(null);setInput(old=>({...old,...data}));};
+ const changeInput=(data:Partial<ExposureInput>)=>{setResult(null);setInput(old=>applyPlannerInputs(old,data));};
+ const changeSource=(source:SourceType)=>{setResult(null);setInput(old=>applySourceSelection(old,source));};
+ const changeShape=(shape:'plate'|'pipe')=>{setResult(null);setInput(old=>applyPlannerShape(old,shape));};
  const changeGeometry=(data:Partial<ExposureInput['geometry']>)=>{setResult(null);setInput(old=>({...old,geometry:{...old.geometry,...data}}));};
  const refresh=async()=>{const [all,act,hist]=await Promise.all([listProcedures(),loadActiveProcedure(),listPlans()]);setProcedures(all);setActive(act);setPlans(hist);};
  useEffect(()=>{refresh().catch(err=>setError(String(err)));},[]);
@@ -228,34 +232,42 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
     </div>
    </article>)}
   </section>}
-  {tab==='planner'&&<section className="ndt-card"><h3>Opnameplan + bestaande belichtingsmotor</h3>
-   <p className="ndt-help">Actief: <strong>{active?`${active.customer} / ${active.code} rev. ${active.revision}`:'geen procedure gekozen'}</strong>. Alleen de bestaande motor berekent de belichtingstijd.</p>
-   <div className="ndt-grid">
-    <ChoiceGroup label="Bron / toestel" items={ALL_SOURCES} selected={input.source} onChange={v=>changeInput({source:v})}/>
+  {tab==='planner'&&<section className="ndt-card ndt-planner-card"><h3>Opnameplan + bestaande belichtingsmotor</h3>
+   <p className="ndt-help">Actief: <strong>{active?`${active.customer} / ${active.code} rev. ${active.revision}`:'geen procedure gekozen'}</strong>. De bestaande motor berekent de belichtingstijd ongewijzigd.</p>
+   <div className="ndt-grid ndt-planner-grid">
+    <ChoiceGroup label="Bron / toestel" items={ALL_SOURCES} selected={input.source} onChange={changeSource}/>
+    <ChoiceGroup label="Werkstuk" items={['plate','pipe'] as const} selected={input.geometry.shape??'pipe'} onChange={changeShape}/>
     <ChoiceGroup label="Filmtype" items={ALL_FILMS} selected={input.film} onChange={v=>changeInput({film:v})}/>
     <ChoiceGroup label="Opnametechniek" items={ALL_TECHNIQUES} selected={input.technique} onChange={v=>changeInput({technique:v})}/>
     <ChoiceGroup label="IQI-positie" items={['source','film'] as const} selected={input.iqiSide} onChange={v=>changeInput({iqiSide:v})}/>
     <FloatField label="Wanddikte t (mm)" value={input.thicknessMm} placeholder="Bijv. 10.0" onChange={v=>changeInput({thicknessMm:v??Number.NaN})}/>
-    <FloatField label="Doorstraalde dikte w, centraal (mm)" value={input.penetratedThicknessMm} onChange={v=>changeInput({penetratedThicknessMm:v})} allowEmpty/>
-    <FloatField label="Maximale w, aan rand (mm)" value={input.maximumPathThicknessMm} onChange={v=>changeInput({maximumPathThicknessMm:v})} allowEmpty/>
+    <div className="ndt-field ndt-derived-field" role="group" aria-label="Automatisch berekende nominale doorstraalde dikte">
+     <span>Doorstraalde dikte w (mm) · automatisch</span>
+     <output aria-live="polite" className="ndt-derived-value">{value(input.penetratedThicknessMm)?`${value(input.penetratedThicknessMm)} mm`:'Vul wanddikte t in'}</output>
+     <small>{input.technique==='SWSI'?'SWSI: 1 × t':'DWSI / DWDI: 2 × t'} · nominale benadering</small>
+    </div>
     <FloatField label="Zwarting D" value={input.density} placeholder="Bijv. 2.5" onChange={v=>changeInput({density:v??Number.NaN})}/>
     <FloatField label="Bron-film-afstand SFD (mm)" value={input.sfdMm} placeholder="Bijv. 800" onChange={v=>changeInput({sfdMm:v??Number.NaN})}/>
-    <FloatField label="Bronactiviteit (Ci), bij gamma" value={input.activityCi} onChange={v=>changeInput({activityCi:v??undefined})} allowEmpty/>
-    <label className="ndt-field"><span>X-ray model</span><input value={input.model??''} onChange={e=>changeInput({model:e.target.value})}/></label>
-    <FloatField label="X-ray kV" value={input.kv} onChange={v=>changeInput({kv:v??undefined})} allowEmpty/>
-    <FloatField label="X-ray mA" value={input.ma} onChange={v=>changeInput({ma:v??undefined})} allowEmpty/>
-    <FloatField label="Pijpbuitendiameter Ø (mm)" value={input.geometry.diameterMm} onChange={v=>changeGeometry({diameterMm:v})} allowEmpty/>
-    <SelectField label="Bronpositie" options={['onbekend','internal-central','external','internal-offset'] as const} selected={input.geometry.sourcePlacement??'onbekend'} onChange={v=>changeGeometry({sourcePlacement:v==='onbekend'?null:v})}/>
-    <FloatField label="Bron-/focusgrootte d, grootste afmeting (mm)" value={input.geometry.sourceSizeMm} onChange={v=>changeGeometry({sourceSizeMm:v})} allowEmpty/>
-    <FloatField label="Object-film-afstand b (mm)" value={input.geometry.objectToFilmMm} onChange={v=>changeGeometry({objectToFilmMm:v})} allowEmpty/>
-    <FloatField label="Bruikbare filmlengte langs omtrek (mm)" value={input.geometry.filmUsableLengthMm} onChange={v=>changeGeometry({filmUsableLengthMm:v})} allowEmpty/>
-    <label className="ndt-check"><input type="checkbox" checked={input.geometry.filmWrapped} onChange={e=>changeGeometry({filmWrapped:e.target.checked})}/>Film volgt de buisomtrek (omgelegde film)</label>
+    {input.source==='X-ray'?<>
+      <label className="ndt-field"><span>Röntgenapparaat / model</span><input value={input.model??''} placeholder="Bijv. toestelmodel" onChange={e=>changeInput({model:e.target.value})}/></label>
+      <FloatField label="Röntgenspanning (kV)" value={input.kv} placeholder="Bijv. 160" onChange={v=>changeInput({kv:v??undefined})} allowEmpty/>
+      <FloatField label="Buisstroom (mA)" value={input.ma} placeholder="Bijv. 5.0" onChange={v=>changeInput({ma:v??undefined})} allowEmpty/>
+    </>:<FloatField label="Bronactiviteit (Ci)" value={input.activityCi} placeholder="Bijv. 40.0" onChange={v=>changeInput({activityCi:v??undefined})} allowEmpty/>}
+    <FloatField label="Maximale doorstraalde dikte aan rand (mm)" value={input.maximumPathThicknessMm} placeholder="Bijv. 22.0" onChange={v=>changeInput({maximumPathThicknessMm:v})} allowEmpty/>
+    {input.geometry.shape==='pipe'&&<>
+      <FloatField label="Pijpbuitendiameter Ø (mm)" value={input.geometry.diameterMm} placeholder="Bijv. 114.3" onChange={v=>changeGeometry({diameterMm:v})} allowEmpty/>
+      <SelectField label="Bronpositie" options={['onbekend','internal-central','external','internal-offset'] as const} selected={input.geometry.sourcePlacement??'onbekend'} onChange={v=>changeGeometry({sourcePlacement:v==='onbekend'?null:v})}/>
+      <FloatField label="Bruikbare filmlengte langs omtrek (mm)" value={input.geometry.filmUsableLengthMm} placeholder="Bijv. 300" onChange={v=>changeGeometry({filmUsableLengthMm:v})} allowEmpty/>
+      <label className="ndt-check ndt-wide"><input type="checkbox" checked={input.geometry.filmWrapped} onChange={e=>changeGeometry({filmWrapped:e.target.checked})}/>Film volgt de buisomtrek (omgelegde film)</label>
+    </>}
+    <FloatField label="Bron-/focusgrootte d, grootste afmeting (mm)" value={input.geometry.sourceSizeMm} placeholder="Bijv. 2.5" onChange={v=>changeGeometry({sourceSizeMm:v})} allowEmpty/>
+    <FloatField label="Object-film-afstand b (mm)" value={input.geometry.objectToFilmMm} placeholder="Bijv. 10.0" onChange={v=>changeGeometry({objectToFilmMm:v})} allowEmpty/>
    </div>
-   <button type="button" disabled={!active||busy} onClick={()=>void evaluate()}>{busy?'Controleren…':'Bereken met bestaande motor + controleer procedure'}</button>
+   <p className="ndt-help ndt-w-caution">Let op: w = t of 2 × t is alleen een <strong>nominale schatting</strong> voor de procedure-/IQI-controles. Bij schuine, excentrische en elliptische opnamen kan de werkelijke stralingsweg afwijken. Controleer deze afzonderlijk. De belichtingsmotor blijft de oorspronkelijke wanddikte t gebruiken.</p>
    {result&&<div className="ndt-output" aria-live="polite">
     <div className={`ndt-bigstatus ndt-${result.status}`}>{friendlyStatus[result.status]} <small>(alleen procedurecontroles)</small></div>
     <div className="ndt-kpis"><p><small>Belichtingstijd</small><strong>{result.exposure?.ok&&Number.isFinite(result.exposure.minutes)?`${Math.round(result.exposure.minutes!*60)} s`:'Niet beschikbaar'}</strong></p>
-     <p><small>Filmsegmenten</small><strong>{fmt(result.filmPlan.filmSegments)}</strong></p>
+     <p><small>Filmsegmenten</small><strong>{input.geometry.shape==='plate'?'n.v.t. (plaat)':fmt(result.filmPlan.filmSegments)}</strong></p>
      <p><small>Min. opnamen</small><strong>{fmt(result.filmPlan.minimumExposures)}</strong></p>
      <p><small>Vereiste IQI</small><strong>{result.iqi.wireNumber?`W${result.iqi.wireNumber} (${result.iqi.wireDiameterMm} mm)`:'Onbekend'}</strong></p></div>
     <p className="ndt-help">IQI-positie: {result.iqi.position==='film'?'filmzijde':'bronzijde'} · Gemeten zichtbaarheid en daadwerkelijke filmdekking moeten apart worden beoordeeld.</p>
@@ -263,6 +275,10 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
     <label className="ndt-field"><span>Logboeknaam</span><input value={planName} onChange={e=>setPlanName(e.target.value)} placeholder="Project / lasnummer / opname-ID"/></label>
     <button type="button" disabled={!planName.trim()} onClick={async()=>{try{if(!active)return;await savePlan(createSavedPlan(planName,active,result));setPlanName('');await refresh();setMessage('Opnameplan inclusief status en snapshot opgeslagen in het lokale logboek.');}catch(e){setError(String(e));}}}>Bewaar opnameplan in logboek</button>
    </div>}
+   <div className="ndt-planner-sticky" role="group" aria-label="Berekening en procedurecontrole">
+    <button className="ndt-primary-calculate" type="button" disabled={!active||busy} onClick={()=>void evaluate()}>{busy?'Controleren…':'Bereken met bestaande motor'}</button>
+    <small>Met procedurecontrole · geen automatische RT-vrijgave</small>
+   </div>
   </section>}
   {tab==='history'&&<section className="ndt-card"><h3>Opnamelogboek / historie</h3>
     {plans.length===0?<p className="ndt-help">Nog geen opnameplannen opgeslagen.</p>:plans.map(x=><article className="ndt-library-item" key={x.id}>
