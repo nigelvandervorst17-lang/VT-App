@@ -1,0 +1,27 @@
+{
+  "name": "ndt-radiography-pro-procedure-suite",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Procedure reader, Level 3 confirmation, plan checks, and local records; existing RT calculation engine is read-only",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run compile:core && node --test tests/*.test.mjs",
+    "compile:core": "tsc -p tsconfig.core.json"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "pdfjs-dist": "^6.5.438",
+    "mammoth": "^1.13.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.3.8"
+  }
+}

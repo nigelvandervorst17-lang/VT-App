@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#081727"><title>Procedure Suite | NDT Radiography Pro</title>
+<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./ndt-pro-theme.css"><link rel="stylesheet" href="./procedure-suite.css">
+<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.11.0/mammoth.browser.min.js"></script>
+<style>
+.ndt-app-wrapper{width:min(100%,760px);margin:auto;padding:14px 13px 35px}
+.ndt-backlink{display:inline-flex;align-items:center;min-height:48px;color:#dcf4ff;text-decoration:none;font-weight:800;padding:10px 14px;background:#1d405b;border:1px solid #5687a5;border-radius:12px;margin:8px 0 15px}
+.ndt-runtime-warning{background:#473221;border:1px solid #b58b58;border-radius:14px;padding:14px;margin:12px 0;color:#ffe4bd;font-size:13px}
+#ndtProcedureSuiteRoot{min-height:300px}
+</style></head><body><div class="ndt-app-wrapper">
+<a class="ndt-backlink" href="./index.html">‹ Terug naar NDT Radiography Pro</a>
+<div class="ndt-runtime-warning"><strong>Onderzoeksversie — niet vrijgegeven voor werkelijke RT-opnamen.</strong> Documenten blijven lokaal in de browser opgeslagen. Voor deze voorlopige browserbouw worden React en PDF/DOCX-bibliotheken online geladen; voer geen vertrouwelijke klantdocumenten in voordat de offline-versie en de privacycontrole zijn afgerond.</div>
+<main id="ndtProcedureSuiteRoot"><p>Procedure Suite wordt geladen…</p></main>
+<div id="ndtStartupError" role="alert" hidden class="ndt-runtime-warning"></div>
+</div>
+<script type="module">
+try {
+ const [{mountProcedureSuite},{existingCalculateExposure}]=await Promise.all([
+  import('./procedure-runtime/host/mountProcedureSuite.js'),
+  import('./basicRTProBridge.mjs')
+ ]);
+ mountProcedureSuite(document.getElementById('ndtProcedureSuiteRoot'),{calculateExposure:existingCalculateExposure});
+} catch(err){const target=document.getElementById('ndtStartupError');target.hidden=false;target.textContent='Procedure Suite kon niet starten. Controleer je internetverbinding of ontbrekende modules: '+String(err);document.getElementById('ndtProcedureSuiteRoot').replaceChildren();console.error(err);}
+</script></body></html>

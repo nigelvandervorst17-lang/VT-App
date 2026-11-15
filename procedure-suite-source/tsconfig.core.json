@@ -1,0 +1,9 @@
+{
+ "compilerOptions":{
+   "target":"ES2022", "lib":["ES2022","DOM"], "module":"NodeNext", "moduleResolution":"NodeNext",
+   "outDir":".test-build", "rootDir":"src", "strict":true,"skipLibCheck":true,
+   "esModuleInterop":true, "verbatimModuleSyntax":true, "noFallthroughCasesInSwitch":true
+ },
+ "include":["src/domain/**/*.ts","src/parser/**/*.ts","src/storage/**/*.ts","src/planning/**/*.ts","src/engine/**/*.ts","tests/offline-vendors.d.ts","src/vite-env.d.ts"],
+ "exclude":["src/ui/**","src/host/**"]
+}

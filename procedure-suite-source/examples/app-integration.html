@@ -1,0 +1,14 @@
+<!-- ADD ONLY TO A TEST COPY of the existing BASIC RT PRO index.html:
+  1. Insert <div id="ndtProcedureSuiteRoot"></div> in the appropriate screen.
+  2. Build this toolkit once (npm install, npm run build), copy dist/ next to index.html.
+  3. Copy examples/basicRTProBridge.mjs alongside rt-core.mjs and related curves.
+  4. Insert the script below, and use the original page's existing nav to show the screen.
+  5. Do not change rt-core.mjs, rt-curves.mjs, film-response.mjs, app.mjs, or calibration data.
+-->
+<div id="ndtProcedureSuiteRoot"></div>
+<script type="module">
+ import {mountProcedureSuite} from './dist/ndt-procedure-suite.js';
+ import {existingCalculateExposure} from './basicRTProBridge.mjs';
+ const root=document.getElementById('ndtProcedureSuiteRoot');
+ mountProcedureSuite(root,{calculateExposure:existingCalculateExposure});
+</script>

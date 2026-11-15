@@ -1,0 +1,2 @@
+Voorbeeldkoppeling staat onder examples/basicRTProBridge.mjs en examples/app-integration.html.
+De rekenmodules zijn nooit gekopieerd naar deze toolkit en blijven ongewijzigd.

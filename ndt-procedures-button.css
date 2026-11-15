@@ -1,0 +1,4 @@
+/* Separate Procedure Suite launcher. Does not edit scientific results. */
+.ndt-home-suite-link{display:flex;gap:10px;align-items:center;justify-content:space-between;max-width:100%;margin:12px 17px 6px;padding:14px 16px;color:#fff;font-weight:850;text-decoration:none;border:1px solid #71caff;border-radius:16px;background:linear-gradient(120deg,#165a97,#0c3c69);box-shadow:0 5px 15px #0004}
+.ndt-home-suite-link small{display:block;font-size:11px;color:#c5e4fa;font-weight:500;margin-top:3px}
+.ndt-home-suite-link:focus-visible{outline:3px solid #b2e9ff;outline-offset:2px}
