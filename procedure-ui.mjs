@@ -1,10 +1,11 @@
-/** App-only procedure screen; calculation core in rt-procedure.mjs. */
+/** BASIC RT PRO · separate IQI and filmverdeling. No proprietary procedures. */
 import {lookupProcedureIqi,planFilmPlacement} from './rt-procedure.mjs';
 const e=id=>document.getElementById(id);
 const fmt=(v,d=2)=>new Intl.NumberFormat('nl-NL',{maximumFractionDigits:d}).format(v);
-const num=id=>Number(String(e(id).value).replace(',','.'));
-const text=(parent,content)=>{const p=document.createElement('p');p.className='procedure-line';p.textContent=content;parent.appendChild(p);return p};
-const f=(id,msg)=>{e(id).textContent=msg};
+const num=id=>Number(String(e(id)?.value??'').trim().replace(',','.'));
+const text=(parent,content)=>{const p=document.createElement('p');p.className='procedure-line';p.textContent=content;parent.appendChild(p);return p;};
+let lastPlan=null;
+
 const filmFormatLengthMm=value=>{
  const match=/^(?:(?:D4|D5):)?\d{1,2}x(\d{1,2})$/.exec(String(value||''));
  return match?Number(match[1])*10:null;
@@ -14,73 +15,81 @@ function updateFilmFormatHelp(){
  if(!format||!length||!note)return;
  const nominal=filmFormatLengthMm(format.value);
  if(nominal===null){
-  note.textContent='Ander formaat / D7 / Rollpack: vul zelf de werkelijk bruikbare lengte langs de las in mm in. Het filmformaat verandert geen belichtingsberekening.';
+  note.textContent='Ander formaat / D7 / Rollpack: vul de werkelijk bruikbare filmlengte in mm in.';
   return;
  }
- const actual=Number(String(length.value).trim().replace(',','.'));
+ const usable=Number(String(length.value).trim().replace(',','.'));
  const label=format.options[format.selectedIndex]?.textContent||format.value;
- if(Number.isFinite(actual)&&actual>nominal+1e-6){
-  note.textContent='Let op: de ingevoerde bruikbare lengte is groter dan '+label+' ('+nominal+' mm in de gekozen richting). Controleer de richting of kies “Ander formaat”.';
+ if(Number.isFinite(usable)&&usable>nominal+1e-6){
+  note.textContent='Bruikbare lengte groter dan de nominale filmlengte ('+nominal+' mm). Controleer de richting of kies een eigen formaat.';
   return;
  }
- note.textContent=label+' = nominale lengte '+nominal+' mm langs de las. Controleer randen en markeringen, pas de bruikbare beeldlengte zo nodig aan; overlap staat apart. Filmkeuze verandert de belichtingsberekening niet.';
+ note.textContent=label+' · nominale lengte '+nominal+' mm. Pas de bruikbare lengte zelf aan voor randen en markeringen. Overlap wordt apart ingesteld.';
 }
-let lastPlan=null;
-function update(){
- const standard=e('procNorm').value;
- const iso=standard==='iso';
- e('procClassWrap').hidden=!iso;
- e('procMaterialWrap').hidden=!iso;
- e('procMetalScope').textContent=iso?'ISO: uitsluitend lassen in staal, nikkel, titanium en legeringen t/m 75 mm doorstraalde dikte.':'ASME: uitsluitend stalen gietstukken t/m 76 mm — NIET toepassen als ASME-lasprocedure.';
- e('procTechnique').disabled=!iso;
- e('procTechnique').value=iso?e('procTechnique').value:'sw';
- e('procTechniqueWrap').hidden=!iso;
- e('procW').closest('.field-card').hidden=!iso||e('procTechnique').value==='sw';
- const side=e('procSide').value,mme=e('procMme').value;
- const args={standard,qualityClass:e('procClass').value,technique:e('procTechnique').value,mme,iqiSide:side,tMm:num('procT'),wMm:num('procW'),material:iso?e('procMaterial').value:'steel'};
- const result=lookupProcedureIqi(args);
+function updateIQI(){
+ const result=lookupProcedureIqi({
+  standard:'iso',qualityClass:e('procClass').value,material:'steel',
+  technique:e('procTechnique').value,iqiSide:e('procSide').value,
+  tMm:num('procT'),wMm:num('procW')
+ });
  const area=e('procIqiOutput');area.replaceChildren();
- if(!result.ok){area.className='procedure-answer invalid';const h=document.createElement('strong');h.textContent='Nog geen geldige IQI-uitkomst';area.append(h);text(area,result.error);}
- else{
-  area.className='procedure-answer';const h=document.createElement('h3');h.textContent=`${result.wire} · Ø ${fmt(result.diameterMm,3)} mm`;area.append(h);
-  text(area,`Kies: ${result.wireGroup} · Materiaalgroep: ${result.materialGroup}`);
-  text(area,`Benodigde IQI's: ${result.minimumCount} minimaal ${standard==='iso'?'per exposure':'voor de opgegeven opnameconfiguratie'} (speciale gevallen in bron controleren).`);
-  text(area,result.note); for(const w of result.warnings)text(area,'• '+w);
-  const s=document.createElement('small');s.textContent='Bron: '+result.source;area.append(s);
+ e('procW').closest('.field-card').hidden=e('procTechnique').value==='sw';
+ if(!result.ok){
+  area.className='procedure-answer invalid';
+  const title=document.createElement('strong');title.textContent='IQI-uitkomst niet beschikbaar';area.append(title);
+  text(area,result.error);
+ }else{
+  area.className='procedure-answer';
+  const heading=document.createElement('h3');heading.textContent=result.wire+' · Ø '+fmt(result.diameterMm,3)+' mm';area.append(heading);
+  text(area,'IQI-draadgroep: '+result.wireGroup+' · Materiaal: staal');
+  text(area,'Vereiste draad volgens de aangehaalde tabel; daadwerkelijke zichtbaarheid moet op de film worden beoordeeld.');
+  text(area,result.note);
+  for(const warning of result.warnings)text(area,'• '+warning);
+  const src=document.createElement('small');src.textContent='Normreferentie: '+result.source;area.append(src);
  }
- const film={standard,shape:e('procShape').value,mme,technique:e('procTechnique').value,
-  outerDiameterMm:num('procOD'),examinedLengthMm:num('procLength'),usableFilmLengthMm:num('procFilmLen'),
-  overlapMm:num('procOverlap'),sourceFilmDistanceMm:num('procSfd')};
- e('procODWrap').hidden=film.shape!=='ring'; e('procLengthWrap').hidden=film.shape!=='straight';
- e('procSfdWrap').hidden=!(standard==='iso'&&['1','5'].includes(String(mme)));
- // A nominal stock-film dimension is only an upper bound on useful image length.
- // Do not produce a plan from a manually entered length longer than the strip itself.
- const selectedNominalMm=filmFormatLengthMm(e('procFilmFormat')?.value);
- const tooLong=selectedNominalMm!==null&&film.usableFilmLengthMm>selectedNominalMm+0.000001;
- const p=tooLong
-  ?{ok:false,error:'Bruikbare film-/beeldlengte is groter dan de gekozen filmstrook. Corrigeer de lengte of kies Ander formaat.'}
-  :planFilmPlacement(film);
- const output=e('procFilmOutput');output.replaceChildren();lastPlan=p.ok?p:null;e('procExport').disabled=!p.ok;
- if(!p.ok){output.className='procedure-answer invalid';const h=document.createElement('strong');h.textContent='Filmplan nog niet beschikbaar';output.append(h);text(output,p.error);e('procSketch').replaceChildren();return;}
- output.className='procedure-answer';const h=document.createElement('h3');h.textContent=`${p.filmCount} film${p.filmCount>1?'s':''} · ${fmt(p.spacingCm)} cm h.o.h.`;output.append(h);
- text(output,film.shape==='ring'?'Afstand gemeten langs buitenomtrek tussen film-middenpunten vanaf 0°; niet in rechte lijn.':'Afstand tussen de film-middenpunten langs de te beoordelen las.');
- text(output,`Bruikbare film-/opnamelengte: ${fmt(p.usefulLengthMm/10)} cm · geplande effectieve overlap: ${fmt(p.actualPlanningOverlapMm/10)} cm`);
- const mid=document.createElement('div');mid.className='proc-midpoint-highlight';
- const midTitle=document.createElement('strong');midTitle.textContent=`Midden van ingevoerde filmstrook (${fmt(p.enteredFilmLengthMm/10)} cm): ${fmt(p.selectedStripMidpointMm/10)} cm vanaf begin van de strook`;mid.append(midTitle);
- const midHelp=document.createElement('p');midHelp.textContent=`Per film hieronder staat het te markeren MIDDELPUNT in cm, gemeten vanaf het 0-punt ${p.shape==='ring'?'over de buisomtrek':'langs de rechte las'}.`;mid.append(midHelp);output.append(mid);
- const ol=document.createElement('ol');ol.className='proc-positions';
- p.placement.slice(0,30).forEach(x=>{
-   const li=document.createElement('li');li.className='proc-film-position';
-   const title=document.createElement('strong');title.textContent=`Film ${x.film} — MIDDELPUNT: ${fmt(x.positionMm/10)} cm`;li.append(title);
-   const sub=document.createElement('span');sub.textContent=`Begin bruikbaar: ${fmt(x.startMm/10)} cm · Einde bruikbaar: ${fmt(x.endMm/10)} cm${x.wrapsPastZeroMm>0?' · '+fmt(x.wrapsPastZeroMm/10)+' cm voorbij 0-punt':''}`;li.append(sub);
-   ol.append(li);
- });output.append(ol);
- if(p.filmCount>30)text(output,`...en nog ${p.filmCount-30} films; exporteer het volledige plan als CSV.`);
- text(output,p.exposureGuide);p.notes.forEach(n=>text(output,n));
- const caut=document.createElement('p');caut.className='proc-red';caut.textContent='LET OP: dit is een theoretisch filmverdeelplan. Verifieer marker-overlap, vrije beeldlengte, stralingshoek, IQI en minimum aantal belichtingen volgens procedure.';output.append(caut);
- const s=document.createElement('small');s.textContent='Bron: '+p.source;output.append(s);
- e('procExport').disabled=false;draw(p);
 }
+function updateFilm(){
+ const shape=e('procShape').value;
+ e('procODWrap').hidden=shape!=='ring';
+ e('procLengthWrap').hidden=shape!=='straight';
+ const useful=num('procFilmLen');
+ const max=filmFormatLengthMm(e('procFilmFormat').value);
+ const p=max!==null&&useful>max+0.000001
+  ?{ok:false,error:'De ingevoerde bruikbare lengte is langer dan de gekozen filmstrook.'}
+  :planFilmPlacement({
+    shape,outerDiameterMm:num('procOD'),examinedLengthMm:num('procLength'),
+    usableFilmLengthMm:useful,overlapMm:num('procOverlap')
+  });
+ const output=e('procFilmOutput');output.replaceChildren();
+ lastPlan=p.ok?p:null;e('procExport').disabled=!p.ok;
+ if(!p.ok){
+  output.className='procedure-answer invalid';
+  const title=document.createElement('strong');title.textContent='Filmplan niet beschikbaar';output.append(title);
+  text(output,p.error);e('procSketch').replaceChildren();return;
+ }
+ output.className='procedure-answer';
+ const title=document.createElement('h3');title.textContent=p.filmCount+' film'+(p.filmCount===1?'':'s')+' · '+fmt(p.spacingCm)+' cm h.o.h.';
+ output.append(title);
+ text(output,shape==='ring'?'Afstand langs de buitenomtrek, vanaf het 0-punt.':'Afstand langs de rechte las, vanaf het 0-punt.');
+ text(output,'Bruikbare filmlengte: '+fmt(p.usefulLengthMm/10)+' cm · berekende overlap tussen stroken: '+fmt(p.actualPlanningOverlapMm/10)+' cm');
+ const centre=document.createElement('div');centre.className='proc-midpoint-highlight';
+ const mid=document.createElement('strong');mid.textContent='Midden van één filmstrook: '+fmt(p.selectedStripMidpointMm/10)+' cm vanaf het begin';
+ centre.append(mid);output.append(centre);
+ const list=document.createElement('ol');list.className='proc-positions';
+ for(const x of p.placement.slice(0,30)){
+  const li=document.createElement('li');li.className='proc-film-position';
+  const line=document.createElement('strong');line.textContent='Film '+x.film+' — MIDDELPUNT: '+fmt(x.positionMm/10)+' cm';
+  const detail=document.createElement('span');detail.textContent='Begin: '+fmt(x.startMm/10)+' cm · Einde: '+fmt(x.endMm/10)+' cm'+(x.wrapsPastZeroMm>0?' · '+fmt(x.wrapsPastZeroMm/10)+' cm voorbij 0-punt':'');
+  li.append(line,detail);list.append(li);
+ }
+ output.append(list);
+ if(p.filmCount>30)text(output,'Meer films beschikbaar in de volledige CSV-export.');
+ text(output,p.exposureGuide);
+ for(const note of p.notes)text(output,note);
+ const src=document.createElement('small');src.textContent=p.source;output.append(src);
+ draw(p);
+}
+function update(){updateIQI();updateFilm();}
 function draw(p){
  const container=e('procSketch');container.replaceChildren();
  const ns='http://www.w3.org/2000/svg';const make=(tag,a,parent)=>{const x=document.createElementNS(ns,tag);Object.entries(a||{}).forEach(([k,v])=>x.setAttribute(k,String(v)));(parent||svg).appendChild(x);return x};
@@ -118,85 +127,44 @@ function csv(){if(!lastPlan)return;
  rows.unshift('CONCEPT FILMINDELING - NIET VRIJGEGEVEN VOOR RT-OPNAMES');
  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Basic-RT-PRO-filmplan-CONCEPT.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);
 }
-function setOverlap(){e('procOverlap').value=e('procNorm').value==='asme'?'40':'10';}
-// IQI and film placement share the existing procedure/film planning engine but
-// have separate entry points. The film-tab selectors mirror the original
-// norm/MME controls; they do not introduce another calculation model.
-function initFilmSettings(){
- const pairs=[['procFilmNorm','procNorm'],['procFilmMme','procMme']];
- const sync=()=>{for(const [proxyId,originalId] of pairs){
-  const p=e(proxyId),o=e(originalId);
-  if(p&&o&&p.value!==o.value)p.value=o.value;
- }};
- for(const [proxyId,originalId] of pairs){
-  const p=e(proxyId),o=e(originalId);
-  if(!p||!o)return;
-  p.replaceChildren(...[...o.options].map(opt=>opt.cloneNode(true)));
-  p.value=o.value;
-  p.addEventListener('change',()=>{
-   if(o.value!==p.value){
-    o.value=p.value;
-    o.dispatchEvent(new Event('change',{bubbles:true}));
-   }
-   sync();
-  });
-  o.addEventListener('change',sync);
- }
- sync();
-}
+
 function showProcedureView(view){
  const selected=view==='film'?'film':'iqi';
- for(const el of document.querySelectorAll('#screen-procedure [data-proc-pane]')){
-  el.hidden=el.dataset.procPane!==selected;
- }
+ for(const element of document.querySelectorAll('#screen-procedure [data-proc-pane]'))
+  element.hidden=element.dataset.procPane!==selected;
  for(const btn of document.querySelectorAll('#screen-procedure [data-proc-tab]')){
   const active=btn.dataset.procTab===selected;
-  btn.classList.toggle('active',active);
-  btn.setAttribute('aria-pressed',String(active));
+  btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
  }
- const heading=e('procViewTitle'),intro=e('procViewIntro');
- if(heading)heading.textContent=selected==='film'?'Filmverdeling':'IQI-controle';
- if(intro)intro.textContent=selected==='film'
-  ?'Kies je filmformaat en werkstukafmetingen. Bekijk het aantal filmstroken, de onderlinge afstand en alle middelpunten vanaf 0 cm. Geen belichtingsplanning.'
-  :'Bepaal de vereiste IQI-draad via de gekozen norm en opnametechniek. Controleer de uitkomst volgens de geldige procedure.';
+ const title=e('procViewTitle'),subtitle=e('procViewIntro');
+ if(title)title.textContent=selected==='film'?'Filmverdeling':'IQI-controle';
+ if(subtitle)subtitle.textContent=selected==='film'
+  ?'Kies een filmformaat, afmeting en overlap voor een theoretische verdeling. Geen opnameschema.'
+  :'Controle van ISO-draad-IQI bij staal op basis van de gekozen opnamegeometrie.';
 }
 export function initProcedureUi(nav){
- initFilmSettings();
- e('procTabIqi')?.addEventListener('click',()=>showProcedureView('iqi'));
- e('procTabFilm')?.addEventListener('click',()=>showProcedureView('film'));
- showProcedureView('iqi');
- const filmFormat=e('procFilmFormat');
- if(filmFormat){
-  filmFormat.addEventListener('change',()=>{
-   const nominal=filmFormatLengthMm(filmFormat.value);
-   if(nominal!==null){
-    e('procFilmLen').value=String(nominal);
-   }
-   updateFilmFormatHelp();
-   update();
-  });
-  e('procFilmLen').addEventListener('input',updateFilmFormatHelp);
-  e('procFilmLen').addEventListener('change',updateFilmFormatHelp);
-  updateFilmFormatHelp();
+ for(const id of ['procClass','procTechnique','procSide','procT','procW']){
+  e(id).addEventListener('input',updateIQI);
+  e(id).addEventListener('change',updateIQI);
  }
- for(const id of ['procNorm','procClass','procTechnique','procMme','procSide','procMaterial','procT','procW','procShape','procOD','procLength','procFilmLen','procOverlap','procSfd']){
-  e(id).addEventListener('input',update); e(id).addEventListener('change',update);
+ for(const id of ['procShape','procOD','procLength','procFilmLen','procOverlap']){
+  e(id).addEventListener('input',updateFilm);
+  e(id).addEventListener('change',updateFilm);
  }
- e('procNorm').addEventListener('change',()=>{
-   if(e('procNorm').value==='asme'&&!['1','2','3','4','6','7'].includes(e('procMme').value))e('procMme').value='1';
-   if(e('procNorm').value==='iso'&&e('procMme').value==='6')e('procMme').value='6A';
-   e('procSide').value='source';setOverlap();update()});
- e('procMme').addEventListener('change',()=>{
-   const m=e('procMme').value;
-   if(e('procNorm').value==='iso'){
-    e('procTechnique').value=['6A','6B'].includes(m)?'dwdi':['4','5','12'].includes(m)?'dwsi':'sw';
-    if(['6A','6B'].includes(m))e('procSide').value='source';
-   }else if(m==='6')e('procSide').value='source';
-   update();
+ e('procFilmFormat').addEventListener('change',()=>{
+  const nominal=filmFormatLengthMm(e('procFilmFormat').value);
+  if(nominal!==null)e('procFilmLen').value=String(nominal);
+  updateFilmFormatHelp();updateFilm();
  });
- e('procShape').addEventListener('change',()=>{if(e('procNorm').value==='iso'){if(e('procShape').value==='straight'&&e('procMme').value==='2')e('procMme').value='1';if(e('procShape').value==='ring'&&e('procMme').value==='1')e('procMme').value='2';}update()});
- e('procExport').addEventListener('click',csv);
- document.querySelectorAll('[data-proc-open]').forEach(x=>x.addEventListener('click',()=>{showProcedureView(x.dataset.procView);nav('procedure');}));
+ e('procFilmLen').addEventListener('input',updateFilmFormatHelp);
+ e('procFilmLen').addEventListener('change',updateFilmFormatHelp);
+ e('procTabIqi').addEventListener('click',()=>showProcedureView('iqi'));
+ e('procTabFilm').addEventListener('click',()=>showProcedureView('film'));
+ document.querySelectorAll('[data-proc-open]').forEach(button=>button.addEventListener('click',()=>{
+  showProcedureView(button.dataset.procView);nav('procedure');
+ }));
  e('procBack').addEventListener('click',()=>nav('calc'));
- e('procExport').disabled=true;setOverlap();update();
+ e('procExport').addEventListener('click',csv);
+ e('procExport').disabled=true;
+ updateFilmFormatHelp();update();showProcedureView('iqi');
 }
