@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "NDT Radiography Pro — ontwerpversie",
+  "name": "NDT Radiography Pro",
   "short_name": "NDT Radiography Pro",
-  "description": "Professionele ontwerpversie voor industriele radiografie: Se-75, Ir-192, X-ray, IQI en filmplanning. Onderzoeksversie; niet vrijgegeven voor opnames.",
+  "description": "Industrial radiography calculator en Procedure Suite — onderzoeksversie met procedurecontroles, IQI en opnameplanning; niet vrijgegeven voor echte RT-opnamen.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
