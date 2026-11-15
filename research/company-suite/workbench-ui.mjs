@@ -27,7 +27,9 @@ function currentInput(kind,material){
   case 'pipe':return {
    diameterMm:numeric('pipeDiameter'),thicknessMm:numeric('pipeThickness'),
    usableFilmMm:numeric('pipeFilmLength'),overlapMm:numeric('pipeOverlap'),
-   qualityClass:value('pipeClass')
+   qualityClass:value('pipeClass'),dMm:optionalNumeric('pipeSpot'),
+   bMm:optionalNumeric('pipeB'),sfdMm:optionalNumeric('pipeSfd'),
+   planarDefects:$('pipePlanar').checked
   };
   case 'iqi':return{
    qualityClass:value('qClass'),technique:value('qTechnique'),
