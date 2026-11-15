@@ -4,6 +4,10 @@ export function calculateFilmPlan(input, p) {
     const diameter = input.geometry.diameterMm;
     const wall = input.thicknessMm;
     const plan = { circumferenceMm: null, filmSegments: null, minimumExposures: null, maxThicknessIncreasePercent: null, maxAllowedPercent: p.class === 'B' ? 10 : 20 };
+    if (input.geometry.shape === 'plate') {
+        checks.push({ code: 'PLATE_COVERAGE', status: 'orange', message: 'Vlakke plaat: opnamedekking, overlap en minimaal aantal opnamen vereisen een apart goedgekeurd opnameplan. Buisomtrek- en bijlage-A-opnameaantallen zijn hier niet toegepast.' });
+        return { plan, checks };
+    }
     if (!Number.isFinite(diameter) || diameter === null || diameter <= 0) {
         checks.push({ code: 'PIPE_DIAMETER', status: 'orange', message: 'Pijpdiameter ontbreekt: filmdekking rondlas niet te berekenen.' });
         return { plan, checks };

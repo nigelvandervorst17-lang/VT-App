@@ -25,3 +25,7 @@ Grote tikknoppen voor bronnen, filmtypes en technieken; expliciete labels voor I
 **D6** is niet toegevoegd: de bestaande app ondersteunt D2, D3, D4, D5, D7 en D8; een extra filmkeuze zou zonder gevalideerde motordata misleidend zijn.
 
 De gewijzigde bestanden zijn alleen de React-UI (`src/ui/ProcedureSuite.tsx`), stylesheet, gegenereerde UI-browserruntime, de tijdelijke HTML-schil en dit document. Alle bestaande motor-, IQI-, planner- en curvebestanden zijn ongewijzigd.
+
+## Opnameplan iPhone UX v0.3
+
+Bronvelden zijn conditioneel (gamma versus X-ray), keuze plaat/rondlas verbergt niet-relevante geometrie, nominale doorstraalde dikte w volgt t/techniek en de berekenknop staat vast onderaan. De vaste knop roept uitsluitend de bestaande procedurecontrole en vervolgens de **ongewijzigde** rekenmotor aan. Bij plaat blijft opnamedekking expliciet onbekend in plaats van een fictieve buisomtrekberekening. Details en tests: `CONTROLE-OPNAMEPLAN-IPHONE-0.3.md`.
