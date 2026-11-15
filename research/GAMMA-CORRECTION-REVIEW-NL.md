@@ -1,9 +1,29 @@
-# NDT Radiography Pro — 9 correctiepunten (review, geen release)
+# NDT Radiography Pro — negenpuntstest met film-specifieke proeffactoren
 
-**Status:** Rekenkundige hypothese. Niet gebruiken om een RT-bron of X-ray-toestel te bedienen.  
-**Rekenmotor:** `rt-core.mjs`, `film-response.mjs`, `rt-curves.mjs/json`, `app.mjs` en de Procedure Suite worden **niet gewijzigd**.
+**Alleen onderzoeksbranch:** `gamma-nine-point-factor-review`.  
+**Geen productiewijziging / geen kalibratievrijgave.**
 
-De vorige 60 combinaties waren motor-uitkomsten, geen 60 onafhankelijk gemeten of geverifieerde belichtingstijden. Uit die lijst volgt dus niet dat alle basiscurves natuurkundig gevalideerd zijn.
+De huidige `calculateGamma()` uit `rt-core.mjs` wordt rechtstreeks en ongewijzigd geïmporteerd. Voor de twee D=2,5-proeven wordt uitsluitend in dit onderzoeksscript de uitkomst op basis van de huidige D=2,0-filmcurve vermenigvuldigd met:
+- **D4: 1,4278**
+- **D5: 1,3085**
+
+De oorspronkelijke Se-75 D5/D4-verhouding is **ca. 0,584514**, rechtstreeks uit de bestaande filmcurves. Deze wordt niet vervangen of afgerond in de berekening. **D7 blijft volledig ongewijzigd.** Voor alle andere zwartingen blijft de huidige motor ongewijzigd. De vijf afgewezen situaties blijven geblokkeerd; er worden geen film- of zwartingsgrenzen verruimd.
+
+## Regressierapport
+
+| Testnr | Oorspronkelijke tijd | Nieuwe tijd | Verschil (sec) | Status |
+|---:|---|---|---:|---|
+| 32 | 00:07:24 | 00:07:24 | 0 | Overeenkomst |
+| 33 | 00:05:24 | 00:05:24 | 0 | Overeenkomst |
+| 38 | Geblokkeerd | Geblokkeerd | — | Geblokkeerd |
+| 39 | Geblokkeerd | Geblokkeerd | — | Geblokkeerd |
+| 43 | Geblokkeerd | Geblokkeerd | — | Geblokkeerd |
+| 48 | Geblokkeerd | Geblokkeerd | — | Geblokkeerd |
+| 49 | Geblokkeerd | Geblokkeerd | — | Geblokkeerd |
+| 53 | 00:00:54 | 00:00:57 | +3 | Overeenkomst |
+| 54 | 01:15:30 | 01:26:04 | +634 | Overeenkomst |
+
+Tests 53 en 54 zijn **numerieke regressie-overeenkomsten met aangeleverde richttijden**, geen bewijs voor de fysische juistheid van de correctiefactoren. Dit script is niet aangesloten op de live-app en mag nooit worden gebruikt om echte belichtingstijden vast te stellen.
 
 ## Uitvoering
 ```sh
@@ -11,17 +31,4 @@ node research/gamma-nine-point-review.mjs
 node --test research/gamma-nine-point-review.test.mjs
 ```
 
-Dit script reproduceert precies de **voorgestelde getallen** als _what-if_, niet als nieuwe kalibratie. Het importeert de live-motor uit deze repository en roept die ongewijzigd aan. De nieuwe factoren worden **alleen in de vergelijkingsmodule** gebruikt.
-
-## Bevindingen
-- **Nr. 53** met Se-75 D5-filmfactor **0,60** en zwartingsfactor **1,415**: **00:01:03**, niet de gevraagde **00:00:57**.
-- **Nr. 54** met D4-factor **1,415**: **01:25:18**, niet **01:26:04**.
-- **Nr. 32** gaat met D5 = 0,60 van **00:07:24** naar **00:07:36**. Dat verandert dus een bestaande filmverhouding.
-- **Nr. 38/39**: de D5/D7-verhouding is wiskundig afgeleid uit het huidige overlapgebied, maar toepassing bij 15 mm Ir-192 heeft **geen onafhankelijke validatie**.
-- **Nr. 43/49**: de nieuwe density-ankers leveren getallen, maar vallen buiten het huidig onderbouwde zwartingsbereik.
-- **Nr. 48**: D = 3,5 vereist een extra aanname; voor de verkennende tabel is er **alleen lineair geïnterpoleerd** tussen 2,5 en 3,9.
-
-Het **exacte** D4-factorgetal voor nr. 54 vanuit huidige D4-basiscurve is ongeveer **1,427834**. Voor nr. 53 zou met filmfactor **0,60** een **andere** D5-zwartingsfactor van ongeveer **1,274839** nodig zijn. Dat is geen bewijs dat deze factoren fysisch juist zijn.
-
-### Beslissing
-Geen merge naar `main` en geen verruimde invoer in de gebruikersapp totdat onafhankelijke film-/dichtheidsmetingen, toegestane extrapolatie en toepassingsgebied zijn vastgesteld en beoordeeld. Bestaande fabrikantafgeleide grafieken krijgen door een andere formule geen nieuwe onafhankelijke herkomst.
+De andere vijf tests blijven geblokkeerd door het oorspronkelijke model: Ir-192 D5/D7 bij 15 mm en zwartingen D=1,2; 3,5; 3,9. Nieuwe data en onafhankelijke validatie blijven noodzakelijk voor eventuele latere wijzigingen.
