@@ -12,6 +12,16 @@ export function createSupabaseConnection({url,key},environment=globalThis){
  if(typeof key!=='string'||key.length<24)
    throw Error('Vul uitsluitend de publishable/anon key van Supabase in.');
  if(/service_role|sb_secret_/i.test(key))throw Error('Geheime sleutel verboden in browser');
+ // Supabase legacy anon keys may be JWTs: reject service_role claim as well.
+ if(key.split('.').length===3){
+  try{
+   const payload=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+   if(payload?.role==='service_role')throw Error('service_role-sleutel verboden in browser');
+  }catch(error){
+   if(String(error?.message).includes('service_role-sleutel verboden'))throw error;
+  }
+ }
+
  const root=url.replace(/\/$/,'');
  let auth=null;
  function save(session){
