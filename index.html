@@ -500,26 +500,32 @@
    <div class="field-card" id="procODWrap"><label for="procOD">Buitendiameter De (mm)</label><input id="procOD" type="text" inputmode="decimal" value="219,1"></div>
    <div class="field-card" id="procLengthWrap" hidden><label for="procLength">Te inspecteren lengte (mm)</label><input id="procLength" type="text" inputmode="decimal" value="1000"></div>
    <div class="field-card">
-    <label for="procFilmFormat">Filmformaat (breedte × lengte, cm)</label>
-    <select id="procFilmFormat">
-     <option value="6x16">6 × 16 cm</option>
-     <option value="6x24">6 × 24 cm</option>
-     <option value="6x30">6 × 30 cm</option>
-     <option value="6x40">6 × 40 cm</option>
-     <option value="7x17">7 × 17 cm</option>
-     <option value="10x16">10 × 16 cm</option>
-     <option value="10x24" selected>10 × 24 cm</option>
-     <option value="10x30">10 × 30 cm</option>
-     <option value="10x40">10 × 40 cm</option>
-     <option value="10x48">10 × 48 cm</option>
-     <option value="13x18">13 × 18 cm</option>
-     <option value="18x24">18 × 24 cm</option>
-     <option value="24x30">24 × 30 cm</option>
-     <option value="custom">Andere maat / zelf invoeren</option>
+    <label for="procFilmFormat">Filmformaat uit voorraad (breedte × lengte, cm)</label>
+    <select id="procFilmFormat" aria-describedby="procFilmFormatHelp">
+     <optgroup label="D4 · PB VAC">
+      <option value="D4:6x16">D4 · 6 × 16 cm</option>
+      <option value="D4:6x24">D4 · 6 × 24 cm</option>
+      <option value="D4:6x48">D4 · 6 × 48 cm</option>
+      <option value="D4:9x12">D4 · 9 × 12 cm</option>
+      <option value="D4:10x16">D4 · 10 × 16 cm</option>
+      <option value="D4:10x24" selected>D4 · 10 × 24 cm</option>
+      <option value="D4:10x40">D4 · 10 × 40 cm</option>
+      <option value="D4:10x48">D4 · 10 × 48 cm</option>
+      <option value="D4:30x40">D4 · 30 × 40 cm</option>
+     </optgroup>
+     <optgroup label="D5 · PB VAC">
+      <option value="D5:6x12">D5 · 6 × 12 cm</option>
+      <option value="D5:6x16">D5 · 6 × 16 cm</option>
+      <option value="D5:9x12">D5 · 9 × 12 cm</option>
+      <option value="D5:10x16">D5 · 10 × 16 cm</option>
+      <option value="D5:10x24">D5 · 10 × 24 cm</option>
+      <option value="D5:10x48">D5 · 10 × 48 cm</option>
+     </optgroup>
+     <option value="custom">Ander formaat / D7 / Rollpack · lengte zelf invoeren</option>
     </select>
    </div>
    <div class="field-card"><label for="procFilmLen">Bruikbare film-/beeldlengte (mm) · aanpasbaar</label><input id="procFilmLen" inputmode="decimal" type="text" value="240" aria-describedby="procFilmFormatHelp"></div>
-   <p class="small-muted proc-film-format-help" id="procFilmFormatHelp">Bij 10 × 24 cm vult de app voorlopig 240 mm in. Controleer de echte bruikbare lengte voor randen, markeringen en lasdekking; overlap staat apart.</p>
+   <p class="small-muted proc-film-format-help" id="procFilmFormatHelp">D4 · 10 × 24 cm: nominale lengte 240 mm. De werkelijke bruikbare beeldlengte kan kleiner zijn door randen en markeringen; pas die zelf aan. Het filmformaat wijzigt geen belichtingsberekening.</p>
    <div class="field-card"><label for="procOverlap">Geplande overlap (mm)</label><input id="procOverlap" inputmode="decimal" type="text" value="10"></div>
    <div class="field-card" id="procSfdWrap"><label for="procSfd">SFD (mm) · nodig voor MME 1/5</label><input id="procSfd" inputmode="decimal" type="text" value="700"></div>
   </div>
@@ -928,7 +934,7 @@
   window.BasicRtCometCatalog={models:items.map(x=>x.model),mode:'reference-only',datasetValidated:false};
 })();
 </script>
-<script type="module" src="./app.mjs?v=394"></script>
+<script type="module" src="./app.mjs?v=410"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
