@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css?v=408">
+<link rel="stylesheet" href="./styles.css?v=409">
 
 <!-- 2.5.4: self-contained mobile image sizing (compatible with older GitHub styles.css) -->
 <style id="rt-mobile-reference-layout-fix">
@@ -499,7 +499,27 @@
    <div class="field-card"><label for="procShape">Objectgeometrie / lasverloop</label><select id="procShape"><option value="ring">Rondlas / omtrek</option><option value="straight">Rechte las / langslas</option></select></div>
    <div class="field-card" id="procODWrap"><label for="procOD">Buitendiameter De (mm)</label><input id="procOD" type="text" inputmode="decimal" value="219,1"></div>
    <div class="field-card" id="procLengthWrap" hidden><label for="procLength">Te inspecteren lengte (mm)</label><input id="procLength" type="text" inputmode="decimal" value="1000"></div>
-   <div class="field-card"><label for="procFilmLen">Bruikbare film-/beeldlengte (mm)</label><input id="procFilmLen" inputmode="decimal" type="text" value="240"></div>
+   <div class="field-card">
+    <label for="procFilmFormat">Filmformaat (breedte × lengte, cm)</label>
+    <select id="procFilmFormat">
+     <option value="6x16">6 × 16 cm</option>
+     <option value="6x24">6 × 24 cm</option>
+     <option value="6x30">6 × 30 cm</option>
+     <option value="6x40">6 × 40 cm</option>
+     <option value="7x17">7 × 17 cm</option>
+     <option value="10x16">10 × 16 cm</option>
+     <option value="10x24" selected>10 × 24 cm</option>
+     <option value="10x30">10 × 30 cm</option>
+     <option value="10x40">10 × 40 cm</option>
+     <option value="10x48">10 × 48 cm</option>
+     <option value="13x18">13 × 18 cm</option>
+     <option value="18x24">18 × 24 cm</option>
+     <option value="24x30">24 × 30 cm</option>
+     <option value="custom">Andere maat / zelf invoeren</option>
+    </select>
+   </div>
+   <div class="field-card"><label for="procFilmLen">Bruikbare film-/beeldlengte (mm) · aanpasbaar</label><input id="procFilmLen" inputmode="decimal" type="text" value="240" aria-describedby="procFilmFormatHelp"></div>
+   <p class="small-muted proc-film-format-help" id="procFilmFormatHelp">Bij 10 × 24 cm vult de app voorlopig 240 mm in. Controleer de echte bruikbare lengte voor randen, markeringen en lasdekking; overlap staat apart.</p>
    <div class="field-card"><label for="procOverlap">Geplande overlap (mm)</label><input id="procOverlap" inputmode="decimal" type="text" value="10"></div>
    <div class="field-card" id="procSfdWrap"><label for="procSfd">SFD (mm) · nodig voor MME 1/5</label><input id="procSfd" inputmode="decimal" type="text" value="700"></div>
   </div>
