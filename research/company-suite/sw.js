@@ -1,7 +1,7 @@
 /* Research-only offline shell. No offline Supabase authorization or released exposures. */
-const CACHE='ndt-company-suite-shell-v2';
+const CACHE='ndt-company-suite-shell-v3';
 const SHELL=['./','./index.html','./styles.css','./company-app.mjs',
- './supabase-rest.mjs','./offline-cache.mjs','./research-physics-preview.mjs',
+ './supabase-rest.mjs','./project-config.mjs','./offline-cache.mjs','./research-physics-preview.mjs',
  './manifest.webmanifest',
  './workbench-ui.mjs','./trial-50.mjs','./field-calculators.mjs',
  '../xray-core.mjs','../gamma-nine-point-review.mjs',
