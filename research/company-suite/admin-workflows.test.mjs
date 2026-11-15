@@ -72,6 +72,18 @@ test('Admin kan een bestaand asset bijwerken zonder eigenaarschap te herschrijve
  assert.equal(call.data.created_by,undefined);
  assert.equal(call.data.company_id,undefined);
 });
+test('Admin mag eigenaarschap of bedrijfsidentiteit niet herschrijven',async()=>{
+ const api=makeApi();
+ for(const data of [
+  {name:'Unsafe',approval_status:'draft',company_id:'OTHER'},
+  {name:'Unsafe',approval_status:'draft',created_by:'OTHER'},
+  {name:'Unsafe',approval_status:'draft',research_factor:2.5}
+ ]){
+  await assert.rejects(()=>saveCompanyAsset({...ctx(api),table:'company_tubes',
+   recordId,data}),/niet-toegestane/);
+ }
+ assert.equal(api.calls.length,0);
+});
 test('Staff mag niet toevoegen of bijwerken, ook niet via directe module-aanroep',async()=>{
  const api=makeApi();
  await assert.rejects(()=>saveCompanyAsset({...ctx(api,staff),
