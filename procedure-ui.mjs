@@ -5,6 +5,26 @@ const fmt=(v,d=2)=>new Intl.NumberFormat('nl-NL',{maximumFractionDigits:d}).form
 const num=id=>Number(String(e(id).value).replace(',','.'));
 const text=(parent,content)=>{const p=document.createElement('p');p.className='procedure-line';p.textContent=content;parent.appendChild(p);return p};
 const f=(id,msg)=>{e(id).textContent=msg};
+const filmFormatLengthMm=value=>{
+ const match=/^\d{1,2}x(\d{1,2})$/.exec(String(value||''));
+ return match?Number(match[1])*10:null;
+};
+function updateFilmFormatHelp(){
+ const format=e('procFilmFormat'),length=e('procFilmLen'),note=e('procFilmFormatHelp');
+ if(!format||!length||!note)return;
+ const nominal=filmFormatLengthMm(format.value);
+ if(nominal===null){
+  note.textContent='Eigen formaat: vul de werkelijk bruikbare lengte langs de las in millimeters in. De filmbreedte verandert dit plaatsingsplan niet.';
+  return;
+ }
+ const actual=Number(String(length.value).trim().replace(',','.'));
+ const label=format.options[format.selectedIndex]?.textContent||format.value;
+ if(Number.isFinite(actual)&&actual>nominal+1e-6){
+  note.textContent='Let op: de ingevoerde bruikbare lengte is groter dan '+label+' ('+nominal+' mm in de gekozen richting). Controleer de richting of kies “Andere maat”.';
+  return;
+ }
+ note.textContent=label+' = nominale lengte '+nominal+' mm langs de las. Pas de bruikbare beeldlengte handmatig aan voor randen en markeringen; overlap wordt apart ingevoerd.';
+}
 let lastPlan=null;
 function update(){
  const standard=e('procNorm').value;
@@ -93,6 +113,20 @@ function csv(){if(!lastPlan)return;
 }
 function setOverlap(){e('procOverlap').value=e('procNorm').value==='asme'?'40':'10';}
 export function initProcedureUi(nav){
+ const filmFormat=e('procFilmFormat');
+ if(filmFormat){
+  filmFormat.addEventListener('change',()=>{
+   const nominal=filmFormatLengthMm(filmFormat.value);
+   if(nominal!==null){
+    e('procFilmLen').value=String(nominal);
+   }
+   updateFilmFormatHelp();
+   update();
+  });
+  e('procFilmLen').addEventListener('input',updateFilmFormatHelp);
+  e('procFilmLen').addEventListener('change',updateFilmFormatHelp);
+  updateFilmFormatHelp();
+ }
  for(const id of ['procNorm','procClass','procTechnique','procMme','procSide','procMaterial','procT','procW','procShape','procOD','procLength','procFilmLen','procOverlap','procSfd']){
   e(id).addEventListener('input',update); e(id).addEventListener('change',update);
  }
