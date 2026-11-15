@@ -54,8 +54,7 @@ function snapshot(){
     wallThicknessMm:isPipe?getField('workWall'):null,
     IQI:{class:getField('iqiClass'),technique:getField('iqiTechnique'),side:getField('iqiSide'),
       penetratedThicknessMm:getField('iqiPenetrated'),wire:getText('iqiWire'),reference:getText('iqiRef')},
-    procedure:{norm:getField('procNorm'),class:getField('procClass'),MME:getField('procMme'),
-      technique:getField('procTechnique'),IQISide:getField('procSide')},
+    iqi:{class:getField('procClass'),technique:getField('procTechnique'),side:getField('procSide'),nominalThicknessMm:getField('procT'),penetratedThicknessMm:getField('procW')},
     geometry:{sourceSizeMm:getField('geoSource'),objectFilmDistanceMm:getField('geoOFD'),
       sourceObjectDistanceMm:getField('geoSOD'),appUgResult:getText('geoResult')},
     appCalculation:calculated?{
