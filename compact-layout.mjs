@@ -73,13 +73,19 @@ function sync(){
     copy($('film'),film);
     copy($('distance'),distance);
     copy($('density'),density);
+    copy($('kv'),$('rtCompactKv'));
     const kvField=$('rtCompactKvField');if(kvField)kvField.hidden=g;
     document.querySelectorAll('[data-rt-xray-density]').forEach(el=>{el.hidden=g;});
     document.querySelectorAll('[data-rt-gamma-density]').forEach(el=>{el.hidden=!g;});
     const originalOutput=$('rtCompactResultMount');if(originalOutput)originalOutput.hidden=false;
     if(!g){const sticky=$('stickyOutcome');if(sticky)sticky.hidden=true;}
     const note=$('rtCompactModeNote');
-    if(note)note.textContent=disabled?tr('locked'):g?tr('noRuntime'):tr('xray');
+    if(note){
+      const xrayName=$('xrayModel')?.selectedOptions?.[0]?.textContent?.trim()||'—';
+      const suffix=lang()==='nl'?'Gebruikte toestelcurve: ':lang()==='pl'?'Krzywa urządzenia: ':'Selected device curve: ';
+      note.textContent=disabled?tr('locked'):g?tr('noRuntime'):(tr('xray')+' '+suffix+xrayName+
+        '. Geen modelonafhankelijke of vrijgegeven RT-belichtingstijd.');
+    }
     const summary=$('rtCompactAdvancedLabel');
     if(summary)summary.textContent=tr('summary');
     const help=$('rtCompactHelpTitle');
@@ -176,6 +182,7 @@ function init(){
   setupInput(film,()=>$('film'));
   setupInput(distance,()=>$('distance'));
   setupInput(density,()=>$('density'));
+  setupInput($('rtCompactKv'),()=>$('kv'));
   document.querySelectorAll('[data-rt-compact-distance]').forEach(b=>b.addEventListener('click',()=>{
     if(distance){distance.value=b.dataset.rtCompactDistance;dispatchProxy(distance);}
   }));
