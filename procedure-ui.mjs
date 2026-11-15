@@ -119,7 +119,52 @@ function csv(){if(!lastPlan)return;
  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Basic-RT-PRO-filmplan-CONCEPT.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),800);
 }
 function setOverlap(){e('procOverlap').value=e('procNorm').value==='asme'?'40':'10';}
+// IQI and film placement share the existing procedure/film planning engine but
+// have separate entry points. The film-tab selectors mirror the original
+// norm/MME controls; they do not introduce another calculation model.
+function initFilmSettings(){
+ const pairs=[['procFilmNorm','procNorm'],['procFilmMme','procMme']];
+ const sync=()=>{for(const [proxyId,originalId] of pairs){
+  const p=e(proxyId),o=e(originalId);
+  if(p&&o&&p.value!==o.value)p.value=o.value;
+ }};
+ for(const [proxyId,originalId] of pairs){
+  const p=e(proxyId),o=e(originalId);
+  if(!p||!o)return;
+  p.replaceChildren(...[...o.options].map(opt=>opt.cloneNode(true)));
+  p.value=o.value;
+  p.addEventListener('change',()=>{
+   if(o.value!==p.value){
+    o.value=p.value;
+    o.dispatchEvent(new Event('change',{bubbles:true}));
+   }
+   sync();
+  });
+  o.addEventListener('change',sync);
+ }
+ sync();
+}
+function showProcedureView(view){
+ const selected=view==='film'?'film':'iqi';
+ for(const el of document.querySelectorAll('#screen-procedure [data-proc-pane]')){
+  el.hidden=el.dataset.procPane!==selected;
+ }
+ for(const btn of document.querySelectorAll('#screen-procedure [data-proc-tab]')){
+  const active=btn.dataset.procTab===selected;
+  btn.classList.toggle('active',active);
+  btn.setAttribute('aria-pressed',String(active));
+ }
+ const heading=e('procViewTitle'),intro=e('procViewIntro');
+ if(heading)heading.textContent=selected==='film'?'Filmverdeling':'IQI-controle';
+ if(intro)intro.textContent=selected==='film'
+  ?'Kies je filmformaat en werkstukafmetingen. Bekijk het aantal filmstroken, de onderlinge afstand en alle middelpunten vanaf 0 cm. Geen belichtingsplanning.'
+  :'Bepaal de vereiste IQI-draad via de gekozen norm en opnametechniek. Controleer de uitkomst volgens de geldige procedure.';
+}
 export function initProcedureUi(nav){
+ initFilmSettings();
+ e('procTabIqi')?.addEventListener('click',()=>showProcedureView('iqi'));
+ e('procTabFilm')?.addEventListener('click',()=>showProcedureView('film'));
+ showProcedureView('iqi');
  const filmFormat=e('procFilmFormat');
  if(filmFormat){
   filmFormat.addEventListener('change',()=>{
@@ -151,7 +196,7 @@ export function initProcedureUi(nav){
  });
  e('procShape').addEventListener('change',()=>{if(e('procNorm').value==='iso'){if(e('procShape').value==='straight'&&e('procMme').value==='2')e('procMme').value='1';if(e('procShape').value==='ring'&&e('procMme').value==='1')e('procMme').value='2';}update()});
  e('procExport').addEventListener('click',csv);
- document.querySelectorAll('[data-proc-open]').forEach(x=>x.addEventListener('click',()=>nav('procedure')));
+ document.querySelectorAll('[data-proc-open]').forEach(x=>x.addEventListener('click',()=>{showProcedureView(x.dataset.procView);nav('procedure');}));
  e('procBack').addEventListener('click',()=>nav('calc'));
  e('procExport').disabled=true;setOverlap();update();
 }
