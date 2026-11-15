@@ -19,13 +19,13 @@ let syncing = false;
 
 const translations = {
   nl:{activity:'Activiteit (Ci)',current:'Stroom (mA)',thickness:'Staaldikte t (mm)',penetrated:'Doorstraalde dikte w (mm)',
-      locked:'Certificaatmodus actief: wijzig activiteit onder Extra instellingen.',noRuntime:'Geen vrijgegeven belichtingstijd. Controleer de volledige geometrie en brongegevens.',xray:'Vul de velden in: de Waygate-softwaretijd verschijnt automatisch als er een exact referentiepunt bestaat.',
+      locked:'Certificaatmodus actief: wijzig activiteit onder Extra instellingen.',noRuntime:'Geen vrijgegeven belichtingstijd. Controleer de volledige geometrie en brongegevens.',xray:'Vul de velden in: de oorspronkelijke onderzoeksberekening staat bij het resultaat; controleer de bronvoorwaarden.',
       summary:'Extra instellingen · opnamegeometrie, IQI en werkvoorbereiding',details:'Meer over onderzoek en beperkingen',title:'Snelle onderzoeksberekening',film:'Filmtype',distance:'Bron-/focus-filmafstand (mm)',density:'Doelzwarting (D)',plate:'Plaat / Las',pipe:'Buis / Pijp',outside:'Buitendiameter Ø (mm)',wall:'Gemeten wanddikte t (mm)',nominal:'Nominaal 2 × t',pipeCaution:'2 × t is een benadering, geen kalibratie. Controleer de werkelijke stralingsweg, IQI en goedgekeurde opnametechniek.',pipeInvalid:'Ongeldige buisgeometrie: controleer Ø, t en w. Er kan geen onderbouwde berekening worden gegeven.',pipeNote:'Nominale dubbele wand',pipeW:'Gekozen doorstraalde dikte w'},
   en:{activity:'Activity (Ci)',current:'Current (mA)',thickness:'Steel thickness t (mm)',penetrated:'Penetrated thickness w (mm)',
-      locked:'Certificate mode: edit activity under Advanced settings.',noRuntime:'No approved exposure time. Check geometry and source data.',xray:'Enter the values: a Waygate software time appears automatically when an exact reference point exists.',
+      locked:'Certificate mode: edit activity under Advanced settings.',noRuntime:'No approved exposure time. Check geometry and source data.',xray:'Enter the values: the research calculation is shown below; verify the reference conditions.',
       summary:'Advanced settings · geometry, IQI and preparation',details:'Research limitations',title:'Quick research estimate',film:'Film type',distance:'Source/focus-to-film (mm)',density:'Target optical density (D)',plate:'Plate / Weld',pipe:'Pipe / Tube',outside:'Outside diameter Ø (mm)',wall:'Measured wall thickness t (mm)',nominal:'Nominal 2 × t',pipeCaution:'2 × t is an approximation, not a calibration. Verify the actual beam path, IQI and approved technique.',pipeInvalid:'Invalid pipe geometry: check Ø, t and w. No supported exposure estimate.',pipeNote:'Nominal double wall',pipeW:'Selected penetrated thickness w'},
   pl:{activity:'Aktywność (Ci)',current:'Prąd (mA)',thickness:'Grubość stali t (mm)',penetrated:'Grubość prześwietlana w (mm)',
-      locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'Wprowadź dane: czas z oprogramowania Waygate pojawi się automatycznie dla dokładnego punktu odniesienia.',
+      locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'Wprowadź dane: wynik badawczej kalkulacji znajdziesz poniżej; zweryfikuj warunki.',
       summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej',title:'Szybkie obliczenie badawcze',film:'Typ błony',distance:'Odległość źródło/błona (mm)',density:'Docelowa gęstość (D)',plate:'Blacha / Spoina',pipe:'Rura',outside:'Średnica zewnętrzna Ø (mm)',wall:'Zmierzona grubość ścianki t (mm)',nominal:'Nominalnie 2 × t',pipeCaution:'2 × t to przybliżenie, nie kalibracja. Zweryfikuj rzeczywistą drogę wiązki, IQI i zatwierdzoną technikę.',pipeInvalid:'Nieprawidłowa geometria rury: sprawdź Ø, t i w. Brak wiarygodnego oszacowania.',pipeNote:'Nominalnie dwie ścianki',pipeW:'Wybrana grubość prześwietlana w'}
 };
 const lang=()=>['nl','en','pl'].includes($('language')?.value)?$('language').value:'nl';
@@ -73,14 +73,10 @@ function sync(){
     copy($('film'),film);
     copy($('distance'),distance);
     copy($('density'),density);
-    const library=$('rtWaygateLibrary');if(library)library.hidden=g;
-    const wg=$('rtWaygateReference');if(wg)wg.hidden=g;
-    const atlas=$('rtWaygateAtlas');if(atlas)atlas.hidden=g;
     const kvField=$('rtCompactKvField');if(kvField)kvField.hidden=g;
     document.querySelectorAll('[data-rt-xray-density]').forEach(el=>{el.hidden=g;});
     document.querySelectorAll('[data-rt-gamma-density]').forEach(el=>{el.hidden=!g;});
-    const softwareOutput=$('rtWaygateLive');if(softwareOutput)softwareOutput.hidden=g;
-    const originalOutput=$('rtCompactResultMount');if(originalOutput)originalOutput.hidden=!g;
+    const originalOutput=$('rtCompactResultMount');if(originalOutput)originalOutput.hidden=false;
     if(!g){const sticky=$('stickyOutcome');if(sticky)sticky.hidden=true;}
     const note=$('rtCompactModeNote');
     if(note)note.textContent=disabled?tr('locked'):g?tr('noRuntime'):tr('xray');
