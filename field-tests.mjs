@@ -170,7 +170,7 @@ function render(){
   $('ftCount').textContent=records.length+' fysieke filmtest'+(records.length===1?'':'en')+' lokaal bewaard';
   if($('ftCurveCount'))$('ftCurveCount').textContent=records.length+' fysieke filmtest'+(records.length===1?'':'en')+' in het lokale register.';
   if(!records.length){
-    list.append(element('p','Nog geen praktijkmetingen opgeslagen. Waygate-softwarepunten zijn hier bewust niet opgenomen.','small-muted'));
+    list.append(element('p','Nog geen praktijkmetingen opgeslagen. Referentiecurves zijn geen fysieke filmmetingen.','small-muted'));
     return;
   }
   for(const row of records.slice(0,LIMIT)){
