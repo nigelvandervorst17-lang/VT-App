@@ -1,34 +1,73 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ALL_SOURCES, ALL_FILMS, ALL_TECHNIQUES, newId, validateProfile } from '../domain/validation.js';
 import { parseProcedureDocument } from '../parser/parseProcedureDocument.js';
 import { evaluateExposurePlan } from '../engine/evaluateExposurePlan.js';
 import { listProcedures, loadActiveProcedure, saveProcedure, deleteProcedure, setActiveProcedure, exportBackup, downloadBackup, importBackup, createSavedPlan, savePlan, listPlans, deletePlan } from '../storage/procedureStorage.js';
 const blankDraft = () => ({ code: '', customer: '', revision: '', norm: 'ISO 17636-1:2022', class: 'B', planarDefectsRequired: false,
-    sources: [], films: [], techniques: [], thickness: { minMm: 0, maxMm: 0 }, density: { min: 0, max: 0 },
+    sources: [], films: [], techniques: [], thickness: { minMm: Number.NaN, maxMm: Number.NaN }, density: { min: Number.NaN, max: Number.NaN },
     iqi: { side: 'source', extraFinerWires: 0, filmSideComparisonVerified: false, approvedRules: [] },
     planning: { minimumFilmOverlapMm: null, approvedExposureRules: [] }, source: { kind: 'text' } });
-const baseInput = () => ({ source: 'Se-75', film: 'D4', technique: 'SWSI', thicknessMm: 0, penetratedThicknessMm: null, maximumPathThicknessMm: null, density: 0, sfdMm: 0, activityCi: undefined, model: '', kv: undefined, ma: undefined, material: 'Fe', iqiSide: 'source',
+const baseInput = () => ({ source: 'Se-75', film: 'D4', technique: 'SWSI', thicknessMm: Number.NaN, penetratedThicknessMm: null, maximumPathThicknessMm: null, density: Number.NaN, sfdMm: Number.NaN, activityCi: undefined, model: '', kv: undefined, ma: undefined, material: 'Fe', iqiSide: 'source',
     geometry: { diameterMm: null, sourcePlacement: null, sourceSizeMm: null, objectToFilmMm: null, filmUsableLengthMm: null, filmWrapped: false } });
 const num = (v) => v.trim() === '' ? null : Number(v.replace(',', '.'));
-const value = (n) => n === null || n === undefined ? '' : String(n);
+const value = (n) => n === null || n === undefined || !Number.isFinite(n) ? '' : String(n);
 const fmt = (n) => n === null ? 'onbekend' : new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 2 }).format(n);
 const friendlyStatus = { green: 'CONTROLE OK', orange: 'NOG TE CONTROLEREN', red: 'GEBLOKKEERD' };
+const RESEARCHER_STORAGE_KEY = 'ndt-procedure-suite-confirming-researcher-v1';
+const getSavedResearcher = () => {
+    try {
+        return typeof window === 'undefined' ? '' : (window.localStorage.getItem(RESEARCHER_STORAGE_KEY) ?? '');
+    }
+    catch {
+        return '';
+    }
+};
+const optionLabel = (item) => ({
+    source: 'Bronzijde (Source)', film: 'Filmzijde (Film)', either: 'Beide zijden',
+    nominal: 'Nominale dikte', penetrated: 'Doorstraalde dikte',
+    'DWDI-ELLIPSE': 'DWDI ellips', 'internal-central': 'Centraal binnen',
+    external: 'Buitenzijde', 'internal-offset': 'Excentrisch binnen',
+    onbekend: 'Onbekend'
+}[item] ?? item);
+/** Grote selecteerknoppen; selectiewaarde blijft de ongewijzigde interne code. */
 function CheckGroup({ label, items, selected, onChange }) {
-    return React.createElement("fieldset", { className: "ndt-multi" },
-        React.createElement("legend", null, label),
-        items.map(item => React.createElement("label", { key: item, className: "ndt-check" },
-            React.createElement("input", { type: "checkbox", checked: selected.includes(item), onChange: e => onChange(e.target.checked ? [...selected, item] : selected.filter(x => x !== item)) }),
-            item)));
+    return React.createElement("fieldset", { className: "ndt-choice-group ndt-multi" },
+        React.createElement("legend", null,
+            label,
+            " ",
+            React.createElement("small", null, "(meerdere mogelijk)")),
+        React.createElement("div", { className: `ndt-option-grid ${items.length === 6 ? 'ndt-options-film' : ''}` }, items.map(item => React.createElement("button", { key: item, type: "button", className: "ndt-option-button", "aria-pressed": selected.includes(item), onClick: () => onChange(selected.includes(item) ? selected.filter(x => x !== item) : [...selected, item]) }, optionLabel(item)))));
 }
-function FloatField({ label, value: current, onChange, allowEmpty = false }) {
+function ChoiceGroup({ label, items, selected, onChange }) {
+    return React.createElement("fieldset", { className: "ndt-choice-group ndt-wide" },
+        React.createElement("legend", null, label),
+        React.createElement("div", { className: `ndt-option-grid ${items.length === 6 ? 'ndt-options-film' : ''} ${items.length === 2 ? 'ndt-options-two' : ''}` }, items.map(item => React.createElement("button", { key: item, type: "button", className: "ndt-option-button", "aria-pressed": selected === item, onClick: () => onChange(item) }, optionLabel(item)))));
+}
+/** Bewaart het getypte decimaalteken tijdens invoer op iPhone, bijvoorbeeld '2,' of '3.'. */
+function FloatField({ label, value: current, onChange, allowEmpty = false, placeholder }) {
+    const [display, setDisplay] = useState(() => value(current));
+    const lastEmitted = useRef(current);
+    useEffect(() => {
+        if (Object.is(lastEmitted.current, current))
+            return;
+        lastEmitted.current = current;
+        setDisplay(value(current));
+    }, [current]);
     return React.createElement("label", { className: "ndt-field" },
         React.createElement("span", null, label),
-        React.createElement("input", { type: "number", step: "any", value: value(current), onChange: e => { const parsed = num(e.target.value); onChange(parsed === null && allowEmpty ? null : parsed ?? NaN); } }));
+        React.createElement("input", { type: "text", inputMode: "decimal", autoComplete: "off", placeholder: placeholder ?? 'Bijv. 2.0', value: display, onChange: e => {
+                const next = e.target.value;
+                setDisplay(next);
+                const parsed = num(next);
+                const normalized = parsed === null ? (allowEmpty ? null : Number.NaN) : parsed;
+                lastEmitted.current = normalized;
+                onChange(normalized);
+            } }));
 }
 function SelectField({ label, options, selected, onChange }) {
     return React.createElement("label", { className: "ndt-field" },
         React.createElement("span", null, label),
-        React.createElement("select", { value: selected, onChange: e => onChange(e.target.value) }, options.map(o => React.createElement("option", { key: o, value: o }, o))));
+        React.createElement("select", { value: selected, onChange: e => onChange(e.target.value) }, options.map(o => React.createElement("option", { key: o, value: o }, optionLabel(o)))));
 }
 function IqiRulesEditor({ rows, onChange }) {
     const patch = (idx, p) => onChange(rows.map((r, i) => i === idx ? { ...r, ...p } : r));
@@ -78,7 +117,7 @@ export function ProcedureSuite({ calculateExposure }) {
     const [draft, setDraft] = useState(blankDraft);
     const [parsing, setParsing] = useState(null);
     const [paste, setPaste] = useState('');
-    const [who, setWho] = useState('');
+    const [who, setWho] = useState(getSavedResearcher);
     const [ack, setAck] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [sourceFile, setSourceFile] = useState(null);
@@ -91,6 +130,10 @@ export function ProcedureSuite({ calculateExposure }) {
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [readyToPlan, setReadyToPlan] = useState(false);
+    const savedBanner = useRef(null);
+    useEffect(() => { if (readyToPlan && tab === 'library')
+        savedBanner.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [readyToPlan, tab]);
     const patch = (data) => setDraft(old => ({ ...old, ...data }));
     const changeInput = (data) => { setResult(null); setInput(old => ({ ...old, ...data })); };
     const changeGeometry = (data) => { setResult(null); setInput(old => ({ ...old, geometry: { ...old.geometry, ...data } })); };
@@ -108,6 +151,7 @@ export function ProcedureSuite({ calculateExposure }) {
         setBusy(true);
         setError('');
         setMessage('');
+        setReadyToPlan(false);
         try {
             if (!sourceFile && !paste.trim())
                 throw Error('Kies eerst een bestand of plak proceduretekst.');
@@ -128,6 +172,7 @@ export function ProcedureSuite({ calculateExposure }) {
     const save = async () => {
         setError('');
         setMessage('');
+        setReadyToPlan(false);
         try {
             if (!ack)
                 throw Error('Vink eerst aan dat je alle procedurevelden met het originele document hebt vergeleken.');
@@ -138,12 +183,17 @@ export function ProcedureSuite({ calculateExposure }) {
             const profile = { ...draft, schemaVersion: 1, id: editingId ?? newId(), confirmedBy: who.trim(), confirmedAt: now,
                 createdAt: old?.createdAt ?? now, updatedAt: now, source: draft.source ?? { kind: 'text' } };
             await saveProcedure(profile);
-            if (!active)
-                await setActiveProcedure(profile.id);
+            // De zojuist bevestigde procedure moet ook degene zijn die het opnameplan controleert.
+            await setActiveProcedure(profile.id);
             await refresh();
             setEditingId(null);
             setTab('library');
-            setMessage('Procedure bevestigd en lokaal opgeslagen. IQI/opnametabellen blijven oningevuld totdat jij ze toevoegt.');
+            try {
+                window.localStorage.setItem(RESEARCHER_STORAGE_KEY, who.trim());
+            }
+            catch { /* Browser kan opslag blokkeren. */ }
+            setReadyToPlan(true);
+            setMessage('Procedure bevestigd en lokaal opgeslagen. Ontbrekende IQI-/opnametabellen blijven onbekend totdat ze gecontroleerd zijn toegevoegd.');
         }
         catch (e) {
             setError(String(e));
@@ -156,6 +206,7 @@ export function ProcedureSuite({ calculateExposure }) {
         setEditingId(id);
         setAck(false);
         setParsing(null);
+        setReadyToPlan(false);
         setTab('read');
         setMessage('Bewerk en bevestig opnieuw.');
         setError('');
@@ -209,12 +260,14 @@ export function ProcedureSuite({ calculateExposure }) {
         React.createElement("header", { className: "ndt-suite-header" },
             React.createElement("div", null,
                 React.createElement("p", { className: "ndt-overline" }, "NDT RADIOGRAPHY PRO"),
-                React.createElement("h2", null, "Procedure \u00B7 Opnameplan \u00B7 Bibliotheek"),
-                React.createElement("p", { className: "ndt-help" }, "Onafhankelijke procedurecontroles \u2014 de bestaande belichtingsmotor wordt niet gewijzigd.")),
+                React.createElement("h2", null, "Procedure Suite"),
+                React.createElement("p", { className: "ndt-help" }, "Procedurecontroles \u00B7 rekenmotor ongewijzigd")),
             React.createElement("span", { className: "ndt-chip" }, "Onderzoeksversie")),
-        React.createElement("nav", { className: "ndt-tabs", "aria-label": "Procedure-suite modules" }, [['read', 'Uitlezer'], ['library', 'Bibliotheek'], ['planner', 'Opnameplan'], ['history', 'Logboek']].map(([k, label]) => React.createElement("button", { key: k, className: tab === k ? 'is-active' : '', type: "button", onClick: () => { setTab(k); setError(''); setMessage(''); } }, label))),
+        React.createElement("nav", { className: "ndt-tabs", "aria-label": "Procedure-suite modules" }, [['read', 'Uitlezer'], ['library', 'Bibliotheek'], ['planner', 'Opnameplan'], ['history', 'Logboek']].map(([k, label]) => React.createElement("button", { key: k, className: tab === k ? 'is-active' : '', type: "button", onClick: () => { setTab(k); setReadyToPlan(false); setError(''); setMessage(''); } }, label))),
         error && React.createElement("div", { role: "alert", className: "ndt-alert ndt-red" }, error),
-        message && React.createElement("div", { role: "status", className: "ndt-alert ndt-green" }, message),
+        message && React.createElement("div", { ref: savedBanner, role: "status", className: `ndt-alert ndt-green ${readyToPlan ? 'ndt-save-success' : ''}` },
+            React.createElement("span", null, message),
+            readyToPlan && React.createElement("button", { className: "ndt-continue", type: "button", onClick: () => { setTab('planner'); setReadyToPlan(false); setMessage(''); setResult(null); } }, "Verder naar Opnameplan \u2192")),
         tab === 'read' && React.createElement("section", { className: "ndt-card", "aria-label": "Procedure-uitlezer en bevestiging" },
             React.createElement("h3", null, "1. Procedure uitlezen"),
             React.createElement("label", { className: "ndt-field" },
@@ -251,7 +304,7 @@ export function ProcedureSuite({ calculateExposure }) {
                 React.createElement("label", { className: "ndt-field" },
                     React.createElement("span", null, "Norm"),
                     React.createElement("input", { readOnly: true, value: "ISO 17636-1:2022", title: "Deze versie ondersteunt alleen ISO filmradiografie" })),
-                React.createElement(SelectField, { label: "Testklasse", options: ['A', 'B'], selected: draft.class ?? 'B', onChange: v => patch({ class: v }) }),
+                React.createElement(ChoiceGroup, { label: "Testklasse", items: ['A', 'B'], selected: draft.class ?? 'B', onChange: v => patch({ class: v }) }),
                 React.createElement("label", { className: "ndt-check ndt-wide" },
                     React.createElement("input", { type: "checkbox", checked: draft.planarDefectsRequired ?? false, onChange: e => patch({ planarDefectsRequired: e.target.checked }) }),
                     "Vlakke defecten relevant: geometrie van klasse B verplicht, ook bij testklasse A")),
@@ -259,11 +312,11 @@ export function ProcedureSuite({ calculateExposure }) {
             React.createElement(CheckGroup, { label: "Toegestane filmtypes", items: ALL_FILMS, selected: draft.films ?? [], onChange: v => patch({ films: v }) }),
             React.createElement(CheckGroup, { label: "Toegestane technieken", items: ALL_TECHNIQUES, selected: draft.techniques ?? [], onChange: v => patch({ techniques: v }) }),
             React.createElement("div", { className: "ndt-grid" },
-                React.createElement(FloatField, { label: "Minimale wanddikte (mm)", value: draft.thickness?.minMm, onChange: v => patch({ thickness: { ...draft.thickness, minMm: v ?? 0 } }) }),
-                React.createElement(FloatField, { label: "Maximale wanddikte (mm)", value: draft.thickness?.maxMm, onChange: v => patch({ thickness: { ...draft.thickness, maxMm: v ?? 0 } }) }),
-                React.createElement(FloatField, { label: "Minimale zwarting D", value: draft.density?.min, onChange: v => patch({ density: { ...draft.density, min: v ?? 0 } }) }),
-                React.createElement(FloatField, { label: "Maximale zwarting D", value: draft.density?.max, onChange: v => patch({ density: { ...draft.density, max: v ?? 0 } }) }),
-                React.createElement(SelectField, { label: "IQI-zijde", options: ['source', 'film', 'either'], selected: draft.iqi?.side ?? 'source', onChange: v => patch({ iqi: { ...draft.iqi, side: v } }) }),
+                React.createElement(FloatField, { label: "Minimale wanddikte (mm)", value: draft.thickness?.minMm, placeholder: "Bijv. 2.0", onChange: v => patch({ thickness: { ...draft.thickness, minMm: v ?? Number.NaN } }) }),
+                React.createElement(FloatField, { label: "Maximale wanddikte (mm)", value: draft.thickness?.maxMm, placeholder: "Bijv. 35.0", onChange: v => patch({ thickness: { ...draft.thickness, maxMm: v ?? Number.NaN } }) }),
+                React.createElement(FloatField, { label: "Minimale zwarting D", value: draft.density?.min, placeholder: "Bijv. 2.0", onChange: v => patch({ density: { ...draft.density, min: v ?? Number.NaN } }) }),
+                React.createElement(FloatField, { label: "Maximale zwarting D", value: draft.density?.max, placeholder: "Bijv. 3.5", onChange: v => patch({ density: { ...draft.density, max: v ?? Number.NaN } }) }),
+                React.createElement(ChoiceGroup, { label: "IQI-zijde", items: ['source', 'film', 'either'], selected: draft.iqi?.side ?? 'source', onChange: v => patch({ iqi: { ...draft.iqi, side: v } }) }),
                 React.createElement(FloatField, { label: "Extra fijnere draden t.o.v. tabel", value: draft.iqi?.extraFinerWires, onChange: v => patch({ iqi: { ...draft.iqi, extraFinerWires: v ?? 0 } }) }),
                 React.createElement(FloatField, { label: "Minimale filmoverlap (mm), indien bekend", value: draft.planning?.minimumFilmOverlapMm, onChange: v => patch({ planning: { ...draft.planning, minimumFilmOverlapMm: v } }), allowEmpty: true }),
                 React.createElement("label", { className: "ndt-check" },
@@ -275,8 +328,9 @@ export function ProcedureSuite({ calculateExposure }) {
                 React.createElement("strong", null, "Controleer voor opslag:"),
                 currentValidations.map((e, i) => React.createElement("p", { key: i }, e))),
             React.createElement("label", { className: "ndt-field" },
-                React.createElement("span", null, "Naam bevestigende onderzoeker / RT Level 3"),
-                React.createElement("input", { value: who, onChange: e => setWho(e.target.value), placeholder: "Naam of personeelscode" })),
+                React.createElement("span", null, "Naam / personeelscode bevestigende onderzoeker"),
+                React.createElement("input", { value: who, onChange: e => setWho(e.target.value), placeholder: "Naam of personeelscode", autoComplete: "name" })),
+            React.createElement("p", { className: "ndt-help ndt-stored-note" }, "Wordt na succesvolle bevestiging onthouden op dit apparaat. Niet automatisch gedeeld."),
             React.createElement("label", { className: "ndt-check ndt-ack" },
                 React.createElement("input", { type: "checkbox", checked: ack, onChange: e => setAck(e.target.checked) }),
                 "Ik heb alle velden en proceduregrenzen met het originele document vergeleken. Deze opslag is geen automatische normgoedkeuring."),
@@ -284,7 +338,7 @@ export function ProcedureSuite({ calculateExposure }) {
         tab === 'library' && React.createElement("section", { className: "ndt-card" },
             React.createElement("h3", null, "Procedure-Bibliotheek"),
             React.createElement("div", { className: "ndt-actions" },
-                React.createElement("button", { type: "button", onClick: () => { setDraft(blankDraft()); setEditingId(null); setParsing(null); setAck(false); setTab('read'); } }, "+ Nieuwe procedure"),
+                React.createElement("button", { type: "button", onClick: () => { setDraft(blankDraft()); setEditingId(null); setParsing(null); setAck(false); setReadyToPlan(false); setTab('read'); } }, "+ Nieuwe procedure"),
                 React.createElement("button", { className: "ndt-secondary", type: "button", onClick: () => { exportBackup().then(downloadBackup).catch(e => setError(String(e))); } }, "Export JSON-back-up"),
                 React.createElement("label", { className: "ndt-file-import" },
                     "Import JSON",
@@ -319,15 +373,15 @@ export function ProcedureSuite({ calculateExposure }) {
                 React.createElement("strong", null, active ? `${active.customer} / ${active.code} rev. ${active.revision}` : 'geen procedure gekozen'),
                 ". Alleen de bestaande motor berekent de belichtingstijd."),
             React.createElement("div", { className: "ndt-grid" },
-                React.createElement(SelectField, { label: "Bron / toestel", options: ALL_SOURCES, selected: input.source, onChange: v => changeInput({ source: v }) }),
-                React.createElement(SelectField, { label: "Film", options: ALL_FILMS, selected: input.film, onChange: v => changeInput({ film: v }) }),
-                React.createElement(SelectField, { label: "Techniek", options: ALL_TECHNIQUES, selected: input.technique, onChange: v => changeInput({ technique: v }) }),
-                React.createElement(SelectField, { label: "IQI-positie", options: ['source', 'film'], selected: input.iqiSide, onChange: v => changeInput({ iqiSide: v }) }),
-                React.createElement(FloatField, { label: "Wanddikte t (mm)", value: input.thicknessMm, onChange: v => changeInput({ thicknessMm: v ?? 0 }) }),
+                React.createElement(ChoiceGroup, { label: "Bron / toestel", items: ALL_SOURCES, selected: input.source, onChange: v => changeInput({ source: v }) }),
+                React.createElement(ChoiceGroup, { label: "Filmtype", items: ALL_FILMS, selected: input.film, onChange: v => changeInput({ film: v }) }),
+                React.createElement(ChoiceGroup, { label: "Opnametechniek", items: ALL_TECHNIQUES, selected: input.technique, onChange: v => changeInput({ technique: v }) }),
+                React.createElement(ChoiceGroup, { label: "IQI-positie", items: ['source', 'film'], selected: input.iqiSide, onChange: v => changeInput({ iqiSide: v }) }),
+                React.createElement(FloatField, { label: "Wanddikte t (mm)", value: input.thicknessMm, placeholder: "Bijv. 10.0", onChange: v => changeInput({ thicknessMm: v ?? Number.NaN }) }),
                 React.createElement(FloatField, { label: "Doorstraalde dikte w, centraal (mm)", value: input.penetratedThicknessMm, onChange: v => changeInput({ penetratedThicknessMm: v }), allowEmpty: true }),
                 React.createElement(FloatField, { label: "Maximale w, aan rand (mm)", value: input.maximumPathThicknessMm, onChange: v => changeInput({ maximumPathThicknessMm: v }), allowEmpty: true }),
-                React.createElement(FloatField, { label: "Zwarting D", value: input.density, onChange: v => changeInput({ density: v ?? 0 }) }),
-                React.createElement(FloatField, { label: "Bron-film-afstand SFD (mm)", value: input.sfdMm, onChange: v => changeInput({ sfdMm: v ?? 0 }) }),
+                React.createElement(FloatField, { label: "Zwarting D", value: input.density, placeholder: "Bijv. 2.5", onChange: v => changeInput({ density: v ?? Number.NaN }) }),
+                React.createElement(FloatField, { label: "Bron-film-afstand SFD (mm)", value: input.sfdMm, placeholder: "Bijv. 800", onChange: v => changeInput({ sfdMm: v ?? Number.NaN }) }),
                 React.createElement(FloatField, { label: "Bronactiviteit (Ci), bij gamma", value: input.activityCi, onChange: v => changeInput({ activityCi: v ?? undefined }), allowEmpty: true }),
                 React.createElement("label", { className: "ndt-field" },
                     React.createElement("span", null, "X-ray model"),

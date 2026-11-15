@@ -58,3 +58,43 @@
 .ndt-footer{font-size:11px;color:#bad1e0;line-height:1.65;padding:12px 3px}
 @media(max-width:520px){.ndt-suite{border-radius:0;padding:12px 8px 30px}.ndt-card{padding:12px}.ndt-grid{gap:5px 8px}.ndt-kpis strong{font-size:17px}.ndt-tabs{gap:4px}.ndt-tabs button{font-size:11px;padding:10px 2px}.ndt-suite-header h2{font-size:19px}.ndt-multi{gap:0px 12px}}
 @media(max-width:360px){.ndt-grid{grid-template-columns:1fr}.ndt-kpis{grid-template-columns:1fr}}
+
+/* iPhone UX v0.2: selectable tiles, decimal keyboard and compact confirmation. */
+.ndt-choice-group{min-width:0;margin:10px 0 16px;border:1px solid #4d7897;border-radius:15px;padding:12px 10px 11px;background:#10283f}
+.ndt-choice-group legend{font-size:13px;color:#d1edff;font-weight:800;padding:0 5px}
+.ndt-choice-group legend small{font-size:11px;font-weight:500;color:#a7c4d9}
+.ndt-option-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.ndt-option-grid.ndt-options-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ndt-suite .ndt-option-button{
+ position:relative;display:flex;align-items:center;justify-content:center;text-align:center;
+ min-width:0;min-height:58px;padding:11px 8px;border-radius:13px;
+ background:linear-gradient(160deg,#213f5b,#17334c);border:1.5px solid #5d87a6;
+ color:#e5f3ff;font-size:clamp(12px,3.6vw,15px);font-weight:780;line-height:1.25;
+ overflow-wrap:anywhere;transition:background .15s,border-color .15s,box-shadow .15s;
+}
+.ndt-suite .ndt-option-button[aria-pressed="true"]{
+ background:linear-gradient(145deg,#237fd0,#0a5caa);border:2px solid #a2e6ff;
+ color:#fff;box-shadow:0 0 0 2px #7ddaff2c,0 4px 15px #0a5dba65;
+}
+.ndt-suite .ndt-option-button[aria-pressed="true"]::before{content:"✓";font-size:14px;font-weight:900;margin-right:5px;flex-shrink:0}
+.ndt-suite .ndt-option-button:focus-visible{outline:3px solid #f6d77d;outline-offset:3px}
+.ndt-grid>.ndt-choice-group{grid-column:1/-1}
+.ndt-suite .ndt-field input[inputmode="decimal"]{min-height:52px;font-size:16px;font-variant-numeric:tabular-nums}
+.ndt-suite input::placeholder{color:#acbfd0;opacity:1}
+.ndt-stored-note{margin:-6px 0 10px}
+.ndt-save-success{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;scroll-margin-top:14px}
+.ndt-save-success span{flex:1 1 220px}
+.ndt-suite .ndt-continue{background:#1473c3;border:2px solid #b3e9ff;min-height:54px;flex:1 1 195px;box-shadow:0 4px 12px #02356244}
+.ndt-suite-header{padding:5px 2px 12px;align-items:center}
+.ndt-suite-header h2{margin:2px 0;font-size:clamp(18px,4vw,24px)}
+.ndt-suite-header .ndt-help{margin:2px 0}
+@media(max-width:520px){
+ .ndt-option-grid{gap:7px}
+ .ndt-suite .ndt-option-button{min-height:60px;padding:11px 5px}
+ .ndt-choice-group{padding:11px 8px}
+ .ndt-suite-header{gap:8px}
+ .ndt-suite-header .ndt-chip{font-size:10px}
+ .ndt-suite-header h2{font-size:19px}
+}
+@media(max-width:335px){.ndt-option-grid:not(.ndt-options-film):not(.ndt-options-two){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.ndt-suite .ndt-option-button{transition:none}}

@@ -6,11 +6,16 @@
 <style>
 .ndt-app-wrapper{width:min(100%,760px);margin:auto;padding:14px 13px 35px}
 .ndt-backlink{display:inline-flex;align-items:center;min-height:48px;color:#dcf4ff;text-decoration:none;font-weight:800;padding:10px 14px;background:#1d405b;border:1px solid #5687a5;border-radius:12px;margin:8px 0 15px}
-.ndt-runtime-warning{background:#473221;border:1px solid #b58b58;border-radius:14px;padding:14px;margin:12px 0;color:#ffe4bd;font-size:13px}
+.ndt-runtime-warning{background:#3a3026;border:1px solid #aa8659;border-radius:11px;padding:8px 12px;margin:7px 0 12px;color:#ffe2bc;font-size:12px;line-height:1.4}
+.ndt-runtime-warning-line{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ndt-runtime-warning details{margin-top:3px}
+.ndt-runtime-warning summary{font-size:11px;cursor:pointer;color:#f1c892}
+.ndt-runtime-warning details p{margin:7px 0 0;line-height:1.5}
+@media(max-width:420px){.ndt-app-wrapper{padding:7px 8px 25px}.ndt-backlink{min-height:42px;margin:5px 0 9px;font-size:12px;padding:8px 10px}}
 #ndtProcedureSuiteRoot{min-height:300px}
 </style></head><body><div class="ndt-app-wrapper">
 <a class="ndt-backlink" href="./index.html">‹ Terug naar NDT Radiography Pro</a>
-<div class="ndt-runtime-warning"><strong>Onderzoeksversie — niet vrijgegeven voor werkelijke RT-opnamen.</strong> Documenten blijven lokaal in de browser opgeslagen. Voor deze voorlopige browserbouw worden React en PDF/DOCX-bibliotheken online geladen; voer geen vertrouwelijke klantdocumenten in voordat de offline-versie en de privacycontrole zijn afgerond.</div>
+<aside class="ndt-runtime-warning" role="note"><div class="ndt-runtime-warning-line"><strong>⚠ Onderzoeksversie</strong><span>Niet vrijgegeven voor echte RT-opnamen.</span></div><details><summary>Privacy en beperkingen</summary><p>Procedures worden lokaal opgeslagen op dit apparaat. Deze testversie laadt React en PDF/DOCX-bibliotheken van externe servers. Gebruik geen vertrouwelijke klantdocumenten voordat de offline-versie en privacycontrole zijn afgerond.</p></details></aside>
 <main id="ndtProcedureSuiteRoot"><p>Procedure Suite wordt geladen…</p></main>
 <div id="ndtStartupError" role="alert" hidden class="ndt-runtime-warning"></div>
 </div>

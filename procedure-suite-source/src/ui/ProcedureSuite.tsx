@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import type {CalculateExposure,ProcedureProfile,ProcedureDraft,DraftCandidate,ApprovedIqiRule,ApprovedExposureCountRule,ExposureInput,EvaluatedPlan,SourceType,FilmType,Technique,IqiSide,Status,SavedPlan} from '../domain/types.js';
 import {ALL_SOURCES,ALL_FILMS,ALL_TECHNIQUES,newId,validateProfile} from '../domain/validation.js';
 import {parseProcedureDocument} from '../parser/parseProcedureDocument.js';
@@ -8,24 +8,58 @@ import './procedureSuite.css';
 
 type Tab='read'|'library'|'planner'|'history';
 const blankDraft=():Partial<DraftCandidate>=>({code:'',customer:'',revision:'',norm:'ISO 17636-1:2022',class:'B',planarDefectsRequired:false,
- sources:[],films:[],techniques:[],thickness:{minMm:0,maxMm:0},density:{min:0,max:0},
+ sources:[],films:[],techniques:[],thickness:{minMm:Number.NaN,maxMm:Number.NaN},density:{min:Number.NaN,max:Number.NaN},
  iqi:{side:'source',extraFinerWires:0,filmSideComparisonVerified:false,approvedRules:[]},
  planning:{minimumFilmOverlapMm:null,approvedExposureRules:[]},source:{kind:'text'}});
-const baseInput=():ExposureInput=>({source:'Se-75',film:'D4',technique:'SWSI',thicknessMm:0,penetratedThicknessMm:null,maximumPathThicknessMm:null,density:0,sfdMm:0,activityCi:undefined,model:'',kv:undefined,ma:undefined,material:'Fe',iqiSide:'source',
+const baseInput=():ExposureInput=>({source:'Se-75',film:'D4',technique:'SWSI',thicknessMm:Number.NaN,penetratedThicknessMm:null,maximumPathThicknessMm:null,density:Number.NaN,sfdMm:Number.NaN,activityCi:undefined,model:'',kv:undefined,ma:undefined,material:'Fe',iqiSide:'source',
  geometry:{diameterMm:null,sourcePlacement:null,sourceSizeMm:null,objectToFilmMm:null,filmUsableLengthMm:null,filmWrapped:false}});
 const num=(v:string)=>v.trim()===''?null:Number(v.replace(',','.'));
-const value=(n:number|null|undefined)=>n===null||n===undefined?'':String(n);
+const value=(n:number|null|undefined)=>n===null||n===undefined||!Number.isFinite(n)?'':String(n);
 const fmt=(n:number|null)=>n===null?'onbekend':new Intl.NumberFormat('nl-NL',{maximumFractionDigits:2}).format(n);
 const friendlyStatus:Record<Status,string>={green:'CONTROLE OK',orange:'NOG TE CONTROLEREN',red:'GEBLOKKEERD'};
-
+const RESEARCHER_STORAGE_KEY='ndt-procedure-suite-confirming-researcher-v1';
+const getSavedResearcher=():string=>{
+ try{return typeof window==='undefined'?'':(window.localStorage.getItem(RESEARCHER_STORAGE_KEY)??'');}catch{return '';}
+};
+const optionLabel=(item:string):string=>({
+ source:'Bronzijde (Source)',film:'Filmzijde (Film)',either:'Beide zijden',
+ nominal:'Nominale dikte',penetrated:'Doorstraalde dikte',
+ 'DWDI-ELLIPSE':'DWDI ellips','internal-central':'Centraal binnen',
+ external:'Buitenzijde','internal-offset':'Excentrisch binnen',
+ onbekend:'Onbekend'
+} as Record<string,string>)[item]??item;
+/** Grote selecteerknoppen; selectiewaarde blijft de ongewijzigde interne code. */
 function CheckGroup<T extends string>({label,items,selected,onChange}:{label:string;items:readonly T[];selected:T[];onChange:(values:T[])=>void}){
- return <fieldset className="ndt-multi"><legend>{label}</legend>{items.map(item=><label key={item} className="ndt-check"><input type="checkbox" checked={selected.includes(item)} onChange={e=>onChange(e.target.checked?[...selected,item]:selected.filter(x=>x!==item))}/>{item}</label>)}</fieldset>;
+ return <fieldset className="ndt-choice-group ndt-multi"><legend>{label} <small>(meerdere mogelijk)</small></legend>
+  <div className={`ndt-option-grid ${items.length===6?'ndt-options-film':''}`}>
+  {items.map(item=><button key={item} type="button" className="ndt-option-button" aria-pressed={selected.includes(item)} onClick={()=>onChange(selected.includes(item)?selected.filter(x=>x!==item):[...selected,item])}>{optionLabel(item)}</button>)}
+  </div>
+ </fieldset>;
 }
-function FloatField({label,value:current,onChange,allowEmpty=false}:{label:string;value:number|null|undefined;onChange:(v:number|null)=>void;allowEmpty?:boolean}){
- return <label className="ndt-field"><span>{label}</span><input type="number" step="any" value={value(current)} onChange={e=>{const parsed=num(e.target.value);onChange(parsed===null&&allowEmpty?null:parsed??NaN)}}/></label>;
+function ChoiceGroup<T extends string>({label,items,selected,onChange}:{label:string;items:readonly T[];selected:T;onChange:(v:T)=>void}){
+ return <fieldset className="ndt-choice-group ndt-wide"><legend>{label}</legend>
+  <div className={`ndt-option-grid ${items.length===6?'ndt-options-film':''} ${items.length===2?'ndt-options-two':''}`}>
+  {items.map(item=><button key={item} type="button" className="ndt-option-button" aria-pressed={selected===item} onClick={()=>onChange(item)}>{optionLabel(item)}</button>)}
+  </div>
+ </fieldset>;
+}
+/** Bewaart het getypte decimaalteken tijdens invoer op iPhone, bijvoorbeeld '2,' of '3.'. */
+function FloatField({label,value:current,onChange,allowEmpty=false,placeholder}:{label:string;value:number|null|undefined;onChange:(v:number|null)=>void;allowEmpty?:boolean;placeholder?:string}){
+ const [display,setDisplay]=useState(()=>value(current));
+ const lastEmitted=useRef<number|null|undefined>(current);
+ useEffect(()=>{
+  if(Object.is(lastEmitted.current,current))return;
+  lastEmitted.current=current;
+  setDisplay(value(current));
+ },[current]);
+ return <label className="ndt-field"><span>{label}</span><input type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder??'Bijv. 2.0'} value={display} onChange={e=>{
+   const next=e.target.value;setDisplay(next);
+   const parsed=num(next);const normalized=parsed===null?(allowEmpty?null:Number.NaN):parsed;
+   lastEmitted.current=normalized;onChange(normalized);
+  }}/></label>;
 }
 function SelectField<T extends string>({label,options,selected,onChange}:{label:string;options:readonly T[];selected:T;onChange:(v:T)=>void}){
- return <label className="ndt-field"><span>{label}</span><select value={selected} onChange={e=>onChange(e.target.value as T)}>{options.map(o=><option key={o} value={o}>{o}</option>)}</select></label>;
+ return <label className="ndt-field"><span>{label}</span><select value={selected} onChange={e=>onChange(e.target.value as T)}>{options.map(o=><option key={o} value={o}>{optionLabel(o)}</option>)}</select></label>;
 }
 function IqiRulesEditor({rows,onChange}:{rows:ApprovedIqiRule[];onChange:(rows:ApprovedIqiRule[])=>void}){
  const patch=(idx:number,p:Partial<ApprovedIqiRule>)=>onChange(rows.map((r,i)=>i===idx?{...r,...p}:r));
@@ -66,7 +100,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
  const [draft,setDraft]=useState<Partial<DraftCandidate>>(blankDraft);
  const [parsing,setParsing]=useState<ProcedureDraft|null>(null);
  const [paste,setPaste]=useState('');
- const [who,setWho]=useState('');
+ const [who,setWho]=useState(getSavedResearcher);
  const [ack,setAck]=useState(false);
  const [editingId,setEditingId]=useState<string|null>(null);
  const [sourceFile,setSourceFile]=useState<File|null>(null);
@@ -79,6 +113,9 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState('');
  const [error,setError]=useState('');
+ const [readyToPlan,setReadyToPlan]=useState(false);
+ const savedBanner=useRef<HTMLDivElement|null>(null);
+ useEffect(()=>{if(readyToPlan&&tab==='library')savedBanner.current?.scrollIntoView({behavior:'smooth',block:'start'});},[readyToPlan,tab]);
  const patch=(data:Partial<DraftCandidate>)=>setDraft(old=>({...old,...data}));
  const changeInput=(data:Partial<ExposureInput>)=>{setResult(null);setInput(old=>({...old,...data}));};
  const changeGeometry=(data:Partial<ExposureInput['geometry']>)=>{setResult(null);setInput(old=>({...old,geometry:{...old.geometry,...data}}));};
@@ -90,7 +127,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
   return validateProfile({...draft,id:editingId??'temporary',schemaVersion:1,confirmedBy:who||'onderzoeker',confirmedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()} as ProcedureProfile);
  },[draft,who,editingId]);
  const parse=async()=>{
-  setBusy(true);setError('');setMessage('');try{
+  setBusy(true);setError('');setMessage('');setReadyToPlan(false);try{
    if(!sourceFile&&!paste.trim())throw Error('Kies eerst een bestand of plak proceduretekst.');
    const p=await parseProcedureDocument(sourceFile??paste);
    setParsing(p);setDraft({...blankDraft(),...p.candidate,source:p.source});setEditingId(null);setAck(false);
@@ -98,7 +135,7 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
   }catch(e){setError(String(e));}finally{setBusy(false);}
  };
  const save=async()=>{
-  setError('');setMessage('');try{
+  setError('');setMessage('');setReadyToPlan(false);try{
    if(!ack)throw Error('Vink eerst aan dat je alle procedurevelden met het originele document hebt vergeleken.');
    if(!who.trim())throw Error('Naam van de bevestigende onderzoeker ontbreekt.');
    const old=editingId?procedures.find(p=>p.id===editingId):null;
@@ -106,13 +143,17 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
    const profile:ProcedureProfile={...draft,schemaVersion:1,id:editingId??newId(),confirmedBy:who.trim(),confirmedAt:now,
      createdAt:old?.createdAt??now,updatedAt:now,source:draft.source??{kind:'text'}} as ProcedureProfile;
    await saveProcedure(profile);
-   if(!active)await setActiveProcedure(profile.id);
-   await refresh();setEditingId(null);setTab('library');setMessage('Procedure bevestigd en lokaal opgeslagen. IQI/opnametabellen blijven oningevuld totdat jij ze toevoegt.');
+   // De zojuist bevestigde procedure moet ook degene zijn die het opnameplan controleert.
+   await setActiveProcedure(profile.id);
+   await refresh();setEditingId(null);setTab('library');
+   try{window.localStorage.setItem(RESEARCHER_STORAGE_KEY,who.trim());}catch{/* Browser kan opslag blokkeren. */}
+   setReadyToPlan(true);
+   setMessage('Procedure bevestigd en lokaal opgeslagen. Ontbrekende IQI-/opnametabellen blijven onbekend totdat ze gecontroleerd zijn toegevoegd.');
   }catch(e){setError(String(e));}
  };
  const edit=(p:ProcedureProfile)=>{
   const {id,schemaVersion,confirmedBy,confirmedAt,createdAt,updatedAt,...rest}=p;
-  setDraft(structuredClone(rest));setWho(confirmedBy);setEditingId(id);setAck(false);setParsing(null);setTab('read');setMessage('Bewerk en bevestig opnieuw.');setError('');
+  setDraft(structuredClone(rest));setWho(confirmedBy);setEditingId(id);setAck(false);setParsing(null);setReadyToPlan(false);setTab('read');setMessage('Bewerk en bevestig opnieuw.');setError('');
  };
  const importJson=async(file:File)=>{
   setError('');try{const counts=await importBackup(await file.text());await refresh();setMessage(`${counts.procedures} procedures en ${counts.plans} logboekrecords geïmporteerd. De actieve procedure is niet omgeschakeld.`);}catch(e){setError(String(e));}
@@ -126,12 +167,15 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
   try{if(kind==='plan')await deletePlan(id);else await deleteProcedure(id);await refresh();setResult(null);}catch(e){setError(String(e));}
  };
  return <div className="ndt-suite">
-  <header className="ndt-suite-header"><div><p className="ndt-overline">NDT RADIOGRAPHY PRO</p><h2>Procedure · Opnameplan · Bibliotheek</h2><p className="ndt-help">Onafhankelijke procedurecontroles — de bestaande belichtingsmotor wordt niet gewijzigd.</p></div><span className="ndt-chip">Onderzoeksversie</span></header>
+  <header className="ndt-suite-header"><div><p className="ndt-overline">NDT RADIOGRAPHY PRO</p><h2>Procedure Suite</h2><p className="ndt-help">Procedurecontroles · rekenmotor ongewijzigd</p></div><span className="ndt-chip">Onderzoeksversie</span></header>
   <nav className="ndt-tabs" aria-label="Procedure-suite modules">
-   {([['read','Uitlezer'],['library','Bibliotheek'],['planner','Opnameplan'],['history','Logboek']] as [Tab,string][]).map(([k,label])=><button key={k} className={tab===k?'is-active':''} type="button" onClick={()=>{setTab(k);setError('');setMessage('');}}>{label}</button>)}
+   {([['read','Uitlezer'],['library','Bibliotheek'],['planner','Opnameplan'],['history','Logboek']] as [Tab,string][]).map(([k,label])=><button key={k} className={tab===k?'is-active':''} type="button" onClick={()=>{setTab(k);setReadyToPlan(false);setError('');setMessage('');}}>{label}</button>)}
   </nav>
   {error&&<div role="alert" className="ndt-alert ndt-red">{error}</div>}
-  {message&&<div role="status" className="ndt-alert ndt-green">{message}</div>}
+  {message&&<div ref={savedBanner} role="status" className={`ndt-alert ndt-green ${readyToPlan?'ndt-save-success':''}`}>
+   <span>{message}</span>
+   {readyToPlan&&<button className="ndt-continue" type="button" onClick={()=>{setTab('planner');setReadyToPlan(false);setMessage('');setResult(null);}}>Verder naar Opnameplan →</button>}
+  </div>}
   {tab==='read'&&<section className="ndt-card" aria-label="Procedure-uitlezer en bevestiging">
    <h3>1. Procedure uitlezen</h3>
    <label className="ndt-field"><span>PDF, DOCX of TXT</span><input type="file" accept=".pdf,.docx,.txt,application/pdf" onChange={e=>{setSourceFile(e.target.files?.[0]??null);}}/></label>
@@ -146,18 +190,18 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
    <div className="ndt-grid">
     {([['code','Procedurecode / documentnummer'],['customer','Klantnaam'],['revision','Revisie']] as const).map(([k,label])=><label key={k} className="ndt-field"><span>{label}</span><input value={String(draft[k]??'')} onChange={e=>patch({[k]:e.target.value})}/></label>)}
     <label className="ndt-field"><span>Norm</span><input readOnly value="ISO 17636-1:2022" title="Deze versie ondersteunt alleen ISO filmradiografie"/></label>
-    <SelectField label="Testklasse" options={['A','B'] as const} selected={draft.class??'B'} onChange={v=>patch({class:v})}/>
+    <ChoiceGroup label="Testklasse" items={['A','B'] as const} selected={draft.class??'B'} onChange={v=>patch({class:v})}/>
     <label className="ndt-check ndt-wide"><input type="checkbox" checked={draft.planarDefectsRequired??false} onChange={e=>patch({planarDefectsRequired:e.target.checked})}/>Vlakke defecten relevant: geometrie van klasse B verplicht, ook bij testklasse A</label>
    </div>
    <CheckGroup label="Toegestane stralingsbronnen" items={ALL_SOURCES} selected={draft.sources??[]} onChange={v=>patch({sources:v})}/>
    <CheckGroup label="Toegestane filmtypes" items={ALL_FILMS} selected={draft.films??[]} onChange={v=>patch({films:v})}/>
    <CheckGroup label="Toegestane technieken" items={ALL_TECHNIQUES} selected={draft.techniques??[]} onChange={v=>patch({techniques:v})}/>
    <div className="ndt-grid">
-    <FloatField label="Minimale wanddikte (mm)" value={draft.thickness?.minMm} onChange={v=>patch({thickness:{...draft.thickness!,minMm:v??0}})}/>
-    <FloatField label="Maximale wanddikte (mm)" value={draft.thickness?.maxMm} onChange={v=>patch({thickness:{...draft.thickness!,maxMm:v??0}})}/>
-    <FloatField label="Minimale zwarting D" value={draft.density?.min} onChange={v=>patch({density:{...draft.density!,min:v??0}})}/>
-    <FloatField label="Maximale zwarting D" value={draft.density?.max} onChange={v=>patch({density:{...draft.density!,max:v??0}})}/>
-    <SelectField label="IQI-zijde" options={['source','film','either'] as const} selected={draft.iqi?.side??'source'} onChange={v=>patch({iqi:{...draft.iqi!,side:v}})}/>
+    <FloatField label="Minimale wanddikte (mm)" value={draft.thickness?.minMm} placeholder="Bijv. 2.0" onChange={v=>patch({thickness:{...draft.thickness!,minMm:v??Number.NaN}})}/>
+    <FloatField label="Maximale wanddikte (mm)" value={draft.thickness?.maxMm} placeholder="Bijv. 35.0" onChange={v=>patch({thickness:{...draft.thickness!,maxMm:v??Number.NaN}})}/>
+    <FloatField label="Minimale zwarting D" value={draft.density?.min} placeholder="Bijv. 2.0" onChange={v=>patch({density:{...draft.density!,min:v??Number.NaN}})}/>
+    <FloatField label="Maximale zwarting D" value={draft.density?.max} placeholder="Bijv. 3.5" onChange={v=>patch({density:{...draft.density!,max:v??Number.NaN}})}/>
+    <ChoiceGroup label="IQI-zijde" items={['source','film','either'] as const} selected={draft.iqi?.side??'source'} onChange={v=>patch({iqi:{...draft.iqi!,side:v}})}/>
     <FloatField label="Extra fijnere draden t.o.v. tabel" value={draft.iqi?.extraFinerWires} onChange={v=>patch({iqi:{...draft.iqi!,extraFinerWires:v??0}})}/>
     <FloatField label="Minimale filmoverlap (mm), indien bekend" value={draft.planning?.minimumFilmOverlapMm} onChange={v=>patch({planning:{...draft.planning!,minimumFilmOverlapMm:v}})} allowEmpty/>
     <label className="ndt-check"><input type="checkbox" checked={draft.iqi?.filmSideComparisonVerified??false} onChange={e=>patch({iqi:{...draft.iqi!,filmSideComparisonVerified:e.target.checked}})}/>Filmzijde-IQI vergelijkingsopname/afspraak gecontroleerd</label>
@@ -165,12 +209,12 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
    <IqiRulesEditor rows={draft.iqi?.approvedRules??[]} onChange={rows=>patch({iqi:{...draft.iqi!,approvedRules:rows}})}/>
    <ShotRulesEditor rows={draft.planning?.approvedExposureRules??[]} onChange={rows=>patch({planning:{...draft.planning!,approvedExposureRules:rows}})}/>
    {currentValidations.length>0&&<div className="ndt-alert ndt-orange"><strong>Controleer voor opslag:</strong>{currentValidations.map((e,i)=><p key={i}>{e}</p>)}</div>}
-   <label className="ndt-field"><span>Naam bevestigende onderzoeker / RT Level 3</span><input value={who} onChange={e=>setWho(e.target.value)} placeholder="Naam of personeelscode"/></label>
+   <label className="ndt-field"><span>Naam / personeelscode bevestigende onderzoeker</span><input value={who} onChange={e=>setWho(e.target.value)} placeholder="Naam of personeelscode" autoComplete="name"/></label><p className="ndt-help ndt-stored-note">Wordt na succesvolle bevestiging onthouden op dit apparaat. Niet automatisch gedeeld.</p>
    <label className="ndt-check ndt-ack"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/>Ik heb alle velden en proceduregrenzen met het originele document vergeleken. Deze opslag is geen automatische normgoedkeuring.</label>
    <button type="button" disabled={busy||!ack||currentValidations.length>0} onClick={save}>Procedure bevestigen & opslaan</button>
   </section>}
   {tab==='library'&&<section className="ndt-card"><h3>Procedure-Bibliotheek</h3>
-   <div className="ndt-actions"><button type="button" onClick={()=>{setDraft(blankDraft());setEditingId(null);setParsing(null);setAck(false);setTab('read');}}>+ Nieuwe procedure</button>
+   <div className="ndt-actions"><button type="button" onClick={()=>{setDraft(blankDraft());setEditingId(null);setParsing(null);setAck(false);setReadyToPlan(false);setTab('read');}}>+ Nieuwe procedure</button>
     <button className="ndt-secondary" type="button" onClick={()=>{exportBackup().then(downloadBackup).catch(e=>setError(String(e)));}}>Export JSON-back-up</button>
     <label className="ndt-file-import">Import JSON<input type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];if(file)void importJson(file);e.target.value='';}}/></label>
    </div>
@@ -187,15 +231,15 @@ export function ProcedureSuite({calculateExposure}:ProcedureSuiteProps){
   {tab==='planner'&&<section className="ndt-card"><h3>Opnameplan + bestaande belichtingsmotor</h3>
    <p className="ndt-help">Actief: <strong>{active?`${active.customer} / ${active.code} rev. ${active.revision}`:'geen procedure gekozen'}</strong>. Alleen de bestaande motor berekent de belichtingstijd.</p>
    <div className="ndt-grid">
-    <SelectField label="Bron / toestel" options={ALL_SOURCES} selected={input.source} onChange={v=>changeInput({source:v})}/>
-    <SelectField label="Film" options={ALL_FILMS} selected={input.film} onChange={v=>changeInput({film:v})}/>
-    <SelectField label="Techniek" options={ALL_TECHNIQUES} selected={input.technique} onChange={v=>changeInput({technique:v})}/>
-    <SelectField label="IQI-positie" options={['source','film'] as const} selected={input.iqiSide} onChange={v=>changeInput({iqiSide:v})}/>
-    <FloatField label="Wanddikte t (mm)" value={input.thicknessMm} onChange={v=>changeInput({thicknessMm:v??0})}/>
+    <ChoiceGroup label="Bron / toestel" items={ALL_SOURCES} selected={input.source} onChange={v=>changeInput({source:v})}/>
+    <ChoiceGroup label="Filmtype" items={ALL_FILMS} selected={input.film} onChange={v=>changeInput({film:v})}/>
+    <ChoiceGroup label="Opnametechniek" items={ALL_TECHNIQUES} selected={input.technique} onChange={v=>changeInput({technique:v})}/>
+    <ChoiceGroup label="IQI-positie" items={['source','film'] as const} selected={input.iqiSide} onChange={v=>changeInput({iqiSide:v})}/>
+    <FloatField label="Wanddikte t (mm)" value={input.thicknessMm} placeholder="Bijv. 10.0" onChange={v=>changeInput({thicknessMm:v??Number.NaN})}/>
     <FloatField label="Doorstraalde dikte w, centraal (mm)" value={input.penetratedThicknessMm} onChange={v=>changeInput({penetratedThicknessMm:v})} allowEmpty/>
     <FloatField label="Maximale w, aan rand (mm)" value={input.maximumPathThicknessMm} onChange={v=>changeInput({maximumPathThicknessMm:v})} allowEmpty/>
-    <FloatField label="Zwarting D" value={input.density} onChange={v=>changeInput({density:v??0})}/>
-    <FloatField label="Bron-film-afstand SFD (mm)" value={input.sfdMm} onChange={v=>changeInput({sfdMm:v??0})}/>
+    <FloatField label="Zwarting D" value={input.density} placeholder="Bijv. 2.5" onChange={v=>changeInput({density:v??Number.NaN})}/>
+    <FloatField label="Bron-film-afstand SFD (mm)" value={input.sfdMm} placeholder="Bijv. 800" onChange={v=>changeInput({sfdMm:v??Number.NaN})}/>
     <FloatField label="Bronactiviteit (Ci), bij gamma" value={input.activityCi} onChange={v=>changeInput({activityCi:v??undefined})} allowEmpty/>
     <label className="ndt-field"><span>X-ray model</span><input value={input.model??''} onChange={e=>changeInput({model:e.target.value})}/></label>
     <FloatField label="X-ray kV" value={input.kv} onChange={v=>changeInput({kv:v??undefined})} allowEmpty/>

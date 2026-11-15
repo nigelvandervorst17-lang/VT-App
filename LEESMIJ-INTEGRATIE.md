@@ -17,3 +17,11 @@ De module **wijzigt** rt-core.mjs, rt-curves.mjs, rt-curves.json en xray-extra-c
 ## Tests
 
 15 package-tests. React-integratie en daadwerkelijke Safari-browserfuncties zijn nog niet live gevalideerd.
+
+## iPhone UX v0.2
+
+Grote tikknoppen voor bronnen, filmtypes en technieken; expliciete labels voor IQI-zijde; lege wanddikte-/zwartingsinvoer met decimaal iPhone-toetsenbord; naam van bevestiger lokaal onthouden na succesvolle opslag. Na opslag is de nieuwe procedure actief en staat er een knop naar Opnameplan. De onderzoekswaarschuwing blijft compact zichtbaar.
+
+**D6** is niet toegevoegd: de bestaande app ondersteunt D2, D3, D4, D5, D7 en D8; een extra filmkeuze zou zonder gevalideerde motordata misleidend zijn.
+
+De gewijzigde bestanden zijn alleen de React-UI (`src/ui/ProcedureSuite.tsx`), stylesheet, gegenereerde UI-browserruntime, de tijdelijke HTML-schil en dit document. Alle bestaande motor-, IQI-, planner- en curvebestanden zijn ongewijzigd.
