@@ -109,7 +109,9 @@ $('magicBtn').addEventListener('click',async()=>{
 $('signOutBtn').addEventListener('click',async()=>{
  try{await state.api?.signOut()}catch(err){notice('Uitloggen zonder netwerk: '+errorString(err))}
  state.cache?.close();state.cache=null;state.user=null;state.member=null;
- state.memberships=[];state.snapshot=null;state.mode='signed-out';
+ state.memberships=[];state.snapshot=null;state.companyCode=null;
+ output('adminCompanyCode','Uitgelogd — opnieuw aanmelden om de Bedrijfscode te zien.');
+ state.mode='signed-out';
  updateRole();workbenchUI.refresh();setTab('account');notice('Uitgelogd. Offline cache blijft versleuteld op dit toestel.');
 });
 async function loadMemberships(){
@@ -134,6 +136,8 @@ async function selectCompany(id){
  const m=state.memberships.find(x=>x.company_id===id);
  if(!m)throw Error('Dit bedrijf behoort niet tot je actieve lidmaatschappen');
  state.member=m;state.mode='online';
+ output('adminCompanyCode','Bedrijfscode alleen na gecontroleerde aanvraag ophalen.');
+ $('staffList').replaceChildren();$('logsList').replaceChildren();
  const companies=await state.api.select('companies',{filters:{id},
   columns:'id,name,created_at'});
  state.company=companies[0]??null;
@@ -142,7 +146,10 @@ async function selectCompany(id){
  $('offlineCompanyId').value=id;$('offlineUserId').value=state.user.id;
  updateRole();
  await syncOnline();
- if(m.role==='admin')$('loadRequestsBtn').click();
+ if(m.role==='admin'){
+  $('loadRequestsBtn').click();
+  $('loadStaffBtn').click();
+ }
 }
 $('companySelect').addEventListener('change',async e=>{
  try{state.cache?.close();state.cache=null;await selectCompany(e.target.value)}
@@ -198,6 +205,61 @@ $('loadRequestsBtn').addEventListener('click',async()=>{
    list.append(entry);
   }
   if(!rows.length)list.textContent='Geen aanvragen';
+ }catch(err){fail(err)}
+});
+$('showCompanyCodeBtn').addEventListener('click',async()=>{
+ try{
+  const code=await loadAdminInviteCode(adminContext());
+  output('adminCompanyCode','Bedrijfscode: '+code+
+   '\nGeef de code uitsluitend aan medewerkers die je persoonlijk hebt geverifieerd.');
+ }catch(err){fail(err)}
+});
+$('loadStaffBtn').addEventListener('click',async()=>{
+ try{
+  const ctx=adminContext();
+  if(!ctx.online||ctx.member?.role!=='admin')throw Error('Alleen online Hoofdgebruiker');
+  const rows=await state.api.select('company_members',{
+   filters:{company_id:ctx.member.company_id},order:'joined_at.desc'});
+  const list=$('staffList');list.replaceChildren();
+  const staff=rows.filter(row=>row.role==='staff');
+  for(const person of staff){
+   const entry=document.createElement('div');entry.className='item';
+   const info=document.createElement('div');
+   info.textContent=person.display_name+' · '+
+    (person.active?'Actief':'Geblokkeerd')+
+    (person.certificate_code?' · '+person.certificate_code:'');
+   entry.append(info);
+   const button=document.createElement('button');button.type='button';
+   button.className=person.active?'ghost':'alt';
+   button.textContent=person.active?'Toegang blokkeren':'Toegang heractiveren';
+   button.addEventListener('click',async()=>{
+    try{
+     await setStaffActive({...adminContext(),staffId:person.user_id,
+      active:!person.active});
+     notice('Personeelsrecht is bijgewerkt in Supabase.');
+     $('loadStaffBtn').click();
+    }catch(err){fail(err)}
+   });
+   entry.append(button);list.append(entry);
+  }
+  if(!staff.length)list.textContent='Nog geen goedgekeurde medewerkers';
+ }catch(err){fail(err)}
+});
+$('loadLogsBtn').addEventListener('click',async()=>{
+ try{
+  const rows=await fetchCompanyLogs(adminContext());
+  const panel=$('logsList');panel.replaceChildren();
+  for(const record of rows.slice(0,50)){
+   const entry=document.createElement('div');entry.className='item';
+   const title=document.createElement('strong');
+   title.textContent=record.details?.workReference??'Werkreferentie ontbreekt';
+   const detail=document.createElement('small');
+   detail.textContent=new Date(record.created_at).toLocaleString('nl-NL')+
+    ' · '+record.status+
+    ' · '+(record.created_by===state.user.id?'Eigen log':'Bedrijfslog');
+   entry.append(title,detail);panel.append(entry);
+  }
+  if(!rows.length)panel.textContent='Nog geen serverlogs zichtbaar voor jouw rol';
  }catch(err){fail(err)}
 });
 const editorConfigs={
