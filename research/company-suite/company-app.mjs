@@ -5,6 +5,7 @@
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY} from './supabase-rest.mjs';
 import {openOfflineCache} from './offline-cache.mjs';
 import {MATERIAL_RESEARCH_FACTORS,equivalentSteelPreview,gammaDecayPreview,isoFMinResearch} from './research-physics-preview.mjs';
+import {mountResearchWorkbench} from './workbench-ui.mjs';
 const $=id=>document.getElementById(id);
 const state={api:null,user:null,memberships:[],member:null,company:null,cache:null,
  snapshot:null,mode:'signed-out',material:'Fe',companyCode:null};
@@ -30,7 +31,7 @@ function setTab(tab){
 }
 function updateRole(){
  const admin=state.member?.role==='admin'&&atOnline();
- show('adminTab',admin);show('companySetupPanel',Boolean(state.user&&atOnline()&&!state.member));
+ show('adminTab',admin);show('companySetupPanel',!state.member);
  show('membershipPanel',Boolean(state.member));
  show('signOutBtn',Boolean(state.api?.token()));
  if($('tab-admin').hidden===false&&!admin)setTab('field');
@@ -77,6 +78,7 @@ async function afterSignIn(){
  notice('Aangemeld als '+(state.user.email||state.user.id));
  await loadMemberships();
  updateRole();
+ workbenchUI.refresh();
 }
 $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();try{
@@ -103,7 +105,7 @@ $('signOutBtn').addEventListener('click',async()=>{
  try{await state.api?.signOut()}catch(err){notice('Uitloggen zonder netwerk: '+errorString(err))}
  state.cache?.close();state.cache=null;state.user=null;state.member=null;
  state.memberships=[];state.snapshot=null;state.mode='signed-out';
- updateRole();setTab('account');notice('Uitgelogd. Offline cache blijft versleuteld op dit toestel.');
+ updateRole();workbenchUI.refresh();setTab('account');notice('Uitgelogd. Offline cache blijft versleuteld op dit toestel.');
 });
 async function loadMemberships(){
  if(!atOnline())throw Error('Online sessie vereist');
@@ -134,6 +136,7 @@ async function selectCompany(id){
  $('offlineCompanyId').value=id;$('offlineUserId').value=state.user.id;
  updateRole();
  await syncOnline();
+ if(m.role==='admin')$('loadRequestsBtn').click();
 }
 $('companySelect').addEventListener('change',async e=>{
  try{state.cache?.close();state.cache=null;await selectCompany(e.target.value)}
@@ -405,5 +408,16 @@ async function boot(){
   }else notice('Supabase ingesteld · meld aan of ontgrendel een bestaande offline cache.');
  }catch(err){fail(err)}
 }
-setTab('account');
+const workbenchUI=mountResearchWorkbench({
+ isAuthenticated:()=>Boolean((atOnline()&&state.user?.id)||
+  (state.mode==='offline'&&state.cache&&state.member?.company_id)),
+ onLogin:()=>{
+  setTab('account');
+  $('email').focus();
+  $('authMessage').textContent='De 50 gratis onderzoeksberekeningen zijn gebruikt of je kiest direct voor inloggen. Meld je aan of registreer een account.';
+  $('authForm').scrollIntoView?.({behavior:'smooth',block:'start'});
+ }
+});
+setTab('field');
+updateRole();
 boot();
