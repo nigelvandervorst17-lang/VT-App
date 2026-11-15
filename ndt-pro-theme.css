@@ -1,0 +1,240 @@
+/* NDT RADIOGRAPHY PRO — DESIGN PREVIEW ONLY
+   Theme styles only. No change to calibration, curves or calculation logic.
+   Prior research-only / not-approved safety notices intentionally preserved. */
+:root {
+  color-scheme:dark;
+  --navy:#091a2b;
+  --deep:#061322;
+  --panel:#152d45;
+  --panel2:#1c3752;
+  --edge:#365a77;
+  --blue:#1677d9;
+  --blue2:#67c8f2;
+  --text:#f3f8fc;
+  --muted:#a9bfd4;
+  --mint:#8af3d2;
+  --warn:#f3cb81;
+}
+html { scroll-behavior:smooth; }
+body {
+  background:radial-gradient(ellipse at 50% -15%,#1b3e5a 0%,#091725 55%,#06111c 100%);
+  color:var(--text);
+}
+.app-shell {
+  background:
+   radial-gradient(circle at 90% 2%,#1f4c702e 0,transparent 34%),
+   linear-gradient(180deg,#0d2236 0%,#091b2c 55%,#091a2b 100%);
+  border-inline:1px solid #ffffff0e;
+  box-shadow:0 16px 54px #0007;
+}
+.top-header {
+  position:relative;
+  z-index:5;
+  background:linear-gradient(116deg,#0c2239,#132e48);
+  color:#f5faff;
+  border-bottom:1px solid #45698569;
+  padding:calc(15px + env(safe-area-inset-top)) 16px 15px;
+  box-shadow:0 8px 20px #06152333;
+}
+.brand {gap:11px;flex:1;}
+.brand-icon {width:52px;height:52px;}
+.ndt-brand-glyph {
+  display:grid;place-items:center;
+  width:52px;height:52px;
+  border-radius:15px;
+  background:linear-gradient(150deg,#1479bd 0%,#073a68 95%);
+  border:1px solid #80d9f076;
+  box-shadow:inset 0 1px 0 #ffffff50,0 6px 13px #0004;
+  color:#9ae9ff;
+}
+.ndt-brand-glyph svg {width:35px;height:35px;display:block;}
+.brand-copy{min-width:0;}
+.brand-copy strong{
+  display:block;font-size:clamp(15px,4.05vw,23px);
+  line-height:1.1;white-space:normal;letter-spacing:-.6px;
+  font-weight:820;
+}
+.brand-copy strong span {color:#89d8ff;}
+.brand-copy small {
+  font-size:clamp(7px,1.9vw,9px);
+  letter-spacing:1.6px;
+  color:#b9d3e7;
+  margin-top:5px;
+  font-weight:650;
+}
+.lang-control select {
+  min-width:76px;min-height:46px;
+  border:1px solid #527894;
+  color:#e7f5ff;
+  background:#1f3c56;
+  border-radius:13px;
+  font-weight:800;
+}
+.safety-strip {
+  background:#342f26;
+  border-bottom:1px solid #a4814870;
+  padding:10px 16px;
+  gap:10px;
+}
+.safety-strip strong {font-size:11px;color:#ffd396;}
+.safety-strip span:not(.safety-dot){color:#f3e2c8;line-height:1.5;}
+.screen {padding:19px 15px 30px;}
+.section-heading {margin-bottom:16px;}
+.section-heading h1 {font-size:clamp(24px,6vw,29px);letter-spacing:-.75px;}
+.overline {color:#86d3f8;font-size:10px;letter-spacing:2.1px;}
+.subtitle {font-size:12px;line-height:1.65;max-width:46ch;}
+.panel,.field-card,.rt-compact-calculator {
+  background:linear-gradient(150deg,#18334d,#10253b);
+  border-color:#3c6684;
+  box-shadow:0 7px 21px #04101c38;
+}
+.panel{border-radius:18px;}
+.field-card{border-radius:16px;}
+.rt-compact-calculator{
+  border-radius:22px;
+  padding:16px;
+  margin:12px 0 13px;
+  border:1px solid #547d9c80;
+}
+.rt-compact-toolbar strong {
+  font-size:16px;
+  letter-spacing:-.3px;
+  color:#f3faff;
+}
+.rt-compact-help summary {color:#b4dff6;}
+.rt-compact-source,.rt-compact-shape {
+  background:#0d2439;
+  border:1px solid #3b6484;
+  border-radius:14px;
+  padding:4px;gap:5px;
+}
+#screen-calc .rt-compact-source button.active,
+#screen-calc .rt-compact-shape button.active,
+#screen-calc .rt-compact-source button[aria-pressed="true"],
+#screen-calc .rt-compact-shape button[aria-pressed="true"] {
+  background:linear-gradient(140deg,#197ed8,#1160ac);
+  border:1px solid #84c8fc;
+  box-shadow:0 2px 10px #0c63be50;
+  color:white;
+}
+#screen-calc .rt-compact-field {
+  background:#1b3954;
+  border:1px solid #426d8b;
+  border-radius:16px;
+  padding:13px;
+}
+#screen-calc .rt-compact-field > span,
+#screen-calc .rt-compact-field > label {
+  color:#bdd7e9;
+  font-weight:760;
+}
+#screen-calc .rt-compact-field input,
+#screen-calc .rt-compact-field select {
+  min-height:52px;
+  border-radius:12px;
+  background:#26445f;
+  border:1px solid #7199b0;
+  color:white;
+  font-size:clamp(17px,4vw,21px);
+  font-weight:730;
+  padding:10px 12px;
+  width:100%;max-width:100%;
+}
+#screen-calc .rt-compact-field input:focus,
+#screen-calc .rt-compact-field select:focus {
+  border-color:#91e5ff;
+  box-shadow:0 0 0 3px #69c5f333;
+  outline:none;
+}
+#screen-calc .rt-compact-chip-row button {
+  min-height:43px;
+  border-radius:10px;
+  background:#284d68;
+  color:#e1f1fd;
+  border-color:#5a88a5;
+}
+#screen-calc .rt-compact-chip-row button.active,
+#screen-calc .rt-compact-chip-row button[aria-pressed="true"] {
+  background:#126fc4;
+  color:white;
+  border-color:#8bc9f8;
+}
+#calculate {
+  min-height:57px;
+  border-radius:16px;
+  border:1px solid #82c9ff;
+  background:linear-gradient(125deg,#217ed6,#11599f);
+  box-shadow:0 6px 18px #0d54aa40;
+  color:#fff;
+  font-size:17px;
+  font-weight:850;
+}
+#calculate:active {transform:translateY(1px);}
+.result-card {
+  border:1px solid #3e9f9d;
+  border-radius:20px;
+  padding:19px 15px;
+  background:linear-gradient(145deg,#113f49,#09293d);
+  box-shadow:0 7px 20px #06111c50;
+}
+.result-kicker {color:#b9e4ed;letter-spacing:.2px;}
+.result-time {
+  font-size:clamp(35px,9vw,53px);
+  font-variant-numeric:tabular-nums;
+  color:#8af3d2;
+  line-height:1.1;
+}
+.result-reason {color:#d3e1ee;line-height:1.5;}
+.result-provenance{
+  border-top:1px solid #476980;
+  padding-top:12px;
+  margin-top:13px;
+}
+.rt-jumpbar button{
+  border-radius:13px;
+  border:1px solid #37617f;
+  background:#152e46;
+  color:#d7ecf9;
+}
+.group-label h2 {font-size:16px;}
+.step {background:#1c6ba9;border-radius:10px;}
+.mode-switch {background:#0c273e;border-radius:17px;}
+.mode-btn.active {background:#176fc4;}
+.bottom-nav{
+  background:#081b2e;
+  border-top:1px solid #53779380;
+  box-shadow:0 -10px 30px #020d1a78;
+  gap:4px;
+  padding:7px 8px calc(10px + env(safe-area-inset-bottom));
+}
+.nav{
+  min-height:59px;
+  color:#b2c9de;
+  border-radius:14px;
+  font-size:10px;
+  font-weight:760;
+}
+.nav.active{
+  background:linear-gradient(160deg,#2386db,#125ca6);
+  color:#fff;
+  box-shadow:0 4px 12px #0a65c455;
+}
+.nav svg {width:23px;height:23px;stroke-width:1.9;}
+.screen details > summary {cursor:pointer;}
+button,select,input {touch-action:manipulation;}
+button{transition:background-color .16s,border-color .16s,box-shadow .16s;}
+@media (max-width:400px){
+ .top-header{padding-inline:12px;}
+ .brand{gap:8px;}
+ .brand-icon,.ndt-brand-glyph {width:44px;height:44px;}
+ .ndt-brand-glyph svg{width:31px;height:31px;}
+ .brand-copy strong{font-size:15px;}
+ .brand-copy small{font-size:7px;letter-spacing:1.15px;}
+ .lang-control select{min-width:68px;padding:8px 4px;font-size:12px;}
+ .rt-compact-calculator{padding:12px;}
+ .nav{font-size:9px;}
+}
+@media (prefers-reduced-motion:reduce) {
+ html{scroll-behavior:auto;}
+ button{transition:none;}
+}

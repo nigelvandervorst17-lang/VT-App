@@ -7,9 +7,9 @@
 <meta name="color-scheme" content="dark light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Basic RT PRO">
-<meta name="description" content="Basic RT PRO — werkassistent voor radiografisch onderzoek, bronverval, grafieken, IQI en filmverdeling (onderzoeksversie).">
-<title>Basic RT PRO 3.8.6 · AI Expert · Se-75 en Ir-192</title>
+<meta name="apple-mobile-web-app-title" content="NDT Radiography Pro">
+<meta name="description" content="NDT Radiography Pro — industriele radiografie, rekentools, IQI, belichtingsgrafieken en filmplanning. Onderzoeksversie, geen vrijgave voor opnames.">
+<title>NDT Radiography Pro · Industrial Radiography Suite (testontwerp)</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -159,11 +159,12 @@
   };
 })();
 </script>
+<link rel="stylesheet" href="./ndt-pro-theme.css?v=ui1">
 </head>
 <body>
 <div class="app-shell">
 <header class="top-header">
-  <div class="brand"><div class="brand-icon" aria-hidden="true"><img src="./brand-logo.png" width="52" height="52" alt="" loading="eager" decoding="async"></div><div class="brand-copy"><strong>BASIC <span>RT</span> PRO</strong><small data-i18n="brandTag">INDUSTRIËLE RADIOGRAFIE</small></div></div>
+  <div class="brand"><div class="brand-icon" aria-hidden="true"><span class="ndt-brand-glyph"><svg viewBox="0 0 48 48" focusable="false"><path d="M14 34V14L34 34V14" stroke="currentColor" stroke-width="3.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 8h10M8 8v10M40 8H30M40 8v10M8 40h10M8 40V30M40 40H30M40 40V30" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span></div><div class="brand-copy"><strong>NDT <span>Radiography</span> Pro</strong><small>INDUSTRIAL RADIOGRAPHY SUITE</small></div></div>
   <label class="lang-control"><span class="sr-only" data-i18n="language">Taal</span><select id="language" aria-label="Language / Taal / Język"><option value="nl">🇳🇱 NL</option><option value="en">🇬🇧 EN</option><option value="pl">🇵🇱 PL</option></select></label>
 </header>
 <div id="bootFailure" class="boot-failure" role="alert" hidden>

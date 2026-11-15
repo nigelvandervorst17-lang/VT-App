@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "Basic RT PRO 3.8.3 BETA — mobiele verbeteringen",
-  "short_name": "RT PRO 3.8.3",
-  "description": "Onderzoeksversie met gebruikersreferenties Waygate Se-75/Ir-192 D4/D5/D7, X-ray, IQI en RT Tools. Geen vrijgegeven RT-belichtingstijden.",
+  "name": "NDT Radiography Pro — ontwerpversie",
+  "short_name": "NDT Radiography Pro",
+  "description": "Professionele ontwerpversie voor industriele radiografie: Se-75, Ir-192, X-ray, IQI en filmplanning. Onderzoeksversie; niet vrijgegeven voor opnames.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#061628",
-  "theme_color": "#061628",
+  "background_color": "#081727",
+  "theme_color": "#081727",
   "lang": "nl",
   "orientation": "any",
   "icons": [
