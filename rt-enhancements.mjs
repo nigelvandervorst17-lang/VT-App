@@ -22,6 +22,7 @@ function fmt(number, digits = 1) {
     selectedLanguage() === 'en' ? 'en-GB' : 'nl-NL',
     {minimumFractionDigits: digits, maximumFractionDigits: digits}).format(number);
 }
+window.NDTI18n = Object.freeze({tr,fmt});
 const staticTargets = {
   rtCompactTitle:'ui.title', rtCompactHelpTitle:'ui.help',
   rtCompactActivityLabel:'ui.activity', rtCompactFilmLabel:'ui.film',
@@ -71,7 +72,7 @@ async function ensureLocales() {
       locale[language] = await response.json();
     } catch (error) { console.warn('Locale unavailable:', language, error); }
   }));
-  if (generation === localeGeneration) refreshTranslations();
+  if (generation === localeGeneration) { refreshTranslations(); window.dispatchEvent(new Event('rt-locales-ready')); }
 }
 const timer = {
   initialSeconds:null, remainingSeconds:0, phase:'idle', deadline:0,
