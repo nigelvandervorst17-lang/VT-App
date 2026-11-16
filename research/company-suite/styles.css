@@ -82,3 +82,10 @@ a{color:#9dd4ff}
 @media(max-width:390px){
  .module-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Visible route back to the original RT calculator. */
+.back-to-main{display:inline-flex;align-items:center;max-width:100%;padding:9px 12px;
+ border:1px solid #416b89;border-radius:11px;background:#0e2e48;color:#bce9ff;
+ text-decoration:none;font-size:.82rem;font-weight:750;margin-bottom:13px;}
+.back-to-main:hover{background:#174367;color:#fff}
+.back-to-main:focus-visible{outline:3px solid #a2ddff;outline-offset:3px}
