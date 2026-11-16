@@ -45,7 +45,8 @@
     "materialInvalidFactor": "Vul een positieve onderzoeksfactor in. Zonder geldige factor is geen berekening mogelijk.",
     "materialInvalidThickness": "Vul een geldige dikte in binnen het ondersteunde curvebereik.",
     "materialComparison": "{{material}} · {{mode}} · factor {{factor}} · {{thickness}} mm → {{fe_eq}} mm Fe-equivalent. Alleen onderzoeksvergelijking; geen RT-vrijgave.",
-    "steelComparison": "Onderzoeksvergelijking voor doelzwarting 2,5: {{time}} (factor {{factor}}, {{film}}). Geen gevalideerde belichtingstijd."
+    "steelComparison": "Onderzoeksvergelijking voor doelzwarting 2,5: {{time}} (factor {{factor}}, {{film}}). Geen gevalideerde belichtingstijd.",
+    "researchHelp": "Software-onderzoeksresultaat, geen gevalideerde RT-belichtingstijd of vrijgave. Controleer de werkelijke geometrie, brongegevens, filmcondities, IQI en goedgekeurde procedure. Dit scherm bedient geen stralingsbron."
   },
   "materials": {
     "Fe": "Staal",
