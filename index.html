@@ -162,6 +162,14 @@
 <link rel="stylesheet" href="./ndt-pro-theme.css?v=ui1">
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
+<style id="se75-quick-entry-style">
+.ndt-se75-launch{display:flex;align-items:center;gap:12px;margin:12px 16px;padding:15px;border:1px solid #68a9d0;border-radius:16px;background:linear-gradient(135deg,#174d70,#123449);color:#f3faff;text-decoration:none;min-height:76px}
+.ndt-se75-launch strong{display:block;font-size:17px;font-weight:850}
+.ndt-se75-launch small{display:block;color:#c5e2f2;font-size:12px;margin-top:2px}
+.ndt-se75-launch-mark{font-size:29px;line-height:1}
+.ndt-se75-launch-go{margin-left:auto;font-size:12px;white-space:nowrap;font-weight:850;color:#d0eaff}
+@media(max-width:360px){.ndt-se75-launch{margin:10px 12px;padding:12px;gap:9px}.ndt-se75-launch strong{font-size:15px}.ndt-se75-launch-go{font-size:11px}}
+</style>
 </head>
 <body>
 <div class="app-shell">
@@ -177,6 +185,11 @@
 </div>
 <main>
 <div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
+<a href="./se75.html" id="ndtSe75QuickLaunch" class="ndt-se75-launch" aria-label="Se-75 snel berekenen met bestaande onderzoeksberekening">
+  <span class="ndt-se75-launch-mark" aria-hidden="true">☢</span>
+  <span><strong>Se-75 direct berekenen</strong><small>Vijf invoervelden · bestaande onderzoekscurve</small></span>
+  <span class="ndt-se75-launch-go" aria-hidden="true">Openen ›</span>
+</a>
 <a href="./research/company-suite/index.html" id="ndtCompanyLaunch" class="ndt-company-launch" aria-label="Bedrijfsmodus openen: proefberekeningen en bedrijfsaccounts">
   <span class="ndt-company-launch-copy">
     <strong id="ndtCompanyLaunchTitle">Bedrijfsmodus</strong>
