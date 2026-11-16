@@ -4,6 +4,10 @@ on:
     paths:
       - 'brand/**'
       - 'index.html'
+      - 'mobile-shell.mjs'
+      - 'mobile-shell.css'
+      - 'mobile-shell.test.mjs'
+      - 'research/company-suite/**'
       - 'styles.css'
       - 'manifest.webmanifest'
       - 'sw.js'
@@ -23,7 +27,10 @@ jobs:
           node-version: '22'
       - name: Verify logos, research guards and original models
         run: |
-          node --test research/brand-logos.test.mjs research/live-material-preview.test.mjs
+          node --test research/brand-logos.test.mjs research/live-material-preview.test.mjs mobile-shell.test.mjs
+          node --check mobile-shell.mjs
+          node --check research/company-suite/company-app.mjs
+          node --check research/company-suite/supabase-rest.mjs
           node --check app.mjs
           node --check sw.js
           node --check rt-material-ui.mjs
