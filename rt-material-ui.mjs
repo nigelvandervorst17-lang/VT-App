@@ -14,7 +14,11 @@ const number=value=>{
  const str=String(value??'').trim().replace(',','.');
  return /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(str)?Number(str):NaN;
 };
-const local=n=>n.toLocaleString('nl-NL',{maximumFractionDigits:3});
+const lang=()=>['nl','en','de'].includes($('language')?.value)?$('language').value:'nl';
+const local=n=>new Intl.NumberFormat(lang()==='de'?'de-DE':lang()==='en'?'en-GB':'nl-NL',
+ {minimumFractionDigits:1,maximumFractionDigits:3}).format(n);
+const phrase=(key,vars,fallback)=>{const translated=window.NDTI18n?.tr(key,vars);return translated&&translated!==key?translated:fallback;};
+const name=material=>phrase('materials.'+material,{},material==='Fe'?'Staal':material);
 const gammaMode=()=>$('modeGamma')?.getAttribute('aria-pressed')==='true';
 const selectedDensity=()=>number($('density')?.value);
 const selectedThickness=()=>number($('thickness')?.value||$('rtCompactThickness')?.value);
@@ -35,19 +39,17 @@ function info(){
  const comparison=current();
  if(!comparison.ok){
   output.textContent=selectedMaterial==='custom'?
-   'Vul een positieve onderzoeksfactor in. Zonder een geldige factor is geen berekening mogelijk.':
-   'Vul een geldige dikte in; de berekening blijft binnen de ondersteunde curvegrenzen.';
+   phrase('ui.materialInvalidFactor',{},'Vul een positieve onderzoeksfactor in.') :
+   phrase('ui.materialInvalidThickness',{},'Vul een geldige dikte in.');
   return;
  }
- if(selectedMaterial==='Fe'){
-  output.textContent='Staal · factor 1,00 · staalequivalentie '+local(comparison.equivalentSteelMm)+
-   ' mm. Referentiecurve zonder materiaalomrekening.';
- }else{
-  output.textContent=comparison.label+' · '+(comparison.mode==='gamma'?'Gamma':'X-ray')+
-   ' onderzoeksfactor '+local(comparison.proposedFactor)+' · w_eq = '+
-   local(comparison.wallMm)+' × '+local(comparison.proposedFactor)+' = '+
-   local(comparison.equivalentSteelMm)+' mm staal. Wordt automatisch gebruikt voor de onderzoeksberekening; geen vrijgave voor RT-opnames.';
- }
+ const args={
+  material:name(selectedMaterial==='custom'?'Other':selectedMaterial),
+  thickness:local(comparison.wallMm), fe_eq:local(comparison.equivalentSteelMm),
+  factor:local(comparison.proposedFactor||1), mode:comparison.mode==='gamma'?'Gamma':'X-ray'
+ };
+ output.textContent=phrase(selectedMaterial==='Fe'?'ui.materialSteelInfo':'ui.materialResearchInfo',args,
+  args.thickness+' mm '+args.material+' → '+args.fe_eq+' mm Fe equivalent.');
 }
 function renderCard(){
  const box=$('rtMaterialResult');if(!box)return;
@@ -55,14 +57,13 @@ function renderCard(){
  if(!cmp.ok){box.hidden=true;return}
  if(selectedMaterial!=='Fe'){
   box.hidden=false;
-  box.textContent='Materiaalonderzoek · '+cmp.label+': voorgestelde factor '+
-   local(cmp.proposedFactor)+' ('+(cmp.mode==='gamma'?'Gamma':'X-ray')+
-   '), equivalente staaldikte '+local(cmp.equivalentSteelMm)+' mm (w_eq = w × f_mat). '+
-   'Automatisch meegenomen in de onderzoeksberekening op basis van de equivalente staaldikte. '+
-   'NIET VRIJGEGEVEN voor werkelijke RT-opnames.';
+  const args={material:name(selectedMaterial==='custom'?'Other':selectedMaterial),
+   thickness:local(cmp.wallMm),fe_eq:local(cmp.equivalentSteelMm),
+   factor:local(cmp.proposedFactor),mode:cmp.mode==='gamma'?'Gamma':'X-ray'};
+  box.textContent=phrase('ui.materialComparison',args,
+   args.material+' · '+args.thickness+' mm ≈ '+args.fe_eq+' mm Fe.');
   return;
  }
- // Only separate research comparison for D=2.5 in the supported gamma/Fe area.
  if(!gammaMode()||selectedDensity()!==2.5||
     !['D4','D5'].includes(film())||
     $('resultTime')?.textContent?.trim()==='—'){
@@ -77,9 +78,8 @@ function renderCard(){
  });
  if(!trial.ok){box.hidden=true;return}
  box.hidden=false;
- box.textContent='PR #6 · aparte D=2,5 onderzoeksvergelijking: '+trial.candidateTime+
-  ' (factor '+local(trial.proposedFactor)+', '+trial.film+
-  '). '+NOT_APPROVED+' · De tijd bovenaan blijft de ongewijzigde referentiemotor.';
+ const vars={time:trial.candidateTime,factor:local(trial.proposedFactor),film:trial.film};
+ box.textContent=phrase('ui.steelComparison',vars,'Onderzoeksvergelijking: '+vars.time);
 }
 function render(){
  const other=selectedMaterial==='custom';
@@ -135,6 +135,7 @@ function init(){
  if(time&&typeof MutationObserver!=='undefined')
   new MutationObserver(renderCard).observe(time,{childList:true,characterData:true,subtree:true});
  window.addEventListener('rt-language-changed',render);
+ window.addEventListener('rt-locales-ready',render);
  render();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
