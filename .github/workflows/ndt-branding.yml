@@ -1,0 +1,30 @@
+name: Branding icons and exposure engine regression
+on:
+  pull_request:
+    paths:
+      - 'brand/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'research/brand-logos.test.mjs'
+      - '.github/workflows/ndt-branding.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  logo-and-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify logos, research guards and original models
+        run: |
+          node --test research/brand-logos.test.mjs research/live-material-preview.test.mjs
+          node --check app.mjs
+          node --check sw.js
+          node --check rt-material-ui.mjs
+          node --check rt-core.mjs
