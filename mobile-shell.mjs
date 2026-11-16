@@ -35,9 +35,10 @@ function modeLabel(){
 }
 function connection(){
  const el=$('ndtConnStatus');if(!el)return;
- const offline=!navigator.onLine;
+ const offline=!navigator.onLine||state.mode==='offline-session';
  el.dataset.offline=String(offline);
- el.textContent=offline?'Offline':'Online';
+ const bunker=get(sessionStorage,'ndt-offline-workspace-v1')==='unlocked';
+ el.textContent=offline?(bunker?'Offline Bunker':'Offline'):'Online';
  if($('ndtAccountEmail'))$('ndtAccountEmail').textContent=modeLabel();
 }
 function showMain(mode){
@@ -47,6 +48,7 @@ function showMain(mode){
  document.body.classList.remove('ndt-entry-active');
  document.body.classList.add('ndt-mobile-live');
  connection();
+ document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
  renderSticky();
 }
 async function hasEncryptedOfflineCache(){
@@ -95,11 +97,18 @@ async function bootAuth(){
     showMain('offline-session');return;
    }
    try{
-    state.user=await api().user();
+    state.user=await Promise.race([
+     api().user(),
+     new Promise((_,reject)=>setTimeout(()=>reject(Error('Netwerkcontrole verlopen')),6000))
+    ]);
     if(state.user?.id){showMain('signed-in');return;}
-   }catch{
-    // A network failure is not proof of revoked rights, nor an approval.
-    if(!navigator.onLine){showMain('offline-session');return;}
+   }catch(err){
+    // No live authorization when offline. A network outage may still allow
+    // the local research calculator, but company data stays protected.
+    const msg=String(err?.message||err);
+    if(!navigator.onLine||/failed to fetch|network|netwerk|load failed|time.?out|verbinding/i.test(msg)){
+     showMain('offline-session');return;
+    }
    }
   }
   if(chosen==='trial')showMain('trial');
