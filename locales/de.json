@@ -46,7 +46,10 @@
     "materialInvalidThickness": "Gültige Dicke innerhalb des Kurvenbereichs eingeben.",
     "materialComparison": "{{material}} · {{mode}} · Faktor {{factor}} · {{thickness}} mm → {{fe_eq}} mm Fe-Äquivalent. Nur Forschungsvergleich; keine RT-Freigabe.",
     "steelComparison": "Forschungsvergleich für Zielschwärzung 2,5: {{time}} (Faktor {{factor}}, {{film}}). Keine validierte Belichtungszeit.",
-    "researchHelp": "Software-Forschungsschätzung, keine validierte RT-Belichtungszeit oder Freigabe. Geometrie, Quelldaten, Filmbedingungen, IQI und genehmigtes Verfahren prüfen. Dieser Bildschirm steuert keine Strahlenquelle."
+    "researchHelp": "Software-Forschungsschätzung, keine validierte RT-Belichtungszeit oder Freigabe. Geometrie, Quelldaten, Filmbedingungen, IQI und genehmigtes Verfahren prüfen. Dieser Bildschirm steuert keine Strahlenquelle.",
+    "companyMode": "Firmenmodus",
+    "companyModeDesc": "50 Testberechnungen · Konto · Offline-Bunker",
+    "companyModeOpen": "Öffnen"
   },
   "materials": {
     "Fe": "Stahl",
