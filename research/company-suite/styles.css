@@ -1,0 +1,84 @@
+:root{color-scheme:dark;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-synthesis:none;background:#071321;color:#edf5ff}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top right,#123a5f 0%,transparent 40%),linear-gradient(150deg,#071321,#102338 70%,#071827)}
+.shell{width:min(860px,100%);margin:0 auto;padding:12px 12px calc(92px + env(safe-area-inset-bottom))}
+.top{padding:14px 6px 9px}
+.eyebrow{font-size:.72rem;font-weight:850;letter-spacing:.11em;color:#81baf2}
+h1{font-size:clamp(1.55rem,6vw,2.15rem);line-height:1.15;letter-spacing:-.03em;margin:6px 0}
+h2{margin:0 0 12px;font-size:1.15rem}h3{font-size:1rem;margin:12px 0 8px}
+.muted,.help{color:#aebfd2}.muted{font-size:.8rem;font-weight:500}
+.help{font-size:.83rem;line-height:1.5;margin:8px 0 14px}
+.state-line{font-size:.83rem;color:#aed6fa;margin:6px 0;max-width:95%}
+.navrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;position:sticky;top:0;z-index:4;background:#0a192bdc;backdrop-filter:blur(14px);padding:10px 0;border-bottom:1px solid #2c475f}
+.navrow button{padding:7px 3px;min-height:45px;font-size:.8rem;white-space:nowrap;background:#1c3449;border:1px solid #486887;border-radius:11px}
+.navrow button[aria-pressed=true]{background:#0961ae;color:white;border-color:#61b6ff;box-shadow:inset 0 0 0 1px #96d5ff}
+.navrow button[hidden]{display:none}
+.panel{border-radius:16px;border:1px solid #2f4e68;background:linear-gradient(155deg,#102b44,#0c2235);padding:18px 14px;margin:15px 0;box-shadow:0 8px 25px #03112144}
+p{margin:8px 0 13px}
+label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;font-weight:700;margin:11px 0}
+label.choice,label.checktile{flex-direction:row;align-items:center;gap:12px;min-height:57px;padding:12px;border:2px solid #496987;border-radius:12px;background:#102d46;cursor:pointer;margin:0}
+label.choice:has(input:checked),label.checktile:has(input:checked){background:#125c9c;border-color:#66beff;color:white}
+label.choice input,label.checktile input{width:23px;height:23px;accent-color:#268ff5;flex:0 0 auto}
+input,select,textarea,button{font:inherit}
+input:not([type=radio]):not([type=checkbox]),select,textarea{width:100%;min-height:48px;outline:none;background:#061b2e;border:1px solid #5c7896;border-radius:11px;color:#f6fbff;padding:11px 12px;font-size:16px}
+textarea{resize:vertical;min-height:80px}
+input::placeholder,textarea::placeholder{color:#9db2c8}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #3ca7ffb0;outline-offset:2px}
+button,.action{display:inline-flex;justify-content:center;align-items:center;text-decoration:none;border-radius:12px;border:1px solid #68b7ff;background:#0966b6;color:white;font-weight:800;padding:12px 16px;min-height:52px;cursor:pointer;text-align:center}
+button.alt,.action.secondary{background:#23445f;border-color:#547c9b}
+button.ghost{background:transparent;border-color:#6083a6;color:#cfe9ff}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.actions>*{flex:1 1 140px}
+form>button{margin-top:13px;width:100%}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:13px}
+.selector{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.readout{margin:12px 0;padding:13px;border-radius:12px;border:1px solid #3c6586;background:#091d31;color:#e0efff;font-size:.89rem;white-space:pre-wrap;overflow-wrap:anywhere}
+#cacheStatus{padding:8px 0}
+.list>div{padding:11px 0;border-bottom:1px solid #33506b}
+.list .item{padding:13px;border-radius:12px;border:1px solid #3d5c77;margin:9px 0;background:#0b2137}
+.list .item small{display:block;color:#a9bbce}
+hr{height:1px;border:0;background:#31536f;margin:17px 0}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.tiles button{flex-direction:column;min-height:62px;background:#14334e;border-color:#4f7191}
+.tiles button[aria-pressed=true]{background:#085faa;border:2px solid #91d2ff;box-shadow:inset 0 0 0 1px #c0e8ff}
+.tiles small{font-weight:500;font-size:.77rem;opacity:.95;margin-top:2px}
+a{color:#9dd4ff}
+.footer{font-size:.76rem;color:#a9bed2;border-top:1px solid #36536f;padding:16px 8px;text-align:center}
+.tab[hidden],.panel[hidden]{display:none}
+@media(max-width:470px){
+ .shell{padding:8px 10px calc(115px + env(safe-area-inset-bottom))}
+ .top{padding:14px 4px 7px}
+ .navrow{gap:4px}.navrow button{font-size:.73rem}
+ .grid,.selector{grid-template-columns:1fr}
+ .panel{padding:15px 12px}
+ .tiles{gap:8px}
+}
+
+/* Combined research workbench / visible 50-call demo */
+.trial-top{border:1px solid #467ca3;background:linear-gradient(135deg,#103a5a,#0e243d);border-radius:16px;padding:15px;margin:12px 0 2px}
+.trial-top strong{display:block;font-size:1rem;color:#f4fcff;font-variant-numeric:tabular-nums}
+.trial-top .help{margin:9px 0}
+.trial-top .actions{margin:8px 0 0}
+.trial-track{height:7px;background:#06182c;border-radius:20px;margin-top:9px;overflow:hidden}
+.trial-track span{display:block;height:100%;background:#4eb5ff;border-radius:20px;transition:width .2s ease}
+.module-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0}
+.module-buttons button{font-size:.85rem;min-height:59px;padding:8px 5px;line-height:1.15;background:#193a55;border-color:#487595}
+.module-buttons button[aria-pressed=true]{background:#0966b6;border:2px solid #b9e3ff;box-shadow:inset 0 0 0 1px #7ac4ff}
+.workbench-module{padding:12px 2px 4px}
+.workbench-module[hidden]{display:none}
+.workbench-module .action{width:100%;margin:6px 0}
+.compute-primary{width:100%;margin-top:13px;background:linear-gradient(110deg,#096abc,#0d79d4);font-size:1.03rem;box-shadow:0 4px 16px #00325355}
+.trial-gate{margin:16px 0 4px;padding:16px;border-radius:14px;background:#352c1e;border:1px solid #d89e48}
+.trial-gate[hidden]{display:none}
+.trial-gate p{color:#fbe8c6}
+.trial-gate button{width:100%;margin-top:5px}
+.workbench-locked .compute-primary{opacity:.45;pointer-events:none}
+.readout{font-variant-numeric:tabular-nums}
+@media(max-width:660px){
+ .module-buttons{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .module-buttons button{font-size:.82rem;min-height:58px}
+}
+@media(max-width:390px){
+ .module-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
