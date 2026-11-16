@@ -42,7 +42,8 @@ const copy={
   caution:'Wyłącznie pomoc w porównaniu numerów drutów, nie formalna akceptacja. Oceń błonę i IQI według normy oraz zatwierdzonej procedury.'
  }
 };
-function lang(){const l=$('language')?.value;return l==='en'||l==='pl'?l:'nl';}
+copy.de={...copy.en,title:'IQI-Schnellprüfung',subtitle:'Klasse · Technik · Position',field:'Dünnster eindeutig sichtbarer IQI-Draht auf dem Film',choose:'Noch nicht beurteilt',empty:'Tatsächlich sichtbaren Draht auswählen und mit der IQI-Anforderung vergleichen.',notReady:'Erforderlicher Draht noch nicht bestimmt. Klasse, Technik, IQI-Seite, Material und Dicke prüfen.',adequate:(seen,required)=>'Drahtvergleich: '+seen+' ist gleich fein oder feiner als '+required+'. Sichtbarkeit, Position, Markierung und Verfahren prüfen. Keine RT-Freigabe.',inadequate:(seen,required)=>'Drahtvergleich: '+seen+' ist gröber als '+required+'. Die erforderliche Drahtnummer ist nicht nachgewiesen.',caution:'Nur Hilfsmittel zum Drahtnummervergleich, keine formelle Abnahme. Film und IQI nach geltender Norm beurteilen.'};
+function lang(){const l=$('language')?.value;return l==='en'||l==='de'?l:'nl';}
 function t(){return copy[lang()];}
 function currentReference(){
  const material=$('material')?.value;
