@@ -161,12 +161,13 @@
 </script>
 <link rel="stylesheet" href="./ndt-pro-theme.css?v=ui1">
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
+<link rel="stylesheet" href="./rt-enhancements.css?v=1">
 </head>
 <body>
 <div class="app-shell">
 <header class="top-header">
   <div class="brand"><img class="ndt-brand-banner" src="./brand/ndt-banner-512.webp" alt="NDT Radiography Pro" width="512" height="171" fetchpriority="high" decoding="async"></div>
-  <label class="lang-control"><span class="sr-only" data-i18n="language">Taal</span><select id="language" aria-label="Language / Taal / Język"><option value="nl">🇳🇱 NL</option><option value="en">🇬🇧 EN</option><option value="pl">🇵🇱 PL</option></select></label>
+  <label class="lang-control"><span class="sr-only" data-i18n="language">Taal</span><select id="language" aria-label="Taal / Language / Sprache"><option value="nl">🇳🇱 NL</option><option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option></select></label>
 </header>
 <div id="bootFailure" class="boot-failure" role="alert" hidden>
 <strong>De app is niet volledig gestart</strong>
@@ -873,6 +874,7 @@
 <script type="module" src="./iqi-quick.mjs?v=408"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
+<script type="module" src="./rt-enhancements.mjs?v=1"></script>
 <script id="rt29-clean-calculator">
 (function(){
 'use strict';
@@ -930,6 +932,10 @@ function setOutcome(r){
   if(r.ok)$('resultProvenance').textContent='Referentie: COMET EVO 225DS v05 (25-04-2022), Fe, D7 + Pb, D=2,0, FFD 700 mm. Niet gebruiken als vrijgegeven bedieningsinstructie.';
   $('saveResult').disabled=true;$('printRecord').disabled=true;
   window.BasicRt29LastCometResult=r.ok?r:null;
+  const card=$('resultCard');
+  if(r.ok){card.dataset.materialCode='Fe';card.dataset.physicalThickness=String(r.w);card.dataset.feEquivalent=String(r.w);}
+  else{delete card.dataset.materialCode;delete card.dataset.physicalThickness;delete card.dataset.feEquivalent;}
+  window.dispatchEvent(new CustomEvent('ndt-result',{detail:{seconds:r.ok?Math.round(r.minutes*60):null}}));
 }
 function estimateSelected(){
   if($('material')?.value!=='Fe')return setOutcome({ok:false,error:'COMET 225DS heeft alleen een ongevalideerde Fe-grafiek; materiaalomrekening is hier niet beschikbaar.'});
