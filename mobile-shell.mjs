@@ -49,12 +49,37 @@ function showMain(mode){
  connection();
  renderSticky();
 }
+async function hasEncryptedOfflineCache(){
+ if(get(localStorage,OFFLINE_READY))return true;
+ const userId=get(localStorage,'ndt-last-user-id');
+ const companyId=get(localStorage,'ndt-last-company-id');
+ if(!/^[a-f0-9-]{36}$/i.test(userId||'')||!/^[a-f0-9-]{36}$/i.test(companyId||''))return false;
+ if(!globalThis.indexedDB)return false;
+ return new Promise(resolve=>{
+  try{
+   const request=indexedDB.open('ndt-company-offline-v1');
+   request.onerror=()=>resolve(false);
+   request.onsuccess=()=>{
+    const db=request.result;
+    if(!db.objectStoreNames.contains('records')){db.close();resolve(false);return;}
+    const tx=db.transaction('records','readonly');
+    const meta=tx.objectStore('records').get('ndt:'+userId+':'+companyId+':meta');
+    meta.onsuccess=()=>{const exists=Boolean(meta.result?.check);db.close();resolve(exists);};
+    meta.onerror=()=>{db.close();resolve(false);};
+   };
+  }catch{resolve(false);}
+ });
+}
+
 function showGate(reason=''){
  state.mode='signed-out';state.user=null;
  document.documentElement.classList.add('ndt-entry-loading');
  document.body.classList.add('ndt-entry-active');
  $('ndtEntryGate').hidden=false;
- $('ndtEntryOffline').hidden=!get(localStorage,OFFLINE_READY);
+ $('ndtEntryOffline').hidden=true;
+ hasEncryptedOfflineCache().then(found=>{
+  if(state.mode==='signed-out')$('ndtEntryOffline').hidden=!found;
+ });
  $('ndtAccountMenu').hidden=true;
  $('ndtEntryPassword').value='';
  status(reason||'Log in of kies de gratis proefversie.');
