@@ -9,8 +9,8 @@
 <header class="top">
  <a class="back-to-main" id="ndtReturnToMain" href="../../index.html">← Terug naar NDT Radiography Pro</a>
  <div class="eyebrow">NDT RADIOGRAPHY PRO · ONDERZOEK</div>
- <h1>Bedrijfsmodus <span class="muted">v0.1</span></h1>
- <p id="stateLine" class="state-line" role="status">Supabase-testproject Basic NDT: openbaar clientprofiel vooraf ingesteld.</p>
+ <h1>Beveiligde bedrijfsomgeving</h1>
+ <p id="stateLine" class="state-line" role="status">De beveiligde bedrijfsverbinding wordt gecontroleerd.</p>
  <div class="trial-top" id="trialTop" role="status" aria-live="polite">
   <strong id="trialCounterLabel">Gratis proefversie: nog 50 van 50 berekeningen</strong>
   <div class="trial-track" aria-hidden="true"><span id="trialProgress" style="width:0%"></span></div>
@@ -26,12 +26,12 @@
 </div>
 <section id="tab-account" class="tab" hidden>
  <article class="panel" id="connectionPanel">
- <h2>1. Supabase-testproject</h2><p class="help">Basic NDT staat standaard ingesteld met een publieke projectsleutel. Je kunt de gegevens wijzigen voor een ander testproject. Geen geheime service_role-sleutels gebruiken.</p>
- <form id="connectionForm"><label>Project-URL <input id="projectUrl" type="url" required autocomplete="url" placeholder="https://PROJECT.supabase.co"></label>
- <label>Publishable/anon-sleutel <input id="projectKey" required type="text" autocomplete="off" placeholder="sb_publishable_..."></label>
+ <h2>Beveiligde bedrijfsverbinding</h2><p class="help">De verbinding is al ingesteld. Deze technische gegevens hoeven normaal niet te worden aangepast.</p>
+ <form id="connectionForm"><label>Projectverbinding (URL) <input id="projectUrl" type="url" required autocomplete="url" placeholder="https://PROJECT.supabase.co"></label>
+ <label>Publieke verbindingssleutel <input id="projectKey" required type="text" autocomplete="off" placeholder="sb_publishable_..."></label>
  <button type="submit">Testverbinding bewaren</button></form>
  </article>
- <article class="panel"><h2>2. Registreren of inloggen</h2>
+ <article class="panel"><h2>Registreren of inloggen</h2>
  <div class="selector" id="authIntent"><label class="choice"><input type="radio" name="authType" value="new" checked>Nieuw bedrijf (Hoofdgebruiker)</label><label class="choice"><input type="radio" name="authType" value="join">Aansluiten (Personeel)</label></div>
  <form id="authForm">
  <label>E-mailadres<input id="email" type="email" autocomplete="email" required placeholder="naam@bedrijf.nl"></label>
@@ -42,7 +42,7 @@
  <button id="signOutBtn" class="ghost" type="button" hidden>Uitloggen</button>
  </article>
  <article class="panel" id="companySetupPanel">
- <h2>3. Bedrijfsregistratie / aansluiting</h2>
+ <h2>Bedrijf registreren of aansluiten</h2>
  <form id="registerCompanyForm"><h3>Nieuw bedrijf registreren</h3>
  <label>Bedrijfsnaam<input id="companyName" required placeholder="Bedrijfsnaam"></label>
  <label>Jouw naam<input id="adminName" required placeholder="Naam Hoofdgebruiker"></label>
@@ -127,7 +127,12 @@
  <button type="submit">Procedure opslaan</button></form></article>
 </section>
 <section id="tab-field" class="tab">
- <article class="panel" id="researchWorkbenchPanel">
+ <article class="panel" id="ndtCompanyCalculatorLink">
+   <h2>Rekenen in de hoofdapp</h2>
+   <p class="help">Eén centrale onderzoeksrekenmachine. Selecteer hieronder een administratief goedgekeurde bron of buis om de relevante gegevens naar Rekenen over te nemen. Geen technische RT-vrijgave.</p>
+   <a class="action secondary" href="../../index.html">Open de hoofdcalculator</a>
+ </article>
+ <article class="panel" id="researchWorkbenchPanel" hidden aria-hidden="true">
   <h2>Opnameplan · Gamma / X-ray / Pijp / IQI / Materialen</h2>
   <p class="help">Onderzoekswaarden uit bestaande, begrensde datasets. Geen belichtingsinstructie, ijkcertificaat of formele IQI-vrijgave.</p>
   <div class="module-buttons" id="workbenchButtons">
@@ -262,10 +267,10 @@
  <div id="isoOutput" class="readout">Geen geometriecontrole uitgevoerd.</div>
  </article>
  <article class="panel"><h2>Onderzoeksmodules</h2><div class="actions">
- <a class="action secondary" href="../mijn-rontgenbuizen.html">Mijn Röntgenbuizen · PR #7</a>
- <a class="action secondary" href="../gamma-nine-point-review.mjs">Gamma negenpuntscontrole · PR #6</a>
+ <a class="action secondary" href="../mijn-rontgenbuizen.html">Mijn Röntgenbuizen · Onderzoeksdossier</a>
+ <a class="action secondary" href="../gamma-nine-point-review.mjs">Gamma negenpuntscontrole · Onderzoekscontrole</a>
  <a class="action secondary" href="../kalibratie-onderbouwing.md">Kalibratie-onderbouwing</a></div>
- <p class="help">De 1-/2-puntsfactor uit PR #7 en D4/D5-zwartingsfactoren uit PR #6 zijn niet toegepast op de live-rekenmotor.</p>
+ <p class="help">De aanvullende onderzoeksfactoren zijn niet toegepast op de bestaande onderzoeksrekenmotor.</p>
  </article>
 </section>
 <footer class="footer">ONDERZOEKSVERSIE · Niet gevalideerd voor industriële RT-opnamen · Geen kalibratievrijgave · Offline data kunnen verouderd zijn.</footer>
