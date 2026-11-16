@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {calculateGamma,hms} from './rt-core.mjs';
 import {curves} from './rt-curves.mjs';
-import {calculateSe75Research,se75ErrorMessage} from './se75-quick.mjs';
+import {calculateSe75Research,se75ErrorMessage,quickResearchAccess} from './se75-quick.mjs';
 
 const input={thicknessMm:'10',film:'D4',density:'2,0',activityCi:'40',distanceMm:'800'};
 test('quick Se-75 uses the existing engine without new exposure formulas',()=>{
@@ -48,4 +48,24 @@ test('UI labels research status; no operational approval and no hardcoded time',
  const js=readFileSync(new URL('./se75-quick.mjs',import.meta.url),'utf8');
  assert.match(js,/calculateGamma\(/);
  assert.doesNotMatch(js,/return \{ok:true,minutes:/);
+});
+
+test('Se-75 research access is restricted to the existing entry flow',()=>{
+ const empty={getItem:()=>null};
+ assert.deepEqual(quickResearchAccess({local:empty,session:empty}),{allowed:false,trial:false});
+ const guest={getItem:k=>k==='ndt-ui-trial-choice-v1'?'trial':null};
+ assert.deepEqual(quickResearchAccess({local:guest,session:empty}),{allowed:true,trial:true});
+ const signedIn={getItem:k=>k==='ndt-supabase-session-v1'?'test-token':null};
+ assert.deepEqual(quickResearchAccess({local:signedIn,session:empty}),{allowed:true,trial:false});
+ const bunker={getItem:k=>k==='ndt-offline-workspace-v1'?'unlocked':null};
+ assert.deepEqual(quickResearchAccess({local:empty,session:bunker}),{allowed:true,trial:false});
+});
+test('Se-75 research shortcut uses the same 50-preview counter without altering calculateGamma',()=>{
+ const js=readFileSync(new URL('./se75-quick.mjs',import.meta.url),'utf8');
+ assert.match(js,/const trial=trialCounter\(\)/);
+ assert.match(js,/trial\.status\(\)/);
+ assert.match(js,/trial\.consume\(\)/);
+ assert.match(js,/if\(access\.trial&&result\.ok\)/);
+ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ assert.match(html,/id="ndtSe75ResearchShortcut"/);
 });
