@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "status": "USER_SUPPLIED_NOT_INDEPENDENTLY_VALIDATED",
+  "researchOnly": true,
+  "note": "6 door gebruiker opgegeven Waygate X-ray punten; apparaat/model, generator, mA, SFD, Pb-schermen, verwerking, bronversie en traceerbare meetonzekerheid zijn voor deze zes punten niet afzonderlijk aangetoond. Geen productietijden, fit, extrapolatie of D4/D5/D7 vrijgave.",
+  "sharedConditions": {
+    "material": "Fe",
+    "manufacturer": null,
+    "model": null,
+    "ma": null,
+    "sfdMm": null,
+    "leadScreens": null,
+    "filmProcessing": null,
+    "provenance": "Door gebruiker in chat verstrekte tijden; nog niet door onafhankelijke Waygate bron bevestigd"
+  },
+  "points": [
+    {
+      "nr": 1,
+      "kv": 120,
+      "steelThicknessMm": 5,
+      "film": "D4",
+      "density": 2,
+      "referenceTime": "00:01:17"
+    },
+    {
+      "nr": 2,
+      "kv": 160,
+      "steelThicknessMm": 10,
+      "film": "D4",
+      "density": 2,
+      "referenceTime": "00:00:59"
+    },
+    {
+      "nr": 3,
+      "kv": 200,
+      "steelThicknessMm": 18,
+      "film": "D4",
+      "density": 2,
+      "referenceTime": "00:01:25"
+    },
+    {
+      "nr": 4,
+      "kv": 250,
+      "steelThicknessMm": 28,
+      "film": "D4",
+      "density": 2,
+      "referenceTime": "00:01:45"
+    },
+    {
+      "nr": 5,
+      "kv": 300,
+      "steelThicknessMm": 40,
+      "film": "D4",
+      "density": 2,
+      "referenceTime": "00:02:12"
+    },
+    {
+      "nr": 6,
+      "kv": 200,
+      "steelThicknessMm": 18,
+      "film": "D5",
+      "density": 2.5,
+      "referenceTime": "00:01:06"
+    }
+  ]
+}

@@ -745,3 +745,56 @@ body{font-synthesis:none}
   grid-template-columns:1fr;
  }
 }
+
+
+/* Research-only material selection on the existing calculator.
+ * Does not bypass the original material/film/thickness validation.
+ */
+#screen-calc .rt-material-choice{
+ margin:0 0 11px;padding:12px 10px;border-radius:13px;
+ border:1px solid #426c8d;background:#0e2b43;color:#eaf6ff;
+}
+#screen-calc .rt-material-choice>strong{
+ display:block;font-size:14px;margin-bottom:10px;
+}
+#screen-calc .rt-material-choice>strong small{
+ display:inline;font-size:11px;font-weight:500;color:#b7cfe3;
+}
+#screen-calc .rt-material-tiles{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
+}
+#screen-calc .rt-material-tiles button{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:3px;min-height:62px;min-width:0;padding:9px 5px;
+ border-radius:12px;border:1px solid #557b9a;
+ background:#183b55;color:#edf7ff;font-size:13px;font-weight:850;
+ cursor:pointer;touch-action:manipulation;
+}
+#screen-calc .rt-material-tiles button small{
+ font-size:10px;font-weight:650;color:#c1daec;
+}
+#screen-calc .rt-material-tiles button.active,
+#screen-calc .rt-material-tiles button[aria-pressed="true"]{
+ background:#0c668e;border:2px solid #99e4ff;
+}
+#screen-calc .rt-material-custom{
+ display:block;margin-top:10px;font-size:12px;font-weight:750;
+}
+#screen-calc .rt-material-custom[hidden]{display:none}
+#screen-calc .rt-material-custom input{
+ display:block;width:100%;min-height:48px;margin-top:6px;
+ border-radius:11px;border:1px solid #8ccbe9;background:#092137;
+ color:#f5fcff;padding:10px 12px;font-size:16px;
+}
+#screen-calc .rt-material-choice p{
+ font-size:12px;line-height:1.45;margin:10px 1px 0;color:#c7dceb;
+}
+#screen-calc .rt-material-result{
+ border-top:1px solid #66869b;padding:11px 9px;margin-top:11px;
+ border-radius:9px;background:#163145;color:#f2e5ca;
+ font-size:12px;line-height:1.5;white-space:normal;
+}
+#screen-calc .rt-material-result[hidden]{display:none}
+@media(max-width:390px){
+ #screen-calc .rt-material-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
