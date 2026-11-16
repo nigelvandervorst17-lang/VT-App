@@ -31,6 +31,9 @@ const staticTargets = {
   rtCompactThicknessLabel:'ui.thickness', rtCompactNominal:'ui.nominal',
   rtCompactAdvancedLabel:'ui.advanced',
   rtRepairCache:'static.repair',
+  ndtCompanyLaunchTitle:'ui.companyMode',
+  ndtCompanyLaunchDesc:'ui.companyModeDesc',
+  ndtCompanyLaunchGo:'ui.companyModeOpen',
 };
 function applyStaticTranslations() {
   for (const [id, key] of Object.entries(staticTargets)) {

@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "1.0",
+  "title": "X-ray D4 — tien referentiepunten",
+  "status": "REFERENTIES_ONTBREKEN",
+  "caution": "Onderzoeksformulier, geen onafhankelijke kalibratie of RT-belichtingsinstructie. Geen D4-curves afleiden van D5/D7.",
+  "conditions": {
+    "material": "Fe",
+    "sfdMm": 800,
+    "ma": 5,
+    "film": "D4",
+    "density": 2
+  },
+  "equipment": {
+    "manufacturer": null,
+    "model": null,
+    "focalSpotMm": null,
+    "deviceFactorEvidenceId": null,
+    "deviceIdSecureReference": null
+  },
+  "filmProcessing": {
+    "filmManufacturer": null,
+    "filmProduct": "D4",
+    "batchLot": null,
+    "developer": null,
+    "developmentTimeMinSec": null,
+    "developmentTemperatureC": null,
+    "densitometerId": null,
+    "calibrationEvidenceId": null
+  },
+  "leadScreens": {
+    "frontType": null,
+    "frontThicknessMm": null,
+    "backType": null,
+    "backThicknessMm": null,
+    "sourceProcedureReference": null
+  },
+  "referenceProvenance": {
+    "source": null,
+    "publicationOrAppVersion": null,
+    "method": null,
+    "observedOn": null,
+    "observerReference": null,
+    "sourceRightsReview": null,
+    "approvedMeasurementProcedureId": null
+  },
+  "points": [
+    {
+      "nr": 1,
+      "steelThicknessMm": 2,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 2,
+      "steelThicknessMm": 4,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 3,
+      "steelThicknessMm": 6,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 4,
+      "steelThicknessMm": 8,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 5,
+      "steelThicknessMm": 10,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 6,
+      "steelThicknessMm": 12,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 7,
+      "steelThicknessMm": 15,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 8,
+      "steelThicknessMm": 20,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 9,
+      "steelThicknessMm": 25,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    },
+    {
+      "nr": 10,
+      "steelThicknessMm": 30,
+      "kv": "Referentie ontbreekt",
+      "referenceTime": "Referentie ontbreekt",
+      "measurementSeriesId": null,
+      "comments": null
+    }
+  ]
+}

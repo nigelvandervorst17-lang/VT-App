@@ -1,0 +1,18 @@
+{
+  "mainCommit": "ad06292c83bb4e24dcae2e88877b3d47b07856f8",
+  "purpose": "SHA-1 Git blob fingerprints at the existing NDT timer/i18n feature branch before company mode integration. Guard unchanged calculator code and UI during the company integration.",
+  "branch": "feature/rt-timer-i18n-ux-20261116",
+  "protectedFiles": {
+    "rt-core.mjs": "4b3135f6998d1c48f6b9c18614db71a2090ac441",
+    "rt-curves.mjs": "7438a25576539f79f89d562a70504ccf2cb42d7c",
+    "rt-curves.json": "9dc79927d8a1d7a1f98fd22797caae18d978bf64",
+    "xray-extra-curves.mjs": "8c7182e0f5e1b6ff88feee11a506c6afa012fce9",
+    "film-response.mjs": "53dbe7aa23317dc55d06862ad82a08006a1daaab",
+    "app.mjs": "25dbd93b3d1a595a32658aee1c4eecbc85c03f8d",
+    "basicRTProBridge.mjs": "f23ec7fa4b13a8443c24ccbc7a5816248f61b2ef",
+    "material-equivalence.mjs": "92478bfba3d150d500b874fabda65e7963ee3594",
+    "procedure-suite.html": "e27e53c71114dc64ef6b8a46bd3cbe49d9059468",
+    "procedure-runtime/engine/evaluateExposurePlan.js": "d851bf7ff0e2fc80ea377863f9ce6a7a7af01a9e",
+    "procedure-suite-source/src/engine/evaluateExposurePlan.ts": "71dd29e4d8f98bd47eb2e2b365963bdfb6d2b3b6"
+  }
+}

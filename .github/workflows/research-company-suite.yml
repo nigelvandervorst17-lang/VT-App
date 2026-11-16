@@ -1,0 +1,26 @@
+name: Research company-suite regressions
+on:
+  pull_request:
+    paths:
+      - 'research/**'
+      - '.github/workflows/research-company-suite.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gamma, X-ray, profiles, company-suite
+        run: |
+          node --test research/gamma-nine-point-review.test.mjs research/xray-core.test.mjs research/xray-tube-profiles.test.mjs research/company-suite/company-suite.test.mjs research/company-suite/workbench-50.test.mjs research/company-suite/workbench-interaction.test.mjs research/company-suite/admin-workflows.test.mjs research/company-suite/ui-integrity.test.mjs
+      - name: Install Procedure Suite build dependencies
+        run: npm install --prefix procedure-suite-source --no-audit --no-fund
+      - name: Existing procedure suite regressions
+        run: |
+          npm --prefix procedure-suite-source test

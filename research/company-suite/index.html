@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="nl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1628"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>NDT Radiography Pro — Bedrijfsmodus (test)</title>
+<link rel="stylesheet" href="./styles.css"><link rel="manifest" href="./manifest.webmanifest">
+</head><body>
+<main class="shell">
+<header class="top">
+ <a class="back-to-main" id="ndtReturnToMain" href="../../index.html">← Terug naar NDT Radiography Pro</a>
+ <div class="eyebrow">NDT RADIOGRAPHY PRO · ONDERZOEK</div>
+ <h1>Bedrijfsmodus <span class="muted">v0.1</span></h1>
+ <p id="stateLine" class="state-line" role="status">Supabase-testproject Basic NDT: openbaar clientprofiel vooraf ingesteld.</p>
+ <div class="trial-top" id="trialTop" role="status" aria-live="polite">
+  <strong id="trialCounterLabel">Gratis proefversie: nog 50 van 50 berekeningen</strong>
+  <div class="trial-track" aria-hidden="true"><span id="trialProgress" style="width:0%"></span></div>
+  <p class="help">Start meteen met Gamma, X-ray, Pijp/IQI of materialen — zonder account. Alleen geslaagde onderzoeksberekeningen tellen mee.</p>
+  <div class="actions"><button type="button" id="trialStartBtn">Start proefberekening</button><button type="button" id="trialLoginBtn" class="alt">Inloggen / Registreren</button></div>
+ </div>
+</header>
+<div class="navrow">
+ <button type="button" data-tab="account" aria-pressed="false">Account</button>
+ <button type="button" data-tab="field" aria-pressed="true">Rekenen</button>
+ <button type="button" data-tab="admin" aria-pressed="false" id="adminTab" hidden>Beheer</button>
+ <button type="button" data-tab="tools" aria-pressed="false" hidden>Controles</button>
+</div>
+<section id="tab-account" class="tab" hidden>
+ <article class="panel" id="connectionPanel">
+ <h2>1. Supabase-testproject</h2><p class="help">Basic NDT staat standaard ingesteld met een publieke projectsleutel. Je kunt de gegevens wijzigen voor een ander testproject. Geen geheime service_role-sleutels gebruiken.</p>
+ <form id="connectionForm"><label>Project-URL <input id="projectUrl" type="url" required autocomplete="url" placeholder="https://PROJECT.supabase.co"></label>
+ <label>Publishable/anon-sleutel <input id="projectKey" required type="text" autocomplete="off" placeholder="sb_publishable_..."></label>
+ <button type="submit">Testverbinding bewaren</button></form>
+ </article>
+ <article class="panel"><h2>2. Registreren of inloggen</h2>
+ <div class="selector" id="authIntent"><label class="choice"><input type="radio" name="authType" value="new" checked>Nieuw bedrijf (Hoofdgebruiker)</label><label class="choice"><input type="radio" name="authType" value="join">Aansluiten (Personeel)</label></div>
+ <form id="authForm">
+ <label>E-mailadres<input id="email" type="email" autocomplete="email" required placeholder="naam@bedrijf.nl"></label>
+ <label>Wachtwoord<input id="password" type="password" autocomplete="current-password" placeholder="Wachtwoord"></label>
+ <div class="actions"><button type="submit" id="signInBtn">Inloggen</button><button type="button" id="signUpBtn" class="alt">Registreren</button><button type="button" id="magicBtn" class="ghost">Magic Link</button></div>
+ </form>
+ <p class="help" id="authMessage">Na e-mailverificatie kun je een bedrijf aanmaken of een bedrijfstoegang aanvragen.</p>
+ <button id="signOutBtn" class="ghost" type="button" hidden>Uitloggen</button>
+ </article>
+ <article class="panel" id="companySetupPanel">
+ <h2>3. Bedrijfsregistratie / aansluiting</h2>
+ <form id="registerCompanyForm"><h3>Nieuw bedrijf registreren</h3>
+ <label>Bedrijfsnaam<input id="companyName" required placeholder="Bedrijfsnaam"></label>
+ <label>Jouw naam<input id="adminName" required placeholder="Naam Hoofdgebruiker"></label>
+ <button type="submit">Bedrijf registreren</button></form>
+ <hr>
+ <form id="joinCompanyForm"><h3>Aansluiten als radiograaf</h3>
+ <label>Bedrijfscode (persoonlijke uitnodiging)<input id="companyCode" autocomplete="off" required placeholder="32 tekens"></label>
+ <label>Jouw naam<input id="staffName" required placeholder="Naam radiograaf"></label>
+ <label>Certificaatcode (intern, optioneel)<input id="staffCertificate" placeholder="Bijv. CERT-..."></label>
+ <button type="submit">Toegang aanvragen</button>
+ <p class="help">Alleen de code kennen geeft geen toegang. De Hoofdgebruiker moet de aanvraag goedkeuren.</p></form>
+ </article>
+ <article class="panel" id="membershipPanel" hidden>
+ <h2>Mijn bedrijf</h2><div id="membershipSummary" class="readout">Nog geen goedgekeurd lidmaatschap.</div>
+ <label>Bedrijf voor deze sessie<select id="companySelect"></select></label>
+ <p id="joinCodeOutput" class="help"></p>
+ </article>
+ <article class="panel" id="offlinePanel">
+ <h2>Offline Bunker-modus</h2>
+ <p class="help">Gegevens worden versleuteld in IndexedDB per account en bedrijf. Gebruik een <strong>aparte</strong> offline wachtzin (minimaal 8 tekens). In een bunker kun je de laatste cache lezen en conceptlogs bewaren; pas bij opnieuw inloggen online worden die gesynchroniseerd.</p>
+ <form id="offlineForm"><label>Offline wachtzin<input type="password" id="offlinePassphrase" autocomplete="off" placeholder="Minimaal 8 tekens" required></label>
+ <div class="actions"><button type="submit">Cache openen / ontgrendelen</button><button type="button" id="syncBtn" class="alt">Synchroniseren</button></div></form>
+ <div class="help" id="cacheStatus">Nog geen offline cache ontgrendeld.</div>
+ <div class="grid"><label>Offline account-ID<input id="offlineUserId" placeholder="Na eerste online login ingevuld"></label>
+ <label>Offline bedrijfs-ID<input id="offlineCompanyId" placeholder="Na eerste online login ingevuld"></label></div>
+ <button type="button" id="offlineOpenBtn" class="ghost">Bestaande cache zonder internet openen</button>
+ </article>
+</section>
+<section id="tab-admin" class="tab" hidden>
+ <article class="panel"><h2>Hoofdgebruiker · Beheer</h2><p class="help">Beheeracties worden op de server met RLS gecontroleerd. Goedkeuren van een bedrijfsrecord betekent geen technische RT-/kalibratievrijgave.</p>
+ <div class="actions"><button type="button" id="loadRequestsBtn" class="alt">Toegangsaanvragen ophalen</button></div>
+ <div id="requestsList" class="list" aria-live="polite"></div>
+ <hr>
+ <h3>Bedrijfscode — alleen Hoofdgebruiker</h3>
+ <p class="help">De code mag alleen aan geautoriseerde medewerkers worden gedeeld. Personeel krijgt de code niet via de bedrijfsgegevens.</p>
+ <button type="button" id="showCompanyCodeBtn" class="alt">Mijn Bedrijfscode tonen</button>
+ <div id="adminCompanyCode" class="readout">Alleen zichtbaar na admincontrole via Supabase.</div>
+ <hr>
+ <h3>Actieve en geblokkeerde medewerkers</h3>
+ <button type="button" id="loadStaffBtn" class="alt">Medewerkers ophalen</button>
+ <div id="staffList" class="list" aria-live="polite"></div>
+ </article>
+ <article class="panel"><h2>Röntgenbuis beheren</h2>
+ <label>Bestaande buis wijzigen<select id="editTubeSelect"><option value="">Nieuwe buis</option></select></label>
+ <button type="button" id="newTubeBtn" class="ghost">Nieuwe buis / formulier leegmaken</button>
+ <p class="help">Bestaande records bewerken of administratief goedkeuren. Een goedgekeurd record is geen RT- of kalibratievrijgave.</p>
+ <form id="tubeForm"><div class="grid">
+ <label>Toestelnaam<input name="name" required placeholder="Bijv. Comet MXR-300HP"></label>
+ <label>Merk<input name="manufacturer" required placeholder="Comet"></label>
+ <label>Model<input name="model" required placeholder="MXR-300HP"></label>
+ <label>Serienummerreferentie<input name="serial_reference" placeholder="Dossier-ID, geen openbaar serienummer"></label>
+ <label>Generator<select name="generator_type"><option value="CONSTANT_POTENTIAL">Constant Potential</option><option value="HALF_WAVE">Half-wave</option></select></label>
+ <label>Type<select name="beam_type"><option value="RICHTSTRALER">Richtstraler</option><option value="RONDSTRALER">Rondstraler</option></select></label>
+ <label>Maximale kV<input name="max_kv" inputmode="decimal" required placeholder="Bijv. 300"></label>
+ <label>Maximale mA<input name="max_ma" inputmode="decimal" required placeholder="Bijv. 10"></label>
+ <label>Brandvlek d (mm)<input name="focal_spot_mm" inputmode="decimal" required placeholder="Bijv. 2"></label>
+ <label>Administratieve status<select name="approval_status"><option value="draft">Concept</option><option value="approved">Administratief goedgekeurd</option></select></label>
+ <label>Goedkeuringsreferentie<input name="approval_reference" placeholder="Verplicht bij goedkeuring"></label>
+ </div><button type="submit">Buis opslaan</button></form></article>
+ <article class="panel"><h2>Gammabron beheren</h2>
+ <label>Bestaande bron wijzigen<select id="editSourceSelect"><option value="">Nieuwe bron</option></select></label>
+ <button type="button" id="newSourceBtn" class="ghost">Nieuwe bron / formulier leegmaken</button>
+ <form id="sourceForm"><div class="grid">
+ <label>Bronnaam<input name="name" required placeholder="Bijv. Se-75 bron A"></label>
+ <label>Isotoop<select name="isotope"><option>Se-75</option><option>Ir-192</option></select></label>
+ <label>Activiteit (Ci) op referentiedatum<input name="activity_ci" inputmode="decimal" required placeholder="Bijv. 52"></label>
+ <label>Referentiedatum en -tijd<input name="activity_reference_at" type="datetime-local" required></label>
+ <label>Broncertificaat/dossier-ID<input name="source_reference" placeholder="Beveiligde referentie"></label>
+ <label>Status<select name="approval_status"><option value="draft">Concept</option><option value="approved">Administratief goedgekeurd</option></select></label>
+ <label>Goedkeuringsreferentie<input name="approval_reference" placeholder="Verplicht bij goedkeuring"></label>
+ </div><button type="submit">Bron opslaan</button></form></article>
+ <article class="panel"><h2>Procedure beheren</h2>
+ <label>Bestaande procedure wijzigen<select id="editProcedureSelect"><option value="">Nieuwe procedure</option></select></label>
+ <button type="button" id="newProcedureBtn" class="ghost">Nieuwe procedure / formulier leegmaken</button>
+ <form id="procedureForm"><div class="grid">
+ <label>Procedurenaam<input name="name" required placeholder="Bijv. PA lasinspectie"></label>
+ <label>Revisie<input name="revision" required placeholder="Rev. 2"></label>
+ <label>Procedurecode<input name="procedure_reference" placeholder="Interne referentie"></label>
+ <label>Status<select name="approval_status"><option value="draft">Concept</option><option value="approved">Administratief goedgekeurd</option></select></label>
+ <label>Goedkeuringsreferentie<input name="approval_reference" placeholder="Verplicht bij goedkeuring"></label>
+ </div><label>Beschrijving (geen vertrouwelijke klantinhoud in test)<textarea name="description" rows="3"></textarea></label>
+ <button type="submit">Procedure opslaan</button></form></article>
+</section>
+<section id="tab-field" class="tab">
+ <article class="panel" id="researchWorkbenchPanel">
+  <h2>Opnameplan · Gamma / X-ray / Pijp / IQI / Materialen</h2>
+  <p class="help">Onderzoekswaarden uit bestaande, begrensde datasets. Geen belichtingsinstructie, ijkcertificaat of formele IQI-vrijgave.</p>
+  <div class="module-buttons" id="workbenchButtons">
+   <button type="button" data-workbench="gamma" aria-pressed="true">☢ Gamma</button>
+   <button type="button" data-workbench="xray" aria-pressed="false">⚡ X-ray</button>
+   <button type="button" data-workbench="pipe" aria-pressed="false">◉ Pijp / film</button>
+   <button type="button" data-workbench="iqi" aria-pressed="false">▥ IQI</button>
+   <button type="button" data-workbench="material" aria-pressed="false">▣ Materialen</button>
+  </div>
+  <form id="researchWorkbenchForm" novalidate>
+   <div class="workbench-module" id="calc-gamma">
+    <h3>Gamma · Se-75 / Ir-192</h3>
+    <div class="grid">
+     <label>Isotoop<select id="gIsotope"><option>Se-75</option><option>Ir-192</option></select></label>
+     <label>Film<select id="gFilm"><option>D4</option><option>D5</option><option>D7</option></select></label>
+     <label>Staaldikte t (mm)<input id="gThickness" inputmode="decimal" placeholder="Bijv. 12"></label>
+     <label>SFD (mm)<input id="gSfd" inputmode="decimal" placeholder="Bijv. 800"></label>
+     <label>Activiteit (Ci)<input id="gActivity" inputmode="decimal" placeholder="Bijv. 40"></label>
+     <label>Zwarting D<input id="gDensity" inputmode="decimal" placeholder="Bijv. 2,0"></label>
+    </div>
+    <label class="checktile"><input type="checkbox" id="gResearchFactor">Toon voorgestelde D4/D5-factor bij D=2,5 (PR #6, niet gevalideerd)</label>
+   </div>
+   <div class="workbench-module" id="calc-xray" hidden>
+    <h3>X-ray · bestaande toestel-/kV-curve</h3>
+    <div class="grid">
+     <label>Toestelreferentie<select id="xModel"><option value="">Kies een passende bestaande onderzoeksreferentie</option></select></label>
+     <label>Ondersteunde film<select id="xFilm"><option value="">Kies eerst het toestel</option></select></label>
+     <label>kV (exacte curve)<select id="xKv"><option value="">Kies eerst het toestel</option></select></label>
+     <label>Staal t (mm)<input id="xThickness" inputmode="decimal" placeholder="Bijv. 20"></label>
+     <label>mA<input id="xMa" inputmode="decimal" placeholder="Bijv. 5"></label>
+     <label>SFD (mm)<input id="xSfd" inputmode="decimal" placeholder="Bijv. 800"></label>
+     <label>Zwarting D<input id="xDensity" inputmode="decimal" placeholder="Bijv. 2,5"></label>
+    </div>
+    <p class="help">D4-X-ray is nog niet onderbouwd. Een CP-buis zonder passende fabrikant-/toestelcurve blijft geblokkeerd.</p>
+    <a class="action secondary" href="../mijn-rontgenbuizen.html">Open Mijn Röntgenbuizen (onderzoek)</a>
+   </div>
+   <div class="workbench-module" id="calc-pipe" hidden>
+    <h3>Pijp · filmdekking</h3><div class="grid">
+     <label>Pijpdiameter (mm)<input id="pipeDiameter" inputmode="decimal" placeholder="Bijv. 168,3"></label>
+     <label>Wanddikte (mm)<input id="pipeThickness" inputmode="decimal" placeholder="Bijv. 8"></label>
+     <label>Bruikbare filmlengte (mm)<input id="pipeFilmLength" inputmode="decimal" placeholder="Bijv. 300"></label>
+     <label>Minimale filmoverlap (mm)<input id="pipeOverlap" inputmode="decimal" placeholder="Bijv. 25"></label>
+     <label>Klasse<select id="pipeClass"><option value="A">A</option><option value="B">B</option></select></label>
+     <label>Brandvlek d (mm, optioneel)<input id="pipeSpot" inputmode="decimal" placeholder="Bijv. 2"></label>
+     <label>Object-film-afstand b (mm, optioneel)<input id="pipeB" inputmode="decimal" placeholder="Bijv. 8"></label>
+     <label>SFD (mm, optioneel)<input id="pipeSfd" inputmode="decimal" placeholder="Bijv. 800"></label>
+    </div>
+    <label class="checktile"><input id="pipePlanar" type="checkbox">Vlakke defecten relevant voor de geometrische controle</label>
+    <p class="help">Filmsegmenten worden geometrisch bepaald. Minimaal aantal opnamen blijft onbekend zonder goedgekeurde procedure/regel.</p>
+   </div>
+   <div class="workbench-module" id="calc-iqi" hidden>
+    <h3>IQI · ISO-draadnummerhulp</h3><div class="grid">
+     <label>Klasse<select id="qClass"><option value="A">A</option><option value="B">B</option></select></label>
+     <label>Techniek<select id="qTechnique"><option value="sw">Enkelwandig</option><option value="dwsi">Dubbelwandig SWSI</option><option value="dwdi">Dubbelwandig DWDI</option></select></label>
+     <label>IQI-positie<select id="qSide"><option value="source">Bronzijde</option><option value="film">Filmzijde</option></select></label>
+     <label>Nominale staal t (mm)<input id="qThickness" inputmode="decimal" placeholder="Bijv. 12"></label>
+     <label>Doorstraald w (mm, dubbelwandig)<input id="qPenetrated" inputmode="decimal" placeholder="Bijv. 24"></label>
+     <label>Bron<select id="qIsotope"><option>Se-75</option><option>Ir-192</option><option>X-ray</option></select></label>
+     <label>Waargenomen fijnste draad<select id="qObserved"><option value="">Nog niet beoordeeld</option></select></label>
+    </div><p class="help">Alleen normatieve tabelhulp; niet een beoordeling van de echte opname of procedurevrijgave.</p>
+   </div>
+   <div class="workbench-module" id="calc-material" hidden>
+    <h3>Materiaalfactoren · onderzoeksvergelijking</h3>
+    <div class="tiles" id="workbenchMaterials">
+     <button type="button" data-field-material="Fe" aria-pressed="true">Staal <small>1,00</small></button>
+     <button type="button" data-field-material="RVS" aria-pressed="false">RVS <small>1,02 / 1,08</small></button>
+     <button type="button" data-field-material="Al" aria-pressed="false">Aluminium <small>0,35 / 0,30</small></button>
+     <button type="button" data-field-material="Cu" aria-pressed="false">Koper <small>1,12 / 1,50</small></button>
+     <button type="button" data-field-material="Ti" aria-pressed="false">Titanium <small>0,58 / 0,75</small></button>
+    </div><div class="grid"><label>Onderzoeksmodus<select id="wmMode"><option value="gamma">Gamma</option><option value="xray">X-ray</option></select></label>
+    <label>Dikte t (mm)<input id="wmThickness" inputmode="decimal" placeholder="Bijv. 10"></label></div>
+   </div>
+   <button type="submit" class="compute-primary" id="workbenchCompute">Bereken · proefmodus</button>
+  </form>
+  <div id="workbenchResult" class="readout" role="status" aria-live="polite">Kies een rekenmodule en vul de onderzoeksgegevens in.</div>
+  <div id="trialGate" class="trial-gate" hidden>
+   <h3>50 proefberekeningen gebruikt</h3>
+   <p>De gratis proefversie op deze browser is afgelopen. Meld je aan of registreer je bedrijf om de onderzoekspagina verder te gebruiken.</p>
+   <button type="button" id="trialGateLoginBtn">Naar inloggen / registreren</button>
+  </div>
+ </article>
+ <article class="panel"><h2>Bedrijfsopnameplan · Veldscherm</h2><p id="fieldStatus" class="hint">Meld je aan en ontgrendel je bedrijfscache.</p>
+ <div class="grid">
+ <label>Vrijgegeven buis<select id="fieldTube"><option value="">Geen buis gekozen</option></select></label>
+ <label>Vrijgegeven gammabron<select id="fieldSource"><option value="">Geen bron gekozen</option></select></label>
+ <label>Vrijgegeven procedure<select id="fieldProcedure"><option value="">Geen procedure gekozen</option></select></label>
+ </div><div id="sourceDecay" class="readout">Bronverval is een informatieve berekening, geen certificaatvalidatie.</div>
+ <p class="help">Bedrijfsgegevens zijn maximaal zo actueel als de laatste synchronisatie. Offline wijzigingen aan goedkeuringen of lidmaatschap zijn niet onmiddellijk zichtbaar.</p>
+ </article>
+ <article class="panel"><h2>Mijn opnamelogboek · concept</h2>
+ <form id="logForm"><label>Opname-/werkreferentie<input id="workRef" required placeholder="Interne werkreferentie"></label>
+ <label>Werknotitie<textarea id="workNote" rows="3" placeholder="Geen persoonsgegevens of echte bronbedieningsinstructies in deze test"></textarea></label>
+ <button type="submit">Concept lokaal opslaan</button></form>
+ <div id="logStatus" class="readout">Nog geen conceptlog opgeslagen.</div>
+ <hr>
+ <h3>Gedeeld bedrijfslogboek</h3>
+ <p class="help">De Hoofdgebruiker kan het bedrijfslogboek zien. Personeel ziet alleen zijn eigen opnames. Alle toegang wordt opnieuw door Supabase RLS gecontroleerd.</p>
+ <button type="button" id="loadLogsBtn" class="alt">Opnamelogboek ophalen</button>
+ <div id="logsList" class="list" aria-live="polite"></div>
+ </article>
+ <article class="panel"><h2>Bestaande Procedure Suite</h2>
+ <p>De bestaande procedure-uitlezer en opnamemodule zijn ongewijzigd. Deze onderzoeksversie levert de lijst met bedrijfsgegevens; automatische overdracht naar de oorspronkelijke belichtingsmotor is nog niet vrijgegeven.</p>
+ <div class="actions"><a class="action" href="../../procedure-suite.html">Procedure Suite bekijken</a></div>
+ </article>
+</section>
+<section id="tab-tools" class="tab" hidden>
+ <article class="panel"><h2>Materiaalonderzoek (geen motorinput)</h2>
+ <p class="help">Voorgestelde factoren worden hier uitsluitend als rekenproef getoond. Ze zijn niet gevalideerd voor energie, materiaalsamenstelling, film of belichtingsmotor.</p>
+ <div class="tiles" id="materials">
+  <button type="button" data-material="Fe" aria-pressed="true">Staal <small>1,00</small></button>
+  <button type="button" data-material="RVS" aria-pressed="false">RVS <small>1,02 / 1,08</small></button>
+  <button type="button" data-material="Al" aria-pressed="false">Aluminium <small>0,35 / 0,30</small></button>
+  <button type="button" data-material="Cu" aria-pressed="false">Koper <small>1,12 / 1,50</small></button>
+  <button type="button" data-material="Ti" aria-pressed="false">Titanium <small>0,58 / 0,75</small></button>
+ </div>
+ <div class="grid"><label>Type referentie<select id="materialMode"><option value="gamma">Gamma</option><option value="xray">X-ray</option></select></label>
+ <label>Wanddikte t (mm)<input id="materialThickness" inputmode="decimal" placeholder="Bijv. 10"></label></div>
+ <button type="button" id="materialCalcBtn">Toon hypothetische staalequivalentie</button>
+ <div id="materialOutput" class="readout">Alleen materiaalonderzoek.</div>
+ </article>
+ <article class="panel"><h2>Geometrie · ISO 17636-1-onderzoek</h2>
+ <p class="help">Rekenkundige f_min volgens gevraagde klassen A/B, inclusief b/t-regel en vlakke defecten. Normversie en werkelijke toepasselijkheid blijven te controleren; geen automatische RT-vrijgave.</p>
+ <div class="grid">
+ <label>Opnameklasse<select id="isoClass"><option value="A">Klasse A</option><option value="B">Klasse B</option></select></label>
+ <label>Brandvlek d (mm)<input id="isoSpot" inputmode="decimal" placeholder="Bijv. 2"></label>
+ <label>Object-film-afstand b (mm)<input id="isoB" inputmode="decimal" placeholder="Bijv. 10"></label>
+ <label>Nominale wanddikte t (mm)<input id="isoT" inputmode="decimal" placeholder="Bijv. 10"></label>
+ <label>SFD (mm)<input id="isoSfd" inputmode="decimal" placeholder="Bijv. 800"></label>
+ </div>
+ <label class="checktile"><input id="isoPlanar" type="checkbox">Vlakke defecten relevant (Klasse A toetst B-geometrie)</label>
+ <button type="button" id="isoCalcBtn">Toon f_min (onderzoekscontrole)</button>
+ <div id="isoOutput" class="readout">Geen geometriecontrole uitgevoerd.</div>
+ </article>
+ <article class="panel"><h2>Onderzoeksmodules</h2><div class="actions">
+ <a class="action secondary" href="../mijn-rontgenbuizen.html">Mijn Röntgenbuizen · PR #7</a>
+ <a class="action secondary" href="../gamma-nine-point-review.mjs">Gamma negenpuntscontrole · PR #6</a>
+ <a class="action secondary" href="../kalibratie-onderbouwing.md">Kalibratie-onderbouwing</a></div>
+ <p class="help">De 1-/2-puntsfactor uit PR #7 en D4/D5-zwartingsfactoren uit PR #6 zijn niet toegepast op de live-rekenmotor.</p>
+ </article>
+</section>
+<footer class="footer">ONDERZOEKSVERSIE · Niet gevalideerd voor industriële RT-opnamen · Geen kalibratievrijgave · Offline data kunnen verouderd zijn.</footer>
+</main>
+<script type="module" src="./company-app.mjs"></script>
+</body></html>
