@@ -5,7 +5,8 @@ import {createHash} from 'node:crypto';
 import {
  PROPOSED_MATERIAL_FACTORS,compareMaterialEquivalence,compareGammaDensityD25
 } from './live-material-preview.mjs';
-import {calculateXray} from '../rt-core.mjs';
+import {calculateXray,calculateGamma} from '../rt-core.mjs';
+import {materialSteelEquivalent} from '../material-equivalence.mjs';
 import {curves} from '../rt-curves.mjs';
 
 const at=path=>readFileSync(new URL(path,import.meta.url),'utf8');
@@ -98,18 +99,52 @@ test('Unavailable Andrex D4 x-ray remains blocked rather than inventing curve',(
  },curves);
  assert.equal(result.ok,false);
 });
-test('Original physical calculation modules retain exact main baseline Git hashes',()=>{
+test('Reference curve datasets and film response remain unchanged',()=>{
  const baseline={
-  'rt-core.mjs':'092fdee99b7910a9427a0cc3031b7d887ccf6fde',
   'rt-curves.mjs':'7438a25576539f79f89d562a70504ccf2cb42d7c',
-  'material-equivalence.mjs':'1878c07b9eb967e49c587df39af2a3294d1e6757',
   'film-response.mjs':'53dbe7aa23317dc55d06862ad82a08006a1daaab'
  };
  for(const [file,sha] of Object.entries(baseline)){
   const b=readFileSync(new URL('../'+file,import.meta.url));
-  const real=createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).update(b).digest('hex');
-  assert.equal(real,sha,file);
+  const actual=createHash('sha1').update(Buffer.from('blob '+b.length+'\\0')).update(b).digest('hex');
+  assert.equal(actual,sha,file);
  }
+});
+test('Material tile ratios automatically drive equivalent thickness in research engine',()=>{
+ for(const mode of ['gamma','xray']){
+  for(const [mat,config] of Object.entries(PROPOSED_MATERIAL_FACTORS)){
+   const result=materialSteelEquivalent({material:mat,thicknessMm:20,mode});
+   assert.equal(result.ok,true,mat+'/'+mode);
+   assert.equal(result.steelEquivalentMm,20*config[mode]);
+   if(mat!=='Fe'){
+    assert.equal(result.researchOnly,true);
+    assert.equal(result.validatedForExposure,false);
+   }
+  }
+ }
+});
+test('Copper selection uses steel equivalent while keeping research warning',()=>{
+ const copper=calculateGamma({isotope:'Se-75',film:'D4',density:2,
+  thicknessMm:25,distanceMm:500,activityCi:36,material:'Cu'},curves);
+ const steel=calculateGamma({isotope:'Se-75',film:'D4',density:2,
+  thicknessMm:28,distanceMm:500,activityCi:36,material:'Fe'},curves);
+ assert.equal(copper.ok,true);
+ assert.equal(steel.ok,true);
+ assert.equal(copper.minutes,steel.minutes);
+ assert.equal(copper.materialFactor,1.12);
+ assert.equal(copper.equivalentSteelMm,28);
+ assert.equal(copper.materialFactorApproximate,true);
+ assert.match(copper.status,/material_factor_research_unverified/);
+});
+test('Custom factor is used only when valid and within curve input range',()=>{
+ const custom=materialSteelEquivalent({material:'Other',thicknessMm:10,
+  mode:'gamma',customFactor:0.85});
+ assert.equal(custom.ok,true);
+ assert.equal(custom.steelEquivalentMm,8.5);
+ for(const v of [0,-1,NaN,11]){
+  assert.equal(materialSteelEquivalent({material:'Other',thicknessMm:10,mode:'gamma',customFactor:v}).ok,false);
+ }
+ assert.equal(materialSteelEquivalent({material:'Cu',thicknessMm:95,mode:'xray'}).ok,false);
 });
 test('Main UI uses a separate preview and does not replace original result time',()=>{
  const ui=at('../rt-material-ui.mjs');
@@ -117,7 +152,7 @@ test('Main UI uses a separate preview and does not replace original result time'
  assert.ok(ui.includes('rtMaterialResult'));
  assert.ok(ui.includes('rtMaterialCustomFactor'));
  assert.equal(ui.includes("resultTime').textContent="),false);
- assert.ok(ui.includes('NIET TOEGEPAST'));
+ assert.ok(ui.includes('Automatisch meegenomen'));
  const sw=at('../sw.js');
  assert.ok(sw.includes("'./rt-material-ui.mjs'"));
  assert.ok(sw.includes("'./research/live-material-preview.mjs'"));
