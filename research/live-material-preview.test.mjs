@@ -106,7 +106,7 @@ test('Reference curve datasets and film response remain unchanged',()=>{
  };
  for(const [file,sha] of Object.entries(baseline)){
   const b=readFileSync(new URL('../'+file,import.meta.url));
-  const actual=createHash('sha1').update(Buffer.from('blob '+b.length+'\\0')).update(b).digest('hex');
+  const actual=createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).update(b).digest('hex');
   assert.equal(actual,sha,file);
  }
 });
