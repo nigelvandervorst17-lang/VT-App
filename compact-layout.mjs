@@ -28,7 +28,8 @@ const translations = {
       locked:'Tryb certyfikatu: zmień aktywność w ustawieniach zaawansowanych.',noRuntime:'Brak zatwierdzonego czasu ekspozycji. Sprawdź geometrię i dane źródła.',xray:'Wprowadź dane: wynik badawczej kalkulacji znajdziesz poniżej; zweryfikuj warunki.',
       summary:'Ustawienia dodatkowe · geometria, IQI i przygotowanie',details:'Ograniczenia wersji badawczej',title:'Szybkie obliczenie badawcze',film:'Typ błony',distance:'Odległość źródło/błona (mm)',density:'Docelowa gęstość (D)',plate:'Blacha / Spoina',pipe:'Rura',outside:'Średnica zewnętrzna Ø (mm)',wall:'Zmierzona grubość ścianki t (mm)',nominal:'Nominalnie 2 × t',pipeCaution:'2 × t to przybliżenie, nie kalibracja. Zweryfikuj rzeczywistą drogę wiązki, IQI i zatwierdzoną technikę.',pipeInvalid:'Nieprawidłowa geometria rury: sprawdź Ø, t i w. Brak wiarygodnego oszacowania.',pipeNote:'Nominalnie dwie ścianki',pipeW:'Wybrana grubość prześwietlana w'}
 };
-const lang=()=>['nl','en','pl'].includes($('language')?.value)?$('language').value:'nl';
+translations.de={...translations.en,activity:'Aktivität (Ci)',current:'Strom (mA)',thickness:'Wanddicke t (mm)',penetrated:'Durchstrahlte Dicke w (mm)',locked:'Zertifikatsmodus aktiv: Aktivität in den erweiterten Einstellungen ändern.',noRuntime:'Keine freigegebene Belichtungszeit. Geometrie und Quelldaten prüfen.',xray:'Forschungsberechnung unten; Kurvenbedingungen prüfen.',summary:'Erweiterte Einstellungen · Geometrie, IQI und Vorbereitung',details:'Grenzen der Forschungsberechnung',title:'Schnelle Forschungsberechnung',film:'Filmtyp',distance:'Strahler-/Fokus-Film-Abstand (mm)',density:'Zielschwärzung (D)',plate:'Blech / Schweißnaht',pipe:'Rohr',outside:'Außendurchmesser Ø (mm)',wall:'Gemessene Wanddicke t (mm)',nominal:'Nominell 2 × t',pipeCaution:'2 × t ist eine Näherung, keine Kalibrierung. Tatsächlichen Strahlengang, IQI und genehmigte Technik prüfen.',pipeInvalid:'Ungültige Rohrgeometrie. Ø, t und w überprüfen.',pipeNote:'Nominelle Doppelwand',pipeW:'Gewählte durchstrahlte Dicke w'};
+const lang=()=>['nl','en','de'].includes($('language')?.value)?$('language').value:'nl';
 const tr=k=>translations[lang()]?.[k]||translations.nl[k]||k;
 const gamma=()=>$('modeGamma')?.getAttribute('aria-pressed')==='true';
 const isPipe=()=>$('workPipe')?.getAttribute('aria-pressed')==='true';
@@ -82,7 +83,7 @@ function sync(){
     const note=$('rtCompactModeNote');
     if(note){
       const xrayName=$('xrayModel')?.selectedOptions?.[0]?.textContent?.trim()||'—';
-      const suffix=lang()==='nl'?'Gebruikte toestelcurve: ':lang()==='pl'?'Krzywa urządzenia: ':'Selected device curve: ';
+      const suffix=lang()==='nl'?'Gebruikte toestelcurve: ':lang()==='de'?'Gerätekurve: ':'Selected device curve: ';
       note.textContent=disabled?tr('locked'):g?tr('noRuntime'):(tr('xray')+' '+suffix+xrayName+
         '. Geen modelonafhankelijke of vrijgegeven RT-belichtingstijd.');
     }
@@ -106,7 +107,7 @@ function renderPipeInfo(pipe){
   const valid=Number.isFinite(od)&&Number.isFinite(t)&&Number.isFinite(w)&&od>0&&t>0&&t<=100&&t<od/2&&w>0;
   output.classList.toggle('rt-compact-invalid',!valid);
   if(!valid){output.textContent=tr('pipeInvalid');return;}
-  const fmt=n=>n.toLocaleString(lang()==='pl'?'pl-PL':lang()==='en'?'en-GB':'nl-NL',{maximumFractionDigits:3});
+  const fmt=n=>n.toLocaleString(lang()==='de'?'de-DE':lang()==='en'?'en-GB':'nl-NL',{maximumFractionDigits:3});
   output.textContent=tr('pipeNote')+' 2 × t = '+fmt(2*t)+' mm · '+tr('pipeW')+' = '+fmt(w)+' mm.';
 }
 function selectShape(which){
