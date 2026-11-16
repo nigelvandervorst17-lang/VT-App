@@ -46,7 +46,8 @@ test('Android 192px and 512px manifest icons have matching user-logo files',()=>
 });
 test('Service worker has a new cache revision and all the four icon/banner assets',()=>{
  const sw=t('sw.js');
- assert.match(sw,/ndt-radiography-pro-material-research-20261116-v2/);
+ assert.match(sw,/ndt-radiography-pro-company-suite-20261116-v1/);
+ assert.match(sw,/research\/company-suite\/index\.html/);
  for(const name of ['ndt-square-192.webp','ndt-square-512.webp',
   'ndt-banner-512.webp','ndt-apple-touch-180.png'])assert.ok(sw.includes(name));
  assert.match(sw,/Promise\.allSettled\(ASSETS/);
@@ -70,7 +71,8 @@ test('The six unverified Waygate points do not become executable X-ray curves',(
 });
 test('Material factor research integration preserves D2.5 comparison and warnings',()=>{
  const ui=t('rt-material-ui.mjs');
- assert.match(ui,/Automatisch meegenomen/);
+ assert.match(ui,/phrase\('ui\.materialComparison'/);
+ assert.match(ui,/rt-locales-ready/);
  assert.match(t('rt-core.mjs'),/material_factor_research_unverified/);
  assert.match(t('material-equivalence.mjs'),/validatedForExposure:false/);
  assert.match(ui,/compareGammaDensityD25/);
