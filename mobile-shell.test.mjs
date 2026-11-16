@@ -59,7 +59,7 @@ test('offline encrypted storage is not reimplemented or bypassed in the main UI'
  assert.match(cache,/AES-GCM/);
  assert.match(cache,/250000/);
  assert.match(ui,/indexedDB\.deleteDatabase/);
- assert.match(ui,/Offline Bunker-modus/);
+ assert.match(html,/Offline Bunker-modus/);
  assert.doesNotMatch(ui,/sessionStorage\.setItem\([^,]+,[^)]*passphrase/);
  assert.doesNotMatch(ui,/localStorage\.setItem\([^,]+,[^)]*passphrase/);
 });
