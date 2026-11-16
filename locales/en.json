@@ -45,7 +45,8 @@
     "materialInvalidFactor": "Enter a positive research factor. No calculation is possible without a valid factor.",
     "materialInvalidThickness": "Enter a valid thickness within the supported curve range.",
     "materialComparison": "{{material}} · {{mode}} · factor {{factor}} · {{thickness}} mm → {{fe_eq}} mm Fe equivalent. Research comparison only; no RT approval.",
-    "steelComparison": "Research comparison for target density 2.5: {{time}} (factor {{factor}}, {{film}}). Not a validated exposure time."
+    "steelComparison": "Research comparison for target density 2.5: {{time}} (factor {{factor}}, {{film}}). Not a validated exposure time.",
+    "researchHelp": "Software research estimate, not a validated RT exposure time or approval. Verify geometry, source data, film conditions, IQI and the approved procedure. This screen does not control radiation equipment."
   },
   "materials": {
     "Fe": "Steel",
