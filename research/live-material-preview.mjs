@@ -1,3 +1,5 @@
+import {PROPOSED_MATERIAL_FACTORS} from './material-factor-data.mjs';
+export {PROPOSED_MATERIAL_FACTORS};
 /**
  * Visual-only research comparisons for the main NDT calculator.
  * No changes to rt-core, rt-curves or approved real-world exposure outputs.
@@ -6,13 +8,6 @@
 import {calculateGamma,hms} from '../rt-core.mjs';
 import {curves} from '../rt-curves.mjs';
 
-export const PROPOSED_MATERIAL_FACTORS=Object.freeze({
- Fe:Object.freeze({name:'Staal',gamma:1,xray:1}),
- RVS300:Object.freeze({name:'RVS',gamma:1.02,xray:1.08}),
- Al:Object.freeze({name:'Aluminium',gamma:0.35,xray:0.30}),
- Cu:Object.freeze({name:'Koper',gamma:1.12,xray:1.50}),
- Ti:Object.freeze({name:'Titanium',gamma:0.58,xray:0.75})
-});
 export const D25_RESEARCH_FACTORS=Object.freeze({D4:1.4278,D5:1.3085});
 export const NOT_APPROVED='NIET GEVALIDEERD — alleen onderzoeksvergelijking, geen RT-belichtingsinstructie';
 
