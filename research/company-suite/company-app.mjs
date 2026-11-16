@@ -111,7 +111,8 @@ $('signOutBtn').addEventListener('click',async()=>{
  state.cache?.close();state.cache=null;state.user=null;state.member=null;
  state.memberships=[];state.snapshot=null;state.companyCode=null;
  output('adminCompanyCode','Uitgelogd — opnieuw aanmelden om de Bedrijfscode te zien.');
- state.mode='signed-out';
+ sessionStorage.removeItem('ndt-offline-workspace-v1');
+  state.mode='signed-out';
  updateRole();workbenchUI.refresh();setTab('account');notice('Uitgelogd. Offline cache blijft versleuteld op dit toestel.');
 });
 async function loadMemberships(){
@@ -430,8 +431,14 @@ function transferAsset(kind,id) {
  if(!record||!state.member||(!state.cache&&!atOnline()))return;
  if(!atOnline()&&state.mode!=='offline')return;
  // Transient same-tab transfer; do not persist company records or passphrases in localStorage.
+ const portable=kind==='source'?{
+  isotope:record.isotope,name:record.name,
+  // Offline source activity remains encrypted; require a fresh manual/certificate check.
+  activity_ci:state.mode==='offline'?null:record.activity_ci,
+  activity_reference_at:state.mode==='offline'?null:record.activity_reference_at
+ }:{name:record.name,manufacturer:record.manufacturer,model:record.model};
  sessionStorage.setItem('ndt-main-asset-selection-v1',JSON.stringify({
-  type:kind,row:record,offline:state.mode==='offline'
+  type:kind,row:portable,offline:state.mode==='offline'
  }));
  location.assign('../../index.html');
 }
