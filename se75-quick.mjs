@@ -5,6 +5,18 @@
  */
 import {calculateGamma, parseDecimal, hms} from './rt-core.mjs';
 import {curves} from './rt-curves.mjs';
+import {SESSION_KEY} from './research/company-suite/supabase-rest.mjs';
+import {trialCounter} from './research/company-suite/trial-50.mjs';
+const TRIAL_CHOICE='ndt-ui-trial-choice-v1';
+const OFFLINE_WORKSPACE='ndt-offline-workspace-v1';
+const tryGet=(storage,key)=>{try{return storage?.getItem(key)||null;}catch{return null;}};
+export function quickResearchAccess({local=globalThis.localStorage,session=globalThis.sessionStorage}={}){
+ const hasSession=Boolean(tryGet(local,SESSION_KEY)||tryGet(session,SESSION_KEY));
+ const offlineUnlocked=tryGet(session,OFFLINE_WORKSPACE)==='unlocked';
+ const trialSelected=tryGet(local,TRIAL_CHOICE)==='trial';
+ return {allowed:hasSession||offlineUnlocked||trialSelected,trial:trialSelected&&!hasSession&&!offlineUnlocked};
+}
+
 
 export const SE75_FILMS = Object.freeze(['D4','D5','D7']);
 
@@ -44,6 +56,13 @@ export function se75ErrorMessage(result) {
 function init() {
   const form = document.getElementById('se75Form');
   if (!form) return;
+  const access=quickResearchAccess();
+  // Research access is a UI flow. No source/company authorization is inferred.
+  if(!access.allowed){
+    location.replace('./index.html');
+    return;
+  }
+  const trial=trialCounter();
   const status = document.getElementById('resultStatus');
   const time = document.getElementById('resultTime');
   const message = document.getElementById('resultMessage');
@@ -61,6 +80,18 @@ function init() {
   form.addEventListener('change', showIdle);
   form.addEventListener('submit', event => {
     event.preventDefault();
+    // The same device-local guest quota applies to this independent research screen.
+    if(access.trial){
+      const available=trial.status();
+      if(!available.ok||available.remaining<=0){
+        resultBox.dataset.state='blocked';
+        status.textContent='PROEFVERSIE AFGELOPEN';
+        time.textContent='—';
+        message.textContent='De 50 gratis onderzoeksberekeningen zijn gebruikt. Meld je aan via het hoofdscherm.';
+        source.hidden=true;
+        return;
+      }
+    }
     const controls = ['thickness','film','density','activity','distance'];
     for(const id of controls) document.getElementById(id).removeAttribute('aria-invalid');
     const values = {
@@ -71,6 +102,17 @@ function init() {
       distanceMm: document.getElementById('distance').value
     };
     const result = calculateSe75Research(values);
+    if(access.trial&&result.ok){
+      const count=trial.consume();
+      if(!count.allowed){
+        resultBox.dataset.state='blocked';
+        status.textContent='PROEFVERSIE AFGELOPEN';
+        time.textContent='—';
+        message.textContent='De proeflimiet is bereikt. Meld je aan via de hoofdapp.';
+        source.hidden=true;
+        return;
+      }
+    }
     resultBox.dataset.state=result.ok?'research':'blocked';
     status.textContent=result.ok?'ONDERZOEKSUITKOMST · GEEN VRIJGAVE':'BEREKENING GEBLOKKEERD';
     time.textContent=result.ok?hms(result.minutes):'—';
