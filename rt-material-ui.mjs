@@ -106,13 +106,13 @@ function init(){
  const selector=$('material'),panel=$('rtMaterialChoices'),result=$('rtMaterialResult');
  if(!selector||!panel||!result)return;
  selectedMaterial=allowed.has(selector.value)?selector.value:
-  selector.value==='Other'?'custom':'Fe';
+  selector.value==='Other'?'custom':'unsupported';
  for(const b of buttons())b.addEventListener('click',()=>choose(b.dataset.rtMaterial));
  $('rtMaterialCustomFactor')?.addEventListener('input',render);
  // Extended settings and source-mode selection update the visual hypothesis.
  selector.addEventListener('change',()=>{
   selectedMaterial=allowed.has(selector.value)?selector.value:
-   selector.value==='Other'?'custom':'Fe';
+   selector.value==='Other'?'custom':'unsupported';
   render();
  });
  for(const id of ['thickness','workWall','workPenetrated','rtCompactThickness',
