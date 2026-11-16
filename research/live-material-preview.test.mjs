@@ -152,7 +152,8 @@ test('Main UI uses a separate preview and does not replace original result time'
  assert.ok(ui.includes('rtMaterialResult'));
  assert.ok(ui.includes('rtMaterialCustomFactor'));
  assert.equal(ui.includes("resultTime').textContent="),false);
- assert.ok(ui.includes('Automatisch meegenomen'));
+ assert.ok(ui.includes("phrase('ui.materialComparison'"));
+ assert.ok(ui.includes('Intl.NumberFormat'));
  const sw=at('../sw.js');
  assert.ok(sw.includes("'./rt-material-ui.mjs'"));
  assert.ok(sw.includes("'./research/live-material-preview.mjs'"));
