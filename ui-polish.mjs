@@ -16,7 +16,10 @@ const toolCategories={
  en:['Exposure & geometry','Sources & administration','Physics & conversions','Radiation safety · preparation'],
  pl:['Ekspozycja i geometria','Źródła i administracja','Fizyka i przeliczenia','Ochrona radiologiczna · przygotowanie']
 };
-let lang=()=>['nl','en','pl'].includes($('language')?.value)?$('language').value:'nl';
+labels.de={...labels.en,toolsNav:'Werkzeuge',pickDevice:'Quelle oder Gerät wählen',chooseFilm:'Film',chooseKv:'Spannung (kV)',tapCurve:'Auf die Kurve tippen, um Dicke und Belichtungswert abzulesen.',interactiveCurves:'Interaktive Belichtungskurven',curvesIntro:'Se-75, Ir-192 und Gerätekurven. Nur Softwarevergleich; keine RT-Freigabe.',openCurveAtlas:'Interaktiven Kurvenatlas öffnen',openPdfAtlas:'Kurvenatlas als PDF öffnen',workPrep:'ARBEITSVORBEREITUNG',workCheck:'RT-Einstellungen prüfen',doubleWallApply:'2 × t als Schätzung verwenden',doubleWallCaution:'Den tatsächlichen Strahlengang und Winkel überprüfen.',moreInfo:'ⓘ Zusätzliche Informationen',pipeMore:'Rohrmaße',sourceCert:'Zertifikatsdaten'};
+toolTitles.de=['🎯 Aufnahmetechnik 6A / 6B (ISO)','📚 IQI- und Aufnahmetabellen','📐 Geometrische Unschärfe und minimale FFD','🎞️ Filmpositionen / IQI / Technik','🔁 Belichtung für Abstand oder Aktivität umrechnen','🧪 Schwärzungskorrektur mit zwei Messwerten','🔎 Se-75-Referenzkurvenvergleich','☢️ Quellenzerfall und Aktivität zum Datum','📅 Quellenwechselplanung','🗂️ Lokales Quellenverzeichnis','📋 Aufnahmeregister','📝 Manuelle Dosisnotizen','🔄 Aktivität, Dosis und Länge umrechnen','📉 Halbwertsschicht (Idealmodell)','📏 Abstandsgesetz (Dosisleistung)','🔬 Räumliche Auflösung / Duplexdraht','🚧 Sicherheitscheck für festen Bereich','🚧 Sicherheitscheck für mobilen Bereich'];
+toolCategories.de=['Belichtung und Geometrie','Quellen und Verwaltung','Physik und Umrechnungen','Strahlenschutz · Vorbereitung'];
+let lang=()=>['nl','en','de'].includes($('language')?.value)?$('language').value:'nl';
 const tr=k=>labels[lang()]?.[k]||labels.nl[k]||k;
 const compact=(el,key)=>{if(!el||el.closest('details'))return;const details=document.createElement('details');details.className='inline-compact-info';const summary=document.createElement('summary');summary.dataset.uiI18n=key;summary.textContent=tr(key);el.replaceWith(details);details.append(summary,el);};
 function accordionise(){
