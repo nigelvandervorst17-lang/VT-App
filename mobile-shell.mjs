@@ -12,7 +12,7 @@ const TRIAL_CHOICE='ndt-ui-trial-choice-v1';
 const OFFLINE_READY='ndt-offline-cache-ready-v1';
 const ASSET_TRANSFER='ndt-main-asset-selection-v1';
 const trial=trialCounter();
-const state={api:null,user:null,mode:'initializing',timer:null,signature:null};
+const state={api:null,user:null,mode:'initializing',timer:null,signature:null,lastCounted:null};
 const get=(store,key)=>{try{return store?.getItem(key)||null}catch{return null}};
 const put=(store,key,value)=>{try{store?.setItem(key,value);return true}catch{return false}};
 const remove=(store,key)=>{try{store?.removeItem(key)}catch{}};
@@ -125,7 +125,7 @@ function initAuth(){
   remove(localStorage,TRIAL_CHOICE);
   remove(sessionStorage,ASSET_TRANSFER);
   remove(sessionStorage,'ndt-offline-workspace-v1');
-  state.user=null;state.api=null;state.signature=null;
+  state.user=null;state.api=null;state.signature=null;state.lastCounted=null;
   showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
  });
  $('ndtEraseOffline').addEventListener('click',async()=>{
@@ -168,7 +168,8 @@ function renderSticky(pending=false){
  }
  $('stickyLabel').textContent=ok?'ONDERZOEKSUITKOMST · GEEN VRIJGAVE':blocked?'BEREKENING GEBLOKKEERD':'Onderzoeksberekening';
  $('stickyTime').textContent=ok?$('resultTime').textContent:'—';
- $('stickyNote').textContent=$('rtCompactXray')?.getAttribute('aria-pressed')==='true'?'X-ray · onderzoek':'Gamma · onderzoek';
+ const src=$('rtCompactXray')?.getAttribute('aria-pressed')==='true'?'X-ray':'Gamma';
+ $('stickyNote').textContent=state.mode==='trial'?src+' · proef '+trial.status().remaining+'/'+TRIAL_MAX+' over':src+' · onderzoek';
  $('ndtStickyReason').textContent=(ok||blocked)?$('resultReason').textContent:'Wijzig een veld om met de bestaande calculator te rekenen.';
  const fe=ok?Number(card.dataset.feEquivalent):NaN;
  $('ndtStickyFe').textContent=Number.isFinite(fe)&&fe>0?'Fe-equivalent: '+fe.toLocaleString('nl-NL',{maximumFractionDigits:3})+' mm':'Fe-equivalent: —';
@@ -202,12 +203,6 @@ function runExisting(){
  state.signature=signature;
  if(state.mode==='trial'&&(!trial.status().ok||trial.status().remaining===0)){blockTrial();return;}
  $('calculate')?.click(); // Existing app.mjs checks and safety blocks remain the only engine.
- const ok=$('resultCard')?.classList.contains('success');
- if(ok&&state.mode==='trial'){
-  const used=trial.consume();
-  if(!used.allowed){blockTrial();return;}
-  connection();
- }
  renderSticky();
 }
 function schedule(){
@@ -285,6 +280,12 @@ async function saveCompanyDraft(){
 function initCalc(){
  const calculate=$('calculate');
  if(!calculate)return;
+ // Guard even programmatic clicks from AI tools when the guest preview is exhausted.
+ calculate.addEventListener('click',event=>{
+  if(state.mode==='trial'&&(!trial.status().ok||trial.status().remaining<=0)){
+   event.preventDefault();event.stopImmediatePropagation();blockTrial();
+  }
+ },true);
  makeIqiCompact();compactLongWarnings();moveAiConfig();
  $('ndtSaveToLog').addEventListener('click',async()=>{
   const save=$('ndtSaveToLog');
@@ -311,7 +312,15 @@ function initCalc(){
   $(id)?.addEventListener('click',()=>setTimeout(schedule,0));
  document.querySelectorAll('.bottom-nav [data-nav],#moreMenu [data-nav]').forEach(b=>
   b.addEventListener('click',()=>setTimeout(()=>renderSticky(),30)));
- window.addEventListener('ndt-result',()=>renderSticky());
+ window.addEventListener('ndt-result',()=>{
+  const sig=inputSignature();
+  if(state.mode==='trial'&&$('resultCard').classList.contains('success')&&sig!==state.lastCounted){
+   const used=trial.consume();
+   if(!used.allowed){blockTrial();return;}
+   state.lastCounted=sig;connection();
+  }
+  renderSticky();
+ });
  window.addEventListener('ndt-result-cleared',()=>renderSticky(true));
  renderSticky();
 }
