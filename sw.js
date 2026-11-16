@@ -1,6 +1,6 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='ndt-radiography-pro-company-suite-20261116-v3';
-const ASSETS=['./','./index.html','./styles.css','./mobile-shell.css','./mobile-shell.mjs','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs','./rt-enhancements.mjs','./rt-enhancements.css','./locales/nl.json','./locales/en.json','./locales/de.json',
+const CACHE='ndt-radiography-pro-company-suite-20261116-v4';
+const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css','./mobile-shell.css','./mobile-shell.mjs','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs','./rt-enhancements.mjs','./rt-enhancements.css','./locales/nl.json','./locales/en.json','./locales/de.json',
  './research/company-suite/index.html','./research/company-suite/styles.css','./research/company-suite/mobile-company.css',
  './research/company-suite/company-app.mjs','./research/company-suite/project-config.mjs',
  './research/company-suite/supabase-rest.mjs','./research/company-suite/offline-cache.mjs',
