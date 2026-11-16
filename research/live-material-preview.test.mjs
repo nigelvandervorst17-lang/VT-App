@@ -130,9 +130,9 @@ test('Copper selection uses steel equivalent while keeping research warning',()=
   thicknessMm:28,distanceMm:500,activityCi:36,material:'Fe'},curves);
  assert.equal(copper.ok,true);
  assert.equal(steel.ok,true);
- assert.equal(copper.minutes,steel.minutes);
+ assert.ok(Math.abs(copper.minutes-steel.minutes)<1e-10);
  assert.equal(copper.materialFactor,1.12);
- assert.equal(copper.equivalentSteelMm,28);
+ assert.ok(Math.abs(copper.equivalentSteelMm-28)<1e-10);
  assert.equal(copper.materialFactorApproximate,true);
  assert.match(copper.status,/material_factor_research_unverified/);
 });
