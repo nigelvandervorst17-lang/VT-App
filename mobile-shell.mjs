@@ -16,7 +16,7 @@ const state={api:null,user:null,mode:'initializing',timer:null,signature:null};
 const get=(store,key)=>{try{return store?.getItem(key)||null}catch{return null}};
 const put=(store,key,value)=>{try{store?.setItem(key,value);return true}catch{return false}};
 const remove=(store,key)=>{try{store?.removeItem(key)}catch{}};
-const today=()=>new Date().toLocaleDateString('en-CA');
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
 function config(){
  let saved=null;
  try{saved=JSON.parse(get(localStorage,PUBLIC_CONFIG_KEY)||'null')}catch{}
@@ -78,6 +78,7 @@ async function bootAuth(){
    }
   }
   if(chosen==='trial')showMain('trial');
+  else if(get(sessionStorage,'ndt-offline-workspace-v1')==='unlocked'&&get(localStorage,OFFLINE_READY))showMain('offline-session');
   else showGate('Meld je aan om je bedrijfsgegevens te gebruiken, of kies de proefversie.');
  }catch{
   if(get(localStorage,TRIAL_CHOICE)==='trial')showMain('trial');
@@ -123,6 +124,7 @@ function initAuth(){
   catch{api().clear();}
   remove(localStorage,TRIAL_CHOICE);
   remove(sessionStorage,ASSET_TRANSFER);
+  remove(sessionStorage,'ndt-offline-workspace-v1');
   state.user=null;state.api=null;state.signature=null;
   showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
  });
@@ -292,7 +294,7 @@ function applySource(row,offline=false){
   radio('activityMode','manual');assign('manualCi','');
  }
  schedule();
- return (offline?'OFFLINE CACHE · VERouderde gegevens mogelijk. ':'')+
+ return (offline?'OFFLINE CACHE · Verouderde gegevens mogelijk. ':'')+
   'Bron gekozen. Controleer certificaat, datum, actuele activiteit, geometrie en procedure. Administratieve goedkeuring is geen RT-vrijgave.';
 }
 function normalize(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
@@ -303,7 +305,7 @@ function applyTube(row,offline=false){
  if(actual)assign('xrayBrand',actual.value);
  const model=$('xrayModel');
  const wanted=[row.model,row.manufacturer+' '+row.model].map(normalize);
- const matched=[...model.options].find(o=>wanted.includes(normalize(o.value)));
+ const matched=actual?[...model.options].find(o=>wanted.includes(normalize(o.value))):null;
  if(matched)assign('xrayModel',matched.value);
  else{
   // Never silently keep a different existing model's curve.
