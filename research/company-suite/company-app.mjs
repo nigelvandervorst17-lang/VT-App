@@ -198,7 +198,7 @@ $('loadRequestsBtn').addEventListener('click',async()=>{
      btn.addEventListener('click',async()=>{
       try{await state.api.rpc('approve_company_join',{
        p_request_id:row.id,p_approve:accepted
-      });notice('Aanvraag behandeld via Supabase RLS/RPC.');
+      });notice('Toegangsaanvraag beveiligd verwerkt.');
       $('loadRequestsBtn').click()}catch(err){fail(err)}
      });entry.append(btn);
     }
