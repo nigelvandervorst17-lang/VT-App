@@ -246,14 +246,60 @@ function moveAiConfig(){
   }
  }
 }
+async function saveCompanyDraft(){
+ if(state.mode!=='signed-in'||!navigator.onLine)return false;
+ const me=await api().user();
+ if(!me?.id)throw Error('Gebruiker niet opnieuw geverifieerd');
+ const members=(await api().select('company_members',{filters:{user_id:me.id}})).filter(m=>m.active);
+ const chosen=get(localStorage,'ndt-last-company-id');
+ const member=members.find(m=>m.company_id===chosen)||members[0];
+ if(!member)throw Error('Geen actief bedrijf gekoppeld');
+ const gamma=$('modeGamma')?.getAttribute('aria-pressed')==='true';
+ const detail={
+  workReference:'Onderzoeksberekening '+new Date().toISOString(),
+  researchOnly:true,exposureAuthorised:false,
+  calculationStatus:'RESEARCH_ONLY_NOT_VALIDATED',
+  source:gamma?document.querySelector('input[name="isotope"]:checked')?.value:$('xrayModel')?.value,
+  modality:gamma?'gamma':'xray',
+  thicknessMm:$('thickness')?.value||'',
+  material:$('material')?.value||'',
+  film:$('film')?.value||'',
+  density:$('density')?.value||'',
+  distanceMm:$('distance')?.value||'',
+  activityMode:gamma?document.querySelector('input[name="activityMode"]:checked')?.value:null,
+  activityCiInput:gamma?$('manualCi')?.value:null,
+  certificateDate:gamma?$('certDate')?.value:null,
+  kv:gamma?null:$('kv')?.value,
+  ma:gamma?null:$('ma')?.value,
+  researchResult:$('resultTime')?.textContent||'',
+  researchWarning:$('resultReason')?.textContent||''
+ };
+ // The existing Supabase insert and per-company RLS remain authoritative.
+ await api().insert('exposure_logs',{
+  client_id:crypto.randomUUID(),company_id:member.company_id,created_by:me.id,
+  status:'draft',details:detail
+ });
+ return true;
+}
+
 function initCalc(){
  const calculate=$('calculate');
  if(!calculate)return;
  makeIqiCompact();compactLongWarnings();moveAiConfig();
- $('ndtSaveToLog').addEventListener('click',()=>{
+ $('ndtSaveToLog').addEventListener('click',async()=>{
+  const save=$('ndtSaveToLog');
   if($('saveResult')?.disabled)return;
-  $('saveResult').click(); // Existing local research record, not a company approval.
-  $('ndtStickyReason').textContent='Onderzoeksrecord lokaal opgeslagen. Dit is geen technische vrijgave.';
+  save.disabled=true;
+  $('saveResult').click(); // Existing local record, not a company authorization.
+  $('ndtStickyReason').textContent='Lokaal onderzoeksrecord opgeslagen. Bedrijfslogboek controleren…';
+  try{
+   const online=await saveCompanyDraft();
+   $('ndtStickyReason').textContent=online?
+    'Onderzoeksrecord lokaal en als bedrijfsconcept opgeslagen. Geen technische RT-vrijgave.':
+    'Onderzoeksrecord lokaal opgeslagen. Voor een bedrijfslogboek: online aanmelden of de versleutelde offline bunker openen.';
+  }catch(err){
+   $('ndtStickyReason').textContent='Lokaal onderzoeksrecord opgeslagen. Bedrijfslogboek niet bijgewerkt: '+String(err?.message||err);
+  }finally{save.disabled=$('saveResult')?.disabled===true;}
  });
  const relevant=new Set(['rtCompactActivity','rtCompactThickness','rtCompactOutside','rtCompactWall','rtCompactFilm','rtCompactDistance','rtCompactDensity','rtCompactKv',
   'workWall','workOutside','workPenetrated','film','density','distance','manualCi','certCi','certDate','referenceDate','material','ma','kv','xrayBrand','xrayModel','rtMaterialCustomFactor']);
