@@ -1,0 +1,83 @@
+/* Mobile shell UX. Existing engine, reference curves and safety text remain untouched. */
+html,body{max-width:100%;overflow-x:clip}
+html.ndt-entry-loading .app-shell>main>:not(.safety-strip):not(#ndtEntryGate){display:none!important}
+html.ndt-entry-loading .bottom-nav,html.ndt-entry-loading #stickyOutcome{display:none!important}
+.top-header{position:relative;z-index:32;min-height:calc(62px + env(safe-area-inset-top));padding:calc(8px + env(safe-area-inset-top)) 10px 8px;gap:8px;overflow:visible}
+.top-header .brand{flex:0 1 162px;max-width:162px;min-width:80px}
+.top-header .ndt-brand-banner{display:block!important;width:100%!important;max-width:162px!important;height:42px!important;object-fit:contain!important}
+.top-header .lang-control{margin-left:auto}
+.top-header .lang-control select{min-width:57px!important;min-height:42px!important;padding:7px 3px!important;font-size:12px!important}
+.ndt-mobile-header-tools{display:flex;align-items:center;gap:6px}
+.ndt-connection{font-size:10px;font-weight:850;color:#315c73;background:#e4f4fc;border-radius:999px;padding:7px 8px;white-space:nowrap}
+.ndt-connection[data-offline="true"]{color:#8c5622;background:#fff0d1}
+.ndt-account-button{width:43px;height:43px;display:grid;place-items:center;border-radius:12px;border:1px solid #cbdeec;background:#f1f7fb;color:#113954;cursor:pointer}
+.ndt-account-button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+.ndt-account-menu{position:absolute;z-index:80;right:8px;top:calc(58px + env(safe-area-inset-top));width:min(320px,calc(100vw - 16px));padding:12px;border:1px solid #517691;border-radius:15px;background:#112e47;color:#fff;box-shadow:0 20px 50px #0007}
+.ndt-account-menu[hidden]{display:none!important}
+.ndt-account-menu p{color:#cbdfea;font-size:12px;margin:5px 0 12px;overflow-wrap:anywhere}
+.ndt-account-menu button,.ndt-account-menu a{width:100%;display:block;min-height:43px;text-align:left;color:#eff7ff;text-decoration:none;background:#1c425f;border:1px solid #416f8c;border-radius:10px;padding:11px;margin:6px 0;font-size:13px;font-weight:760}
+.safety-strip{min-height:39px;padding:8px 12px;background:#342e21;border-color:#947d3e}
+.safety-strip strong{color:#ffe4a4}
+.safety-strip span:not(.safety-dot){color:#fff1c9}
+#ndtCompanyLaunch,#ndtProcedureSuiteShortcut{display:none!important}
+#ndtEntryGate{padding:20px 17px 35px;max-width:550px;margin:0 auto}
+#ndtEntryGate[hidden]{display:none!important}
+.ndt-entry-card{background:#142f46;border:1px solid #3a6683;border-radius:20px;padding:19px 16px}
+.ndt-entry-card h1{font-size:24px;margin:0 0 7px}
+.ndt-entry-card p{font-size:13px;line-height:1.5;color:#c4dbe9;margin:8px 0 17px}
+.ndt-entry-card label{display:block;font-size:12px;font-weight:800;margin:10px 0}
+.ndt-entry-card input{display:block;width:100%;min-height:52px;padding:10px 12px;background:#203f58;border:1px solid #6e91a6;border-radius:12px;color:#fff;margin-top:5px;font-size:16px}
+.ndt-entry-card button{width:100%;min-height:52px;border:1px solid #6dbbff;border-radius:12px;color:#fff;background:#087bdf;font-weight:850;margin-top:8px}
+.ndt-entry-card button.secondary{background:#244663;border-color:#5b8099}
+.ndt-entry-card button:disabled{opacity:.6}
+.ndt-entry-card #ndtEntryStatus{margin:7px 0 0;min-height:24px}
+.ndt-entry-card #ndtEntryOffline[hidden]{display:none!important}
+#ndtAssetDialog{width:min(520px,calc(100vw - 22px));max-height:80dvh;border-radius:18px;background:#0e2d44;color:#edf7ff;border:1px solid #6791ac;padding:17px}
+#ndtAssetDialog::backdrop{background:#020c17c9}
+#ndtAssetDialog h2{margin:0 0 6px;font-size:19px}
+#ndtAssetDialog p{font-size:12px;line-height:1.55;color:#c3dae9}
+#ndtAssetList{display:grid;gap:9px;max-height:50dvh;overflow:auto}
+#ndtAssetList button{padding:12px 13px;text-align:left;min-height:53px;background:#224864;border:1px solid #4e7895;color:#fff;border-radius:11px}
+#ndtAssetList button strong{display:block;font-size:14px}
+#ndtAssetList button small{font-size:11px;color:#cfe4f1}
+.ndt-asset-close{width:100%;margin-top:12px;min-height:46px;border:1px solid #557f9b;background:#203d56;border-radius:11px;color:#fff}
+.ndt-picker-button{display:flex;align-items:center;gap:7px;justify-content:center;min-height:42px;padding:7px 12px;border:1px solid #5c91b6;border-radius:11px;background:#1e4562;color:#eaf5ff;font-size:12px;font-weight:850;margin:5px 0 11px}
+.rt-compact-calculator .rt-compact-grid{gap:9px}
+.rt-compact-calculator .rt-compact-field input,.rt-compact-calculator .rt-compact-field select{min-height:48px}
+.rt-compact-calculator .rt-compact-chip-row button{min-height:40px}
+.rt-compact-calculator #calculate{display:none!important}
+#rtCompactIqiQuick .ndt-iqi-accordion{margin:0;border:1px solid #466e88;border-radius:13px;background:#102e46;padding:0}
+#rtCompactIqiQuick .ndt-iqi-accordion>summary{min-height:48px;display:flex;align-items:center;padding:11px 13px;font-weight:900;cursor:pointer;color:#e7f4ff}
+#rtCompactIqiQuick .ndt-iqi-accordion-body{padding:9px 12px 14px}
+#rtCompactIqiQuick .rt-iqi-quick-title{display:none!important}
+.ndt-warning-detail{border:1px solid #665939;border-radius:12px;padding:0;margin:8px 0;color:#ffe5ac}
+.ndt-warning-detail summary{padding:9px 10px;cursor:pointer;font-size:12px;font-weight:800}
+.ndt-warning-detail>p{margin:0;padding:0 10px 12px;font-size:12px;line-height:1.6}
+#stickyOutcome{position:fixed!important;z-index:29;left:50%;transform:translateX(-50%);bottom:calc(69px + env(safe-area-inset-bottom));width:min(100%,680px);max-height:28dvh;overflow:auto;background:#092d42;border:1px solid #4c8eae;border-radius:16px 16px 0 0;padding:10px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;box-shadow:0 -7px 26px #0007}
+#stickyOutcome[hidden],body.ndt-entry-active #stickyOutcome{display:none!important}
+#stickyOutcome.sticky-error{background:#422b2b;border-color:#dc8c7a}
+#stickyOutcome .sticky-meta{min-width:0}
+#stickyOutcome #stickyLabel{font-size:11px;display:block}
+#stickyOutcome #stickyNote{font-size:11px;line-height:1.35;white-space:normal}
+#stickyOutcome #stickyTime{font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#ndtStickyReason{grid-column:1/-1;margin:0;font-size:11px;line-height:1.35;color:#e5eef7;overflow-wrap:anywhere}
+#ndtStickyFoot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:9px;font-size:11px}
+#ndtStickyFe{font-weight:750}
+#ndtSaveToLog{border:1px solid #80bcda;background:#22516b;color:#fff;border-radius:10px;padding:7px 12px;min-height:38px;font-weight:850;font-size:11px}
+#ndtSaveToLog:disabled{opacity:.55}
+body.ndt-mobile-live .app-shell{padding-bottom:calc(197px + env(safe-area-inset-bottom))}
+body.ndt-mobile-live #screen-calc{padding-bottom:190px}
+.bottom-nav{bottom:0;z-index:31}
+.more-menu{bottom:calc(70px + env(safe-area-inset-bottom));z-index:42}
+#screen-settings .ai-config{margin:15px 0}
+#screen-ai #aiSettingsButton{display:none!important}
+#ndtSettingsLinks{display:grid;gap:9px;margin:14px 0}
+#ndtSettingsLinks a{background:#214560;color:#edf7ff;border:1px solid #507b99;border-radius:11px;padding:12px;text-decoration:none;font-size:13px;font-weight:850}
+@media(max-width:400px){
+ .top-header .brand,.top-header .ndt-brand-banner{max-width:115px!important}
+ .ndt-connection{font-size:9px;padding:6px}
+ .top-header .lang-control select{min-width:49px!important;font-size:11px!important}
+ .ndt-account-button{width:39px;height:42px}
+ #stickyOutcome{padding:9px 10px}
+ #stickyOutcome #stickyTime{font-size:23px}
+}
