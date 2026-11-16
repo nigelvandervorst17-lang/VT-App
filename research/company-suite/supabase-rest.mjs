@@ -1,7 +1,9 @@
 /**
  * Minimal Supabase Auth + PostgREST adapter (no external JS/CDN required).
  * Public publishable/anon key only; NEVER a service_role or secret key.
- * Auth tokens remain in sessionStorage, not in IndexedDB.
+ * Access/refresh tokens persist in browser localStorage, not IndexedDB.
+ * Server-side RLS remains the authorization boundary.
+ * The separate offline-cache passphrase is NEVER stored.
  * The company code is never used as an authentication token.
  */
 export const PUBLIC_CONFIG_KEY='ndt-supabase-public-connection-v1';
@@ -24,19 +26,35 @@ export function createSupabaseConnection({url,key},environment=globalThis){
 
  const root=url.replace(/\/$/,'');
  let auth=null;
+ const durableStorage=()=>{
+  try {const s=environment.localStorage;if(s&&typeof s.getItem==='function')return s;}
+  catch{}
+  return environment.sessionStorage;
+ };
  function save(session){
   if(!session?.access_token||!session?.refresh_token)throw Error('Geen geldige Auth-sessie');
   auth={access_token:session.access_token,refresh_token:session.refresh_token,
    expires_at:Math.floor(Date.now()/1000)+(session.expires_in??3600)};
-  environment.sessionStorage?.setItem(SESSION_KEY,JSON.stringify(auth));
+  durableStorage()?.setItem(SESSION_KEY,JSON.stringify(auth));
+  if(durableStorage()!==environment.sessionStorage)environment.sessionStorage?.removeItem(SESSION_KEY);
  }
  function restore(){
-  try{auth=JSON.parse(environment.sessionStorage?.getItem(SESSION_KEY)||'null')}
-  catch{auth=null}
-  return Boolean(auth?.access_token);
+  try{
+   const current=durableStorage()?.getItem(SESSION_KEY);
+   const legacy=environment.sessionStorage?.getItem(SESSION_KEY);
+   auth=JSON.parse(current||legacy||'null');
+   if(!current&&legacy&&durableStorage()!==environment.sessionStorage){
+    durableStorage()?.setItem(SESSION_KEY,legacy);
+    environment.sessionStorage?.removeItem(SESSION_KEY);
+   }
+  }catch{auth=null}
+  if(!auth?.access_token||!auth?.refresh_token){auth=null;return false;}
+  return true;
  }
  function clear(){
-  auth=null;environment.sessionStorage?.removeItem(SESSION_KEY);
+  auth=null;
+  try{environment.localStorage?.removeItem(SESSION_KEY);}catch{}
+  try{environment.sessionStorage?.removeItem(SESSION_KEY);}catch{}
  }
  async function request(path,{method='GET',body,authenticated=false,headers={}}={}){
   const h={apikey:key,'Content-Type':'application/json',...headers};
