@@ -39,7 +39,13 @@
     "caution": "Forschungsschätzung: keine validierte Belichtungszeit oder Genehmigung zum Betrieb von Strahlungsgeräten. Genehmigte RT-Verfahren und Strahlenschutzmaßnahmen beachten.",
     "materialSummary": "{{thickness}} mm {{material}} (≈ {{fe_eq}} mm Fe-Äquivalent)",
     "reference": "Die Materialumrechnung dient nur der Forschung und ist nicht für reale Belichtungen validiert.",
-    "startError": "Keine gültige berechnete Zeit verfügbar."
+    "startError": "Keine gültige berechnete Zeit verfügbar.",
+    "materialSteelInfo": "{{thickness}} mm Stahl → {{fe_eq}} mm Fe-Äquivalent (Faktor {{factor}}).",
+    "materialResearchInfo": "{{thickness}} mm {{material}} → {{fe_eq}} mm Fe-Äquivalent (Faktor {{factor}}). Forschungsfaktor, nicht validiert.",
+    "materialInvalidFactor": "Positiven Forschungsfaktor eingeben. Ohne gültigen Faktor ist keine Berechnung möglich.",
+    "materialInvalidThickness": "Gültige Dicke innerhalb des Kurvenbereichs eingeben.",
+    "materialComparison": "{{material}} · {{mode}} · Faktor {{factor}} · {{thickness}} mm → {{fe_eq}} mm Fe-Äquivalent. Nur Forschungsvergleich; keine RT-Freigabe.",
+    "steelComparison": "Forschungsvergleich für Zielschwärzung 2,5: {{time}} (Faktor {{factor}}, {{film}}). Keine validierte Belichtungszeit."
   },
   "materials": {
     "Fe": "Stahl",
