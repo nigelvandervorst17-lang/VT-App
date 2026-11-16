@@ -255,11 +255,17 @@ function makeIqiCompact(){
  wrapper.addEventListener('toggle',()=>{summary.textContent=wrapper.open?'▾ IQI Snelcontrole':'▸ IQI Snelcontrole'});
 }
 function compactLongWarnings(){
- const warning=$('rtCompactPipeCaution');
- if(!warning||warning.parentElement?.classList.contains('ndt-warning-detail'))return;
- const wrap=document.createElement('details');wrap.className='ndt-warning-detail';
- const summary=document.createElement('summary');summary.textContent='ⓘ Let op: buisgeometrie en dikte controleren';
- warning.before(wrap);wrap.append(summary,warning);
+ const pairs=[
+  [$('rtCompactPipeCaution'),'ⓘ Controleer werkelijke buisgeometrie'],
+  [$('densityHelp'),'ⓘ Ondersteunde filmzwarting en curvegrenzen'],
+  [$('workShapePanel')?.querySelector('.workshape-caution'),'ⓘ Controle van dubbelwandige geometrie']
+ ];
+ for(const [warning,title] of pairs){
+  if(!warning||warning.parentElement?.classList.contains('ndt-warning-detail'))continue;
+  const wrap=document.createElement('details');wrap.className='ndt-warning-detail';
+  const summary=document.createElement('summary');summary.textContent=title;
+  warning.before(wrap);wrap.append(summary,warning);
+ }
 }
 function moveAiConfig(){
  const configPanel=$('aiConfigDetails')?.closest('.ai-config');
