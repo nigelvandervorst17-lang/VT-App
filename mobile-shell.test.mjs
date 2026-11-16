@@ -78,7 +78,7 @@ test('50-calculation trial uses the original local counter without altering engi
  for(let i=0;i<TRIAL_MAX;i++)assert.equal(counter.consume().allowed,true);
  assert.equal(counter.consume().allowed,false);
  assert.match(ui,/trial\.consume\(\)/);
- assert.match(ui,/if\(ok&&state\.mode==='trial'\)/);
+ assert.match(ui,/state\.mode==='trial'&&\$\('resultCard'\)\.classList\.contains\('success'\)/);
 });
 test('persistent Supabase token survives new adapter instance; signout clears both stores',async()=>{
  const permanent=new Map(),temporary=new Map(),calls=[];
