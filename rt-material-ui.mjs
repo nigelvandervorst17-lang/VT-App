@@ -1,7 +1,6 @@
 /**
- * Main UI only: research material comparison, never modify the exposure engine.
- * Uses the existing #material selector and compact geometry proxy.
- * The current engine retains its non-steel validation block.
+ * Materials control the research calculator through the existing #material selector.
+ * Keep a visible research warning; there is no RT procedure approval here.
  */
 import {
  PROPOSED_MATERIAL_FACTORS,NOT_APPROVED,compareMaterialEquivalence,
@@ -36,8 +35,8 @@ function info(){
  const comparison=current();
  if(!comparison.ok){
   output.textContent=selectedMaterial==='custom'?
-   'Vul een positieve, aantoonbare factor in. Zonder validatie wordt geen belichtingstijd aangepast.':
-   'Vul een geldige dikte in. De belichtingsmotor blijft ongewijzigd.';
+   'Vul een positieve onderzoeksfactor in. Zonder een geldige factor is geen berekening mogelijk.':
+   'Vul een geldige dikte in; de berekening blijft binnen de ondersteunde curvegrenzen.';
   return;
  }
  if(selectedMaterial==='Fe'){
@@ -47,7 +46,7 @@ function info(){
   output.textContent=comparison.label+' · '+(comparison.mode==='gamma'?'Gamma':'X-ray')+
    ' onderzoeksfactor '+local(comparison.proposedFactor)+' · w_eq = '+
    local(comparison.wallMm)+' × '+local(comparison.proposedFactor)+' = '+
-   local(comparison.equivalentSteelMm)+' mm staal. NIET GEVALIDEERD en niet toegepast op de belichtingsmotor.';
+   local(comparison.equivalentSteelMm)+' mm staal. Wordt automatisch gebruikt voor de onderzoeksberekening; geen vrijgave voor RT-opnames.';
  }
 }
 function renderCard(){
@@ -59,7 +58,8 @@ function renderCard(){
   box.textContent='Materiaalonderzoek · '+cmp.label+': voorgestelde factor '+
    local(cmp.proposedFactor)+' ('+(cmp.mode==='gamma'?'Gamma':'X-ray')+
    '), equivalente staaldikte '+local(cmp.equivalentSteelMm)+' mm (w_eq = w × f_mat). '+
-   'NIET TOEGEPAST: geen geverifieerde materiaalcurve. De bestaande berekeningsblokkade blijft gelden.';
+   'Automatisch meegenomen in de onderzoeksberekening op basis van de equivalente staaldikte. '+
+   'NIET VRIJGEGEVEN voor werkelijke RT-opnames.';
   return;
  }
  // Only separate research comparison for D=2.5 in the supported gamma/Fe area.
@@ -101,6 +101,8 @@ function choose(material){
   original.dispatchEvent(new Event('change',{bubbles:true}));
  }
  render();
+ // Gamma has an existing debounced auto-update; trigger an immediate X-ray update.
+ if(!gammaMode())$('calculate')?.click();
 }
 function init(){
  const selector=$('material'),panel=$('rtMaterialChoices'),result=$('rtMaterialResult');
@@ -108,7 +110,11 @@ function init(){
  selectedMaterial=allowed.has(selector.value)?selector.value:
   selector.value==='Other'?'custom':'unsupported';
  for(const b of buttons())b.addEventListener('click',()=>choose(b.dataset.rtMaterial));
- $('rtMaterialCustomFactor')?.addEventListener('input',render);
+ $('rtMaterialCustomFactor')?.addEventListener('input',()=>{
+  $('material')?.dispatchEvent(new Event('input',{bubbles:true}));
+  render();
+  if(!gammaMode())$('calculate')?.click();
+ });
  // Extended settings and source-mode selection update the visual hypothesis.
  selector.addEventListener('change',()=>{
   selectedMaterial=allowed.has(selector.value)?selector.value:
@@ -124,8 +130,7 @@ function init(){
  }
  document.querySelectorAll('input[name="isotope"],input[name="activityMode"]').forEach(el=>
   el.addEventListener('change',render));
- // The original app writes #resultTime. Observe only that node and never
- // modify it, so recalculation remains owned by the original engine.
+ // The original app owns #resultTime. Keep this card in sync without changing it.
  const time=$('resultTime');
  if(time&&typeof MutationObserver!=='undefined')
   new MutationObserver(renderCard).observe(time,{childList:true,characterData:true,subtree:true});
