@@ -1,5 +1,27 @@
 # NDT Radiography Pro — geïntegreerde bedrijfsmodus (testversie)
 
+## Integratie in NDT Radiography Pro (conceptbranch)
+
+Deze module is vanaf de hoofdapp bereikbaar via de nieuwe **Bedrijfsmodus**-tegel
+bovenaan `index.html`. De module heeft een zichtbare link terug naar de
+hoofdcalculator. De oorspronkelijke hoofdapp, RT-motor en onderzoekscurven
+worden hierdoor niet vervangen.
+
+- Integratiebranch: `feature/company-suite-integration-20261116`
+- Preview hoofdapp: `https://raw.githack.com/nigelvandervorst17-lang/VT-App/feature/company-suite-integration-20261116/index.html`
+- Preview Bedrijfsmodus: `https://raw.githack.com/nigelvandervorst17-lang/VT-App/feature/company-suite-integration-20261116/research/company-suite/index.html`
+- De eerdere standalone onderzoeksbranch en de Supabase-testdatabase blijven ongewijzigd.
+
+**Voor Magic Links en e-mailbevestiging:** de **exacte** preview- of latere
+productie-URL moet in Supabase Auth Redirect URLs worden toegestaan. Dit is
+nog niet vanuit deze codewijziging ingericht. Voer echte 2-account/2-bedrijf
+tests en een onafhankelijke security-audit uit voor productiegebruik.
+De 50 gratis berekeningen zijn een lokale UX-teller, geen serverafgedwongen
+abonnements- of licentiegrens. De offline cache kan verouderde rechten tonen.
+
+**Dit document en deze app zijn geen veiligheids- of RT-vrijgave.**
+
+
 **Status:** ONDERZOEK / STAGING, **geen gevalideerde RT- of kalibratievrijgave**.  
 **Branch:** \`research/integrated-company-suite\`. \`main\`, PR #6 en PR #7 worden niet samengevoegd of gewijzigd.  
 **Startpagina:** \`research/company-suite/index.html\`.
