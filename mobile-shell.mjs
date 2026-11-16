@@ -311,6 +311,8 @@ function initCalc(){
    event.preventDefault();event.stopImmediatePropagation();blockTrial();
   }
  },true);
+ // Place the selector beside the relevant top input, not below all fields.
+ $('rtCompactActivity')?.closest('.rt-compact-field')?.after($('ndtChooseAsset'));
  makeIqiCompact();compactLongWarnings();moveAiConfig();
  $('ndtSaveToLog').addEventListener('click',async()=>{
   const save=$('ndtSaveToLog');
