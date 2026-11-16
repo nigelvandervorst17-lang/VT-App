@@ -75,7 +75,7 @@ async function ensureLocales() {
 }
 const timer = {
   initialSeconds:null, remainingSeconds:0, phase:'idle', deadline:0,
-  intervalId:null, wakeLock:null, audio:null, completedShown:false
+  intervalId:null, wakeLock:null, audio:null
 };
 const toSeconds = value => {
   const match = /^(\d+):([0-5]\d):([0-5]\d)$/.exec(String(value || '').trim());
@@ -153,8 +153,8 @@ function render() {
   const active = timer.phase === 'running';
   const displayed = hasTime ? showTime(timer.remainingSeconds) : '—';
   if (hasTime) {
-    if ($('resultTime')) $('resultTime').textContent = displayed;
-    if ($('stickyTime')) $('stickyTime').textContent = displayed;
+    if ($('resultTime') && $('resultTime').textContent !== displayed) $('resultTime').textContent = displayed;
+    if ($('stickyTime') && $('stickyTime').textContent !== displayed) $('stickyTime').textContent = displayed;
   }
   for (const controls of getControls()) {
     controls.hidden = !hasTime;
@@ -173,7 +173,7 @@ function render() {
   const notice = $('rtTimerComplete');
   if (notice) {
     notice.hidden = timer.phase !== 'done';
-    notice.textContent = tr('timer.completed');
+    notice.textContent = tr('timer.completed') + ' — ' + tr('timer.hint');
   }
   const heading = $('rtTechnicalDetailsHeading');
   if (heading) heading.textContent = tr('ui.technical');
@@ -276,6 +276,10 @@ function refreshTranslations() {
 }
 function init() {
   createControls();
+  for (const id of ['resultTime','stickyTime']) {
+    const el=$(id);
+    if (el) { el.setAttribute('role','timer'); el.setAttribute('aria-live','off'); }
+  }
   setCalculatedTime(toSeconds($('resultTime')?.textContent));
   document.addEventListener('click', event => {
     const button = event.target.closest?.('[data-rt-timer]');
