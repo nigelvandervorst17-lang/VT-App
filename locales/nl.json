@@ -39,7 +39,13 @@
     "caution": "Onderzoeksschatting: geen gevalideerde belichtingstijd of toestemming om stralingsapparatuur te bedienen. Volg de goedgekeurde RT-procedure en stralingsveiligheidsmaatregelen.",
     "materialSummary": "{{thickness}} mm {{material}} (≈ {{fe_eq}} mm Fe-equivalent)",
     "reference": "Materiaalomrekening is onderzoeksinformatie, niet gevalideerd voor werkelijke belichtingen.",
-    "startError": "Geen geldige berekende tijd beschikbaar."
+    "startError": "Geen geldige berekende tijd beschikbaar.",
+    "materialSteelInfo": "{{thickness}} mm staal → {{fe_eq}} mm Fe-equivalent (factor {{factor}}).",
+    "materialResearchInfo": "{{thickness}} mm {{material}} → {{fe_eq}} mm Fe-equivalent (factor {{factor}}). Onderzoeksfactor, niet gevalideerd.",
+    "materialInvalidFactor": "Vul een positieve onderzoeksfactor in. Zonder geldige factor is geen berekening mogelijk.",
+    "materialInvalidThickness": "Vul een geldige dikte in binnen het ondersteunde curvebereik.",
+    "materialComparison": "{{material}} · {{mode}} · factor {{factor}} · {{thickness}} mm → {{fe_eq}} mm Fe-equivalent. Alleen onderzoeksvergelijking; geen RT-vrijgave.",
+    "steelComparison": "Onderzoeksvergelijking voor doelzwarting 2,5: {{time}} (factor {{factor}}, {{film}}). Geen gevalideerde belichtingstijd."
   },
   "materials": {
     "Fe": "Staal",
