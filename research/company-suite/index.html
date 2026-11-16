@@ -20,7 +20,7 @@
 </header>
 <div class="navrow">
  <button type="button" data-tab="account" aria-pressed="false">Account</button>
- <button type="button" data-tab="field" aria-pressed="true">Rekenen</button>
+ <button type="button" data-tab="field" aria-pressed="true">Bronnen &amp; logboek</button>
  <button type="button" data-tab="admin" aria-pressed="false" id="adminTab" hidden>Beheer</button>
  <button type="button" data-tab="tools" aria-pressed="false" hidden>Controles</button>
 </div>
@@ -29,7 +29,7 @@
  <h2>Beveiligde bedrijfsverbinding</h2><p class="help">De verbinding is al ingesteld. Deze technische gegevens hoeven normaal niet te worden aangepast.</p>
  <form id="connectionForm"><label>Projectverbinding (URL) <input id="projectUrl" type="url" required autocomplete="url" placeholder="https://PROJECT.supabase.co"></label>
  <label>Publieke verbindingssleutel <input id="projectKey" required type="text" autocomplete="off" placeholder="sb_publishable_..."></label>
- <button type="submit">Testverbinding bewaren</button></form>
+ <button type="submit">Verbinding controleren en bewaren</button></form>
  </article>
  <article class="panel"><h2>Registreren of inloggen</h2>
  <div class="selector" id="authIntent"><label class="choice"><input type="radio" name="authType" value="new" checked>Nieuw bedrijf (Hoofdgebruiker)</label><label class="choice"><input type="radio" name="authType" value="join">Aansluiten (Personeel)</label></div>
@@ -66,13 +66,13 @@
  <form id="offlineForm"><label>Offline wachtzin<input type="password" id="offlinePassphrase" autocomplete="off" placeholder="Minimaal 8 tekens" required></label>
  <div class="actions"><button type="submit">Cache openen / ontgrendelen</button><button type="button" id="syncBtn" class="alt">Synchroniseren</button></div></form>
  <div class="help" id="cacheStatus">Nog geen offline cache ontgrendeld.</div>
- <div class="grid"><label>Offline account-ID<input id="offlineUserId" placeholder="Na eerste online login ingevuld"></label>
- <label>Offline bedrijfs-ID<input id="offlineCompanyId" placeholder="Na eerste online login ingevuld"></label></div>
+ <details><summary>Geavanceerde offline-identificatie</summary><div class="grid"><label>Offline account-ID<input id="offlineUserId" placeholder="Na eerste online login ingevuld"></label>
+ <label>Offline bedrijfs-ID<input id="offlineCompanyId" placeholder="Na eerste online login ingevuld"></label></div></details>
  <button type="button" id="offlineOpenBtn" class="ghost">Bestaande cache zonder internet openen</button>
  </article>
 </section>
 <section id="tab-admin" class="tab" hidden>
- <article class="panel"><h2>Hoofdgebruiker · Beheer</h2><p class="help">Beheeracties worden op de server met RLS gecontroleerd. Goedkeuren van een bedrijfsrecord betekent geen technische RT-/kalibratievrijgave.</p>
+ <article class="panel"><h2>Hoofdgebruiker · Beheer</h2><p class="help">Beheeracties worden beveiligd gecontroleerd. Goedkeuren van een bedrijfsrecord betekent geen technische RT-/kalibratievrijgave.</p>
  <div class="actions"><button type="button" id="loadRequestsBtn" class="alt">Toegangsaanvragen ophalen</button></div>
  <div id="requestsList" class="list" aria-live="polite"></div>
  <hr>
