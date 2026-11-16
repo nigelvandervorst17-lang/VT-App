@@ -798,3 +798,16 @@ body{font-synthesis:none}
 @media(max-width:390px){
  #screen-calc .rt-material-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* User-supplied NDT RADIOGRAPHY PRO banner in the live main header.
+   Keep language picker accessible and the logo legible on small phones. */
+.top-header{background:linear-gradient(145deg,#041532,#061b37);color:#f5faff;border-bottom:1px solid #1c8fb9;min-height:86px;align-items:center;gap:8px}
+.top-header .brand{flex:1 1 auto;min-width:0;max-width:512px;justify-content:flex-start}
+.top-header .ndt-brand-banner{display:block;width:100%;height:auto;aspect-ratio:512 / 171;max-height:170px;object-fit:contain;object-position:left center}
+.top-header .lang-control{flex:0 0 auto}
+.top-header .lang-control select{border-color:#4b829d;background:#10344f;color:#ecf9ff}
+@media(max-width:460px){
+ .top-header{padding-left:10px;padding-right:10px;gap:5px}
+ .top-header .lang-control select{min-width:65px;padding:10px 3px;font-size:12px}
+}
