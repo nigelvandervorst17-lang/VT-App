@@ -81,3 +81,5 @@ body.ndt-mobile-live #screen-calc{padding-bottom:190px}
  #stickyOutcome{padding:9px 10px}
  #stickyOutcome #stickyTime{font-size:23px}
 }
+
+.rt-compact-grid>.ndt-picker-button{width:100%;align-self:center;margin:5px 0;padding:8px;min-height:49px}
