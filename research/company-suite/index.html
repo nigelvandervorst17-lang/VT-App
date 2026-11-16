@@ -153,7 +153,7 @@
      <label>Activiteit (Ci)<input id="gActivity" inputmode="decimal" placeholder="Bijv. 40"></label>
      <label>Zwarting D<input id="gDensity" inputmode="decimal" placeholder="Bijv. 2,0"></label>
     </div>
-    <label class="checktile"><input type="checkbox" id="gResearchFactor">Toon voorgestelde D4/D5-factor bij D=2,5 (PR #6, niet gevalideerd)</label>
+    <label class="checktile"><input type="checkbox" id="gResearchFactor">Onderzoeksfactor voor D4/D5 bij D=2,5 (niet gevalideerd)</label>
    </div>
    <div class="workbench-module" id="calc-xray" hidden>
     <h3>X-ray · bestaande toestel-/kV-curve</h3>
@@ -229,7 +229,7 @@
  <div id="logStatus" class="readout">Nog geen conceptlog opgeslagen.</div>
  <hr>
  <h3>Gedeeld bedrijfslogboek</h3>
- <p class="help">De Hoofdgebruiker kan het bedrijfslogboek zien. Personeel ziet alleen zijn eigen opnames. Alle toegang wordt opnieuw door Supabase RLS gecontroleerd.</p>
+ <p class="help">De Hoofdgebruiker kan het bedrijfslogboek zien. Personeel ziet alleen zijn eigen opnames. Alle toegang wordt opnieuw door de beveiligde bedrijfsomgeving gecontroleerd.</p>
  <button type="button" id="loadLogsBtn" class="alt">Opnamelogboek ophalen</button>
  <div id="logsList" class="list" aria-live="polite"></div>
  </article>
