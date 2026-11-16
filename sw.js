@@ -1,11 +1,12 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='basic-rt-pro-v4.0.2-safe-material-tiles-20261116';
+const CACHE='ndt-radiography-pro-brand-20261116-v1';
 const ASSETS=['./','./index.html','./styles.css','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs',
 './rt-material-ui.mjs','./research/live-material-preview.mjs',
 './ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./iqi-quick.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',
 './controle.html','./curveatlas.html','./curveatlas.pdf','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./brand-logo.png',
+'./brand/ndt-square-192.webp','./brand/ndt-square-512.webp','./brand/ndt-apple-touch-180.png','./brand/ndt-banner-512.webp',
 './smart-225b.webp','./smart-225-d7.webp','./smart-200pc-d7.webp',
 './weld-details.webp','./smart-300pc-d7.webp','./smart-300hp-d7.webp',
 './smart-225-yxlon-d7.webp','./smart-200pc-new-d7.webp',
