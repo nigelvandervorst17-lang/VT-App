@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'se75.html'
+      - 'se75-quick.mjs'
+      - 'se75-quick.test.mjs'
       - 'styles.css'
       - 'app.mjs'
       - 'compact-layout.mjs'
@@ -28,7 +31,8 @@ jobs:
           node-version: '22'
       - name: Research material UI, supported engine ranges and syntax
         run: |
-          node --test research/live-material-preview.test.mjs
+          node --test research/live-material-preview.test.mjs se75-quick.test.mjs
+          node --check se75-quick.mjs
           node --check app.mjs
           node --check compact-layout.mjs
           node --check rt-material-ui.mjs
