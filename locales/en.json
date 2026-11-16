@@ -39,7 +39,13 @@
     "caution": "Research estimate: not a validated exposure time or permission to operate radiation equipment. Follow an approved RT procedure and radiation safety controls.",
     "materialSummary": "{{thickness}} mm {{material}} (≈ {{fe_eq}} mm Fe equivalent)",
     "reference": "Material conversion is research information, not validated for real exposures.",
-    "startError": "No valid calculated time is available."
+    "startError": "No valid calculated time is available.",
+    "materialSteelInfo": "{{thickness}} mm steel → {{fe_eq}} mm Fe equivalent (factor {{factor}}).",
+    "materialResearchInfo": "{{thickness}} mm {{material}} → {{fe_eq}} mm Fe equivalent (factor {{factor}}). Research factor, not validated.",
+    "materialInvalidFactor": "Enter a positive research factor. No calculation is possible without a valid factor.",
+    "materialInvalidThickness": "Enter a valid thickness within the supported curve range.",
+    "materialComparison": "{{material}} · {{mode}} · factor {{factor}} · {{thickness}} mm → {{fe_eq}} mm Fe equivalent. Research comparison only; no RT approval.",
+    "steelComparison": "Research comparison for target density 2.5: {{time}} (factor {{factor}}, {{film}}). Not a validated exposure time."
   },
   "materials": {
     "Fe": "Steel",
