@@ -207,6 +207,8 @@ function init(){
     ask();
   }));
   $('aiSettingsButton')?.addEventListener('click',()=>{
+    // AI connection settings now live under More > Settings.
+    document.querySelector('#moreMenu [data-nav="settings"]')?.click();
     const details=$('aiConfigDetails');if(!details)return;details.open=true;
     details.scrollIntoView({behavior:'smooth',block:'center'});
   });
@@ -230,7 +232,7 @@ function init(){
   document.querySelector('[data-nav="ai"]')?.addEventListener('click',()=>{
     if(widgetId===null) installTurnstile(); preview();
   });
-  if(!publicConfig().endpoint || !publicConfig().siteKey)status('Tik op AI-instellingen om de verbinding eenmalig in te stellen.');
+  if(!publicConfig().endpoint || !publicConfig().siteKey)status('Open Meer → Instellingen om de AI-verbinding eenmalig in te stellen.');
   else status('Beveiligingscontrole wordt uitgevoerd…');
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

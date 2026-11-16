@@ -162,12 +162,33 @@
 <link rel="stylesheet" href="./ndt-pro-theme.css?v=ui1">
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
+<link rel="stylesheet" href="./mobile-shell.css?v=1">
+<script>
+try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
+catch{document.documentElement.classList.add('ndt-entry-loading')}
+</script>
 </head>
 <body>
 <div class="app-shell">
 <header class="top-header">
   <div class="brand"><img class="ndt-brand-banner" src="./brand/ndt-banner-512.webp" alt="NDT Radiography Pro" width="512" height="171" fetchpriority="high" decoding="async"></div>
   <label class="lang-control"><span class="sr-only" data-i18n="language">Taal</span><select id="language" aria-label="Taal / Language / Sprache"><option value="nl">🇳🇱 NL</option><option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option></select></label>
+  <div class="ndt-mobile-header-tools">
+    <span id="ndtConnStatus" class="ndt-connection" role="status" aria-live="polite">Online</span>
+    <button id="ndtAccountButton" class="ndt-account-button" type="button" aria-haspopup="true" aria-controls="ndtAccountMenu" aria-expanded="false" title="Account en offline gegevens" aria-label="Account openen">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg>
+    </button>
+  </div>
+  <div id="ndtAccountMenu" class="ndt-account-menu" hidden>
+    <strong>Mijn account</strong>
+    <p id="ndtAccountEmail">Sessie controleren…</p>
+    <a href="./research/company-suite/index.html#account">Beveiligde bedrijfsomgeving</a>
+    <a href="./procedure-suite.html">Procedure Suite</a>
+    <button type="button" id="ndtSwitchAccount">Van account wisselen</button>
+    <button type="button" id="ndtSignOut">Uitloggen</button>
+    <button type="button" id="ndtEraseOffline">Offline bedrijfsgegevens verwijderen</button>
+    <p>De offline cache blijft versleuteld totdat je die met je aparte wachtzin opent.</p>
+  </div>
 </header>
 <div id="bootFailure" class="boot-failure" role="alert" hidden>
 <strong>De app is niet volledig gestart</strong>
@@ -177,6 +198,21 @@
 </div>
 <main>
 <div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
+<section id="ndtEntryGate" hidden aria-label="Inloggen of proefversie starten">
+ <div class="ndt-entry-card">
+  <h1>Welkom bij NDT Radiography Pro</h1>
+  <p>Log eenmalig in. Daarna herkent dit toestel je sessie, ook wanneer de verbinding wegvalt. Bedrijfsgegevens blijven offline versleuteld en vragen een aparte wachtzin.</p>
+  <form id="ndtEntryForm">
+   <label for="ndtEntryEmail">E-mailadres<input id="ndtEntryEmail" type="email" autocomplete="email" required placeholder="naam@bedrijf.nl"></label>
+   <label for="ndtEntryPassword">Wachtwoord<input id="ndtEntryPassword" type="password" autocomplete="current-password" required placeholder="Wachtwoord"></label>
+   <button id="ndtEntrySubmit" type="submit">Inloggen</button>
+  </form>
+  <button id="ndtEntryTrial" class="secondary" type="button">Start gratis proefversie (50 berekeningen)</button>
+  <button id="ndtEntryOffline" class="secondary" type="button" hidden>Doorgaan in Offline Bunker-modus</button>
+  <p id="ndtEntryStatus" role="status" aria-live="polite">Log in of kies de proefversie.</p>
+  <p>Heb je nog geen account? Open via het account-icoon de bedrijfsomgeving om je te registreren. De proefversie is een lokale onderzoeksdemo, geen licentie- of veiligheidsvrijgave.</p>
+ </div>
+</section>
 <a href="./research/company-suite/index.html" id="ndtCompanyLaunch" class="ndt-company-launch" aria-label="Bedrijfsmodus openen: proefberekeningen en bedrijfsaccounts">
   <span class="ndt-company-launch-copy">
     <strong id="ndtCompanyLaunchTitle">Bedrijfsmodus</strong>
@@ -192,6 +228,7 @@
   <section class="rt-compact-calculator" id="rtCompactPanel" aria-label="Compact rekenoverzicht" hidden>
     <div class="rt-compact-toolbar">
       <strong id="rtCompactTitle">Snelle onderzoeksberekening</strong>
+      <a class="ndt-se75-quicklink" id="ndtSe75ResearchShortcut" href="./se75.html" aria-label="Open het aparte mobiele Se-75 onderzoeksinvoerscherm">Se-75 snelinvoer</a>
       <details class="rt-compact-help">
         <summary id="rtCompactHelpTitle">ⓘ Grenzen</summary>
         <p>Software-onderzoeksuitkomst, geen gevalideerde RT-belichtingstijd of vrijgave. Controleer de echte geometrie, actuele brongegevens, filmcondities, IQI en goedgekeurde procedure. Dit scherm geeft geen instructie om een bron of toestel te bedienen.</p>
@@ -272,6 +309,8 @@
         </div>
       </div>
     </div>
+    <button id="ndtChooseAsset" class="ndt-picker-button" type="button">☷ Kies bron / toestel uit mijn gegevens</button>
+    <p id="ndtAssetNote" class="rt-compact-note" hidden role="status" aria-live="polite"></p>
     <p class="rt-compact-note" id="rtCompactModeNote" role="status">Onderzoeksberekening: geen vrijgegeven belichtingstijd.</p>
     
     <div class="rt-compact-result-mount" id="rtCompactResultMount"></div>
@@ -803,12 +842,20 @@
     </div>
   </details></div>
 </section>
-<section class="screen" data-screen="settings" id="screen-settings" hidden><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.6 BETA · AI Expert · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">De standaardrekenmodule slaat gegevens lokaal op. Als je AI Expert gebruikt, worden je vraag en optioneel geselecteerde RT-invoer via jouw Worker naar Google Gemini verstuurd.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
+<section class="screen" data-screen="settings" id="screen-settings" hidden><div id="ndtSettingsLinks" class="panel"><strong>Meer hulpmiddelen</strong></div><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.6 BETA · AI Expert · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">De standaardrekenmodule slaat gegevens lokaal op. Als je AI Expert gebruikt, worden je vraag en optioneel geselecteerde RT-invoer via jouw Worker naar Google Gemini verstuurd.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
 </main>
 <div id="stickyOutcome" class="sticky-outcome" role="status" aria-live="polite" hidden>
   <div class="sticky-meta"><strong id="stickyLabel">Berekening · onderzoek</strong><small id="stickyNote">Nog geen berekening</small></div>
   <strong id="stickyTime">—</strong>
+  <p id="ndtStickyReason">Nog geen onderzoeksberekening.</p>
+  <div id="ndtStickyFoot"><span id="ndtStickyFe">Fe-equivalent: —</span><button id="ndtSaveToLog" type="button" disabled>Opslaan in logboek</button></div>
 </div>
+<dialog id="ndtAssetDialog" aria-labelledby="ndtAssetHeading">
+  <h2 id="ndtAssetHeading">Kies bron of toestel</h2>
+  <p id="ndtAssetState" role="status" aria-live="polite">Gegevens laden…</p>
+  <div id="ndtAssetList"></div>
+  <button id="ndtAssetClose" type="button" class="ndt-asset-close">Sluiten</button>
+</dialog>
 <nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="sources" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg><span data-i18n="tabSources">Bronnen</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="ai" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5zM8 11h.01M16 11h.01M9 15h6"/></svg><span>AI Expert</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation">
   <button data-nav="curves" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-10"/></svg><span data-i18n="tabCurves">Grafieken</span></button>
   <button class="nav" data-nav="tools" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3h8l1 4 4 2v6l-4 2-1 4H8l-1-4-4-2V9l4-2z"></path><circle cx="12" cy="12" r="3"/></svg><span data-ui-i18n="toolsNav">Tools</span></button><button data-nav="records" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM9 10h6M9 14h6M9 18h4"/></svg><span data-i18n="tabRecords">Records</span></button><button data-nav="settings" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span data-i18n="tabSettings">Instellingen</span></button></div>
@@ -873,6 +920,7 @@
 })();
 </script>
 <script type="module" src="./app.mjs?v=419"></script>
+<script type="module" src="./mobile-shell.mjs?v=1"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>

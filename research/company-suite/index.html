@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="nl"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,viewport-fit=cover">
 <meta name="theme-color" content="#0a1628"><meta name="apple-mobile-web-app-capable" content="yes">
 <title>NDT Radiography Pro — Bedrijfsmodus (test)</title>
-<link rel="stylesheet" href="./styles.css"><link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./mobile-company.css"><link rel="manifest" href="./manifest.webmanifest">
 </head><body>
 <main class="shell">
 <header class="top">
  <a class="back-to-main" id="ndtReturnToMain" href="../../index.html">← Terug naar NDT Radiography Pro</a>
  <div class="eyebrow">NDT RADIOGRAPHY PRO · ONDERZOEK</div>
- <h1>Bedrijfsmodus <span class="muted">v0.1</span></h1>
- <p id="stateLine" class="state-line" role="status">Supabase-testproject Basic NDT: openbaar clientprofiel vooraf ingesteld.</p>
+ <h1>Beveiligde bedrijfsomgeving</h1>
+ <p id="stateLine" class="state-line" role="status">De beveiligde bedrijfsverbinding wordt gecontroleerd.</p>
  <div class="trial-top" id="trialTop" role="status" aria-live="polite">
   <strong id="trialCounterLabel">Gratis proefversie: nog 50 van 50 berekeningen</strong>
   <div class="trial-track" aria-hidden="true"><span id="trialProgress" style="width:0%"></span></div>
@@ -20,18 +20,18 @@
 </header>
 <div class="navrow">
  <button type="button" data-tab="account" aria-pressed="false">Account</button>
- <button type="button" data-tab="field" aria-pressed="true">Rekenen</button>
+ <button type="button" data-tab="field" aria-pressed="true">Bronnen &amp; logboek</button>
  <button type="button" data-tab="admin" aria-pressed="false" id="adminTab" hidden>Beheer</button>
  <button type="button" data-tab="tools" aria-pressed="false" hidden>Controles</button>
 </div>
 <section id="tab-account" class="tab" hidden>
  <article class="panel" id="connectionPanel">
- <h2>1. Supabase-testproject</h2><p class="help">Basic NDT staat standaard ingesteld met een publieke projectsleutel. Je kunt de gegevens wijzigen voor een ander testproject. Geen geheime service_role-sleutels gebruiken.</p>
- <form id="connectionForm"><label>Project-URL <input id="projectUrl" type="url" required autocomplete="url" placeholder="https://PROJECT.supabase.co"></label>
- <label>Publishable/anon-sleutel <input id="projectKey" required type="text" autocomplete="off" placeholder="sb_publishable_..."></label>
- <button type="submit">Testverbinding bewaren</button></form>
+ <h2>Beveiligde bedrijfsverbinding</h2><p class="help">De verbinding is al ingesteld. Deze technische gegevens hoeven normaal niet te worden aangepast.</p>
+ <form id="connectionForm"><label>Projectverbinding (URL) <input id="projectUrl" type="url" required autocomplete="url" placeholder="https://PROJECT.supabase.co"></label>
+ <label>Publieke verbindingssleutel <input id="projectKey" required type="text" autocomplete="off" placeholder="sb_publishable_..."></label>
+ <button type="submit">Verbinding controleren en bewaren</button></form>
  </article>
- <article class="panel"><h2>2. Registreren of inloggen</h2>
+ <article class="panel"><h2>Registreren of inloggen</h2>
  <div class="selector" id="authIntent"><label class="choice"><input type="radio" name="authType" value="new" checked>Nieuw bedrijf (Hoofdgebruiker)</label><label class="choice"><input type="radio" name="authType" value="join">Aansluiten (Personeel)</label></div>
  <form id="authForm">
  <label>E-mailadres<input id="email" type="email" autocomplete="email" required placeholder="naam@bedrijf.nl"></label>
@@ -42,7 +42,7 @@
  <button id="signOutBtn" class="ghost" type="button" hidden>Uitloggen</button>
  </article>
  <article class="panel" id="companySetupPanel">
- <h2>3. Bedrijfsregistratie / aansluiting</h2>
+ <h2>Bedrijf registreren of aansluiten</h2>
  <form id="registerCompanyForm"><h3>Nieuw bedrijf registreren</h3>
  <label>Bedrijfsnaam<input id="companyName" required placeholder="Bedrijfsnaam"></label>
  <label>Jouw naam<input id="adminName" required placeholder="Naam Hoofdgebruiker"></label>
@@ -66,13 +66,13 @@
  <form id="offlineForm"><label>Offline wachtzin<input type="password" id="offlinePassphrase" autocomplete="off" placeholder="Minimaal 8 tekens" required></label>
  <div class="actions"><button type="submit">Cache openen / ontgrendelen</button><button type="button" id="syncBtn" class="alt">Synchroniseren</button></div></form>
  <div class="help" id="cacheStatus">Nog geen offline cache ontgrendeld.</div>
- <div class="grid"><label>Offline account-ID<input id="offlineUserId" placeholder="Na eerste online login ingevuld"></label>
- <label>Offline bedrijfs-ID<input id="offlineCompanyId" placeholder="Na eerste online login ingevuld"></label></div>
+ <details><summary>Geavanceerde offline-identificatie</summary><div class="grid"><label>Offline account-ID<input id="offlineUserId" placeholder="Na eerste online login ingevuld"></label>
+ <label>Offline bedrijfs-ID<input id="offlineCompanyId" placeholder="Na eerste online login ingevuld"></label></div></details>
  <button type="button" id="offlineOpenBtn" class="ghost">Bestaande cache zonder internet openen</button>
  </article>
 </section>
 <section id="tab-admin" class="tab" hidden>
- <article class="panel"><h2>Hoofdgebruiker · Beheer</h2><p class="help">Beheeracties worden op de server met RLS gecontroleerd. Goedkeuren van een bedrijfsrecord betekent geen technische RT-/kalibratievrijgave.</p>
+ <article class="panel"><h2>Hoofdgebruiker · Beheer</h2><p class="help">Beheeracties worden beveiligd gecontroleerd. Goedkeuren van een bedrijfsrecord betekent geen technische RT-/kalibratievrijgave.</p>
  <div class="actions"><button type="button" id="loadRequestsBtn" class="alt">Toegangsaanvragen ophalen</button></div>
  <div id="requestsList" class="list" aria-live="polite"></div>
  <hr>
@@ -127,7 +127,12 @@
  <button type="submit">Procedure opslaan</button></form></article>
 </section>
 <section id="tab-field" class="tab">
- <article class="panel" id="researchWorkbenchPanel">
+ <article class="panel" id="ndtCompanyCalculatorLink">
+   <h2>Rekenen in de hoofdapp</h2>
+   <p class="help">Eén centrale onderzoeksrekenmachine. Selecteer hieronder een administratief goedgekeurde bron of buis om de relevante gegevens naar Rekenen over te nemen. Geen technische RT-vrijgave.</p>
+   <a class="action secondary" href="../../index.html">Open de hoofdcalculator</a>
+ </article>
+ <article class="panel" id="researchWorkbenchPanel" hidden aria-hidden="true">
   <h2>Opnameplan · Gamma / X-ray / Pijp / IQI / Materialen</h2>
   <p class="help">Onderzoekswaarden uit bestaande, begrensde datasets. Geen belichtingsinstructie, ijkcertificaat of formele IQI-vrijgave.</p>
   <div class="module-buttons" id="workbenchButtons">
@@ -148,7 +153,7 @@
      <label>Activiteit (Ci)<input id="gActivity" inputmode="decimal" placeholder="Bijv. 40"></label>
      <label>Zwarting D<input id="gDensity" inputmode="decimal" placeholder="Bijv. 2,0"></label>
     </div>
-    <label class="checktile"><input type="checkbox" id="gResearchFactor">Toon voorgestelde D4/D5-factor bij D=2,5 (PR #6, niet gevalideerd)</label>
+    <label class="checktile"><input type="checkbox" id="gResearchFactor">Onderzoeksfactor voor D4/D5 bij D=2,5 (niet gevalideerd)</label>
    </div>
    <div class="workbench-module" id="calc-xray" hidden>
     <h3>X-ray · bestaande toestel-/kV-curve</h3>
@@ -211,8 +216,8 @@
  </article>
  <article class="panel"><h2>Bedrijfsopnameplan · Veldscherm</h2><p id="fieldStatus" class="hint">Meld je aan en ontgrendel je bedrijfscache.</p>
  <div class="grid">
- <label>Vrijgegeven buis<select id="fieldTube"><option value="">Geen buis gekozen</option></select></label>
- <label>Vrijgegeven gammabron<select id="fieldSource"><option value="">Geen bron gekozen</option></select></label>
+ <label>Administratief goedgekeurde buis<select id="fieldTube"><option value="">Geen buis gekozen</option></select></label>
+ <label>Administratief goedgekeurde gammabron<select id="fieldSource"><option value="">Geen bron gekozen</option></select></label>
  <label>Vrijgegeven procedure<select id="fieldProcedure"><option value="">Geen procedure gekozen</option></select></label>
  </div><div id="sourceDecay" class="readout">Bronverval is een informatieve berekening, geen certificaatvalidatie.</div>
  <p class="help">Bedrijfsgegevens zijn maximaal zo actueel als de laatste synchronisatie. Offline wijzigingen aan goedkeuringen of lidmaatschap zijn niet onmiddellijk zichtbaar.</p>
@@ -224,7 +229,7 @@
  <div id="logStatus" class="readout">Nog geen conceptlog opgeslagen.</div>
  <hr>
  <h3>Gedeeld bedrijfslogboek</h3>
- <p class="help">De Hoofdgebruiker kan het bedrijfslogboek zien. Personeel ziet alleen zijn eigen opnames. Alle toegang wordt opnieuw door Supabase RLS gecontroleerd.</p>
+ <p class="help">De Hoofdgebruiker kan het bedrijfslogboek zien. Personeel ziet alleen zijn eigen opnames. Alle toegang wordt opnieuw door de beveiligde bedrijfsomgeving gecontroleerd.</p>
  <button type="button" id="loadLogsBtn" class="alt">Opnamelogboek ophalen</button>
  <div id="logsList" class="list" aria-live="polite"></div>
  </article>
@@ -262,10 +267,10 @@
  <div id="isoOutput" class="readout">Geen geometriecontrole uitgevoerd.</div>
  </article>
  <article class="panel"><h2>Onderzoeksmodules</h2><div class="actions">
- <a class="action secondary" href="../mijn-rontgenbuizen.html">Mijn Röntgenbuizen · PR #7</a>
- <a class="action secondary" href="../gamma-nine-point-review.mjs">Gamma negenpuntscontrole · PR #6</a>
+ <a class="action secondary" href="../mijn-rontgenbuizen.html">Mijn Röntgenbuizen · Onderzoeksdossier</a>
+ <a class="action secondary" href="../gamma-nine-point-review.mjs">Gamma negenpuntscontrole · Onderzoekscontrole</a>
  <a class="action secondary" href="../kalibratie-onderbouwing.md">Kalibratie-onderbouwing</a></div>
- <p class="help">De 1-/2-puntsfactor uit PR #7 en D4/D5-zwartingsfactoren uit PR #6 zijn niet toegepast op de live-rekenmotor.</p>
+ <p class="help">De aanvullende onderzoeksfactoren zijn niet toegepast op de bestaande onderzoeksrekenmotor.</p>
  </article>
 </section>
 <footer class="footer">ONDERZOEKSVERSIE · Niet gevalideerd voor industriële RT-opnamen · Geen kalibratievrijgave · Offline data kunnen verouderd zijn.</footer>

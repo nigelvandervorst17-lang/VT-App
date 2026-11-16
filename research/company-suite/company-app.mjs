@@ -42,7 +42,7 @@ function updateRole(){
  output('membershipSummary',state.member
   ?'Bedrijf: '+(state.company?.name??state.member.company_id)+
    '\nRol: '+(state.member.role==='admin'?'Hoofdgebruiker / Level 3':'Personeel / Radiograaf')+
-   '\nStatus: '+(state.mode==='offline'?'Offline cache, verouderd mogelijk':'Online, RLS actief')
+   '\nStatus: '+(state.mode==='offline'?'Offline cache, verouderd mogelijk':'Online, toegangsrechten gecontroleerd')
   :'Nog geen goedgekeurde bedrijfstoegang.');
  if(!state.member&&atOnline())setTab('account');
 }
@@ -69,7 +69,7 @@ $('connectionForm').addEventListener('submit',e=>{
   const config={url:selected('projectUrl').trim(),key:selected('projectKey').trim()};
   state.api=createSupabaseConnection(config);
   localStorage.setItem(PUBLIC_CONFIG_KEY,JSON.stringify(config));
-  notice('Supabase-project ingesteld. Je kunt nu een persoonlijk account gebruiken.');
+  notice('Beveiligde bedrijfsverbinding ingesteld. Je kunt nu aanmelden.');
  }catch(err){fail(err)}
 });
 async function authorize(fn){
@@ -88,7 +88,7 @@ async function afterSignIn(){
 $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();try{
   await authorize(()=>state.api.signIn(selected('email'),selected('password')));
-  await afterSignIn();output('authMessage','Ingelogd met Supabase Auth.');
+  await afterSignIn();output('authMessage','Je bent veilig aangemeld.');
  }catch(err){fail(err)}
 });
 $('signUpBtn').addEventListener('click',async()=>{
@@ -111,7 +111,8 @@ $('signOutBtn').addEventListener('click',async()=>{
  state.cache?.close();state.cache=null;state.user=null;state.member=null;
  state.memberships=[];state.snapshot=null;state.companyCode=null;
  output('adminCompanyCode','Uitgelogd — opnieuw aanmelden om de Bedrijfscode te zien.');
- state.mode='signed-out';
+ sessionStorage.removeItem('ndt-offline-workspace-v1');
+  state.mode='signed-out';
  updateRole();workbenchUI.refresh();setTab('account');notice('Uitgelogd. Offline cache blijft versleuteld op dit toestel.');
 });
 async function loadMemberships(){
@@ -197,7 +198,7 @@ $('loadRequestsBtn').addEventListener('click',async()=>{
      btn.addEventListener('click',async()=>{
       try{await state.api.rpc('approve_company_join',{
        p_request_id:row.id,p_approve:accepted
-      });notice('Aanvraag behandeld via Supabase RLS/RPC.');
+      });notice('Toegangsaanvraag beveiligd verwerkt.');
       $('loadRequestsBtn').click()}catch(err){fail(err)}
      });entry.append(btn);
     }
@@ -422,6 +423,37 @@ $('fieldTube').addEventListener('change',()=>{
  const row=state.snapshot?.tubes?.find(x=>x.id===$('fieldTube').value);
  if(row?.focal_spot_mm)$('isoSpot').value=String(row.focal_spot_mm);
 });
+
+/** Administrative selection bridge, never a technical RT approval. */
+function transferAsset(kind,id) {
+ const rows=kind==='source'?state.snapshot?.sources:state.snapshot?.tubes;
+ const record=rows?.find(row=>row.id===id&&row.approval_status==='approved');
+ if(!record||!state.member||(!state.cache&&!atOnline()))return;
+ if(!atOnline()&&state.mode!=='offline')return;
+ // Transient same-tab transfer; do not persist company records or passphrases in localStorage.
+ const portable=kind==='source'?{
+  isotope:record.isotope,name:record.name,
+  // Offline source activity remains encrypted; require a fresh manual/certificate check.
+  activity_ci:state.mode==='offline'?null:record.activity_ci,
+  activity_reference_at:state.mode==='offline'?null:record.activity_reference_at
+ }:{name:record.name,manufacturer:record.manufacturer,model:record.model};
+ sessionStorage.setItem('ndt-main-asset-selection-v1',JSON.stringify({
+  type:kind,row:portable,offline:state.mode==='offline'
+ }));
+ location.assign('../../index.html');
+}
+$('fieldSource').addEventListener('change',e=>{
+ if(e.target.value)transferAsset('source',e.target.value);
+});
+$('fieldTube').addEventListener('change',e=>{
+ if(e.target.value)transferAsset('tube',e.target.value);
+});
+$('trialStartBtn').addEventListener('click',e=>{
+ e.preventDefault();e.stopImmediatePropagation();
+ localStorage.setItem('ndt-ui-trial-choice-v1','trial');
+ location.assign('../../index.html');
+},true);
+
 async function syncOnline(){
  if(!atOnline()||!state.member)throw Error('Online account en goedgekeurd bedrijf vereist');
  const id=state.member.company_id;
@@ -467,7 +499,11 @@ async function unlock(online){
   updateRole();renderField();setTab('field');
   notice(STALE);
  }
- output('cacheStatus','Versleutelde cache ontgrendeld. Laatste sync: '+
+ // Only save an offline identity marker after the original encrypted-cache verifier and snapshot passed.
+  // No passphrase, token or decrypted company data is stored here.
+  localStorage.setItem('ndt-offline-cache-ready-v1',JSON.stringify({userId,companyId,lastSync:state.snapshot?.lastSync||null}));
+  if(state.mode==='offline')sessionStorage.setItem('ndt-offline-workspace-v1','unlocked');
+  output('cacheStatus','Versleutelde cache ontgrendeld. Laatste sync: '+
   (state.snapshot?.lastSync||'nog niet'));
  $('offlinePassphrase').value='';
 }
@@ -537,7 +573,11 @@ async function boot(){
   }
   $('offlineUserId').value=localStorage.getItem('ndt-last-user-id')||'';
   $('offlineCompanyId').value=localStorage.getItem('ndt-last-company-id')||'';
-  if(!applyConfig()){notice('Supabase nog niet ingesteld — bekijk schermen of configureer je testproject');return}
+  if(!applyConfig()){notice('Bedrijfsverbinding nog niet ingesteld.');return}
+   if(location.hash==='#offline'||location.hash==='#account'){
+    setTab('account');
+    if(location.hash==='#offline')$('offlinePanel')?.scrollIntoView({block:'start'});
+   }
   if(location.hash.includes('access_token=')){
    if(state.api.acceptMagicLinkHash(location.hash)){
     history.replaceState(null,'',location.pathname+location.search);
@@ -545,7 +585,7 @@ async function boot(){
   }
   if(state.api.token()&&navigator.onLine){
    try{await afterSignIn()}catch(err){notice('Online sessie kon niet worden vernieuwd. Offline cache ontgrendelen mogelijk.')}
-  }else notice('Supabase ingesteld · meld aan of ontgrendel een bestaande offline cache.');
+  }else notice('Bedrijfsomgeving gereed · meld je aan of ontgrendel een bestaande offline cache.');
  }catch(err){fail(err)}
 }
 const workbenchUI=mountResearchWorkbench({
