@@ -1,0 +1,10 @@
+{
+  "name": "NDT Radiography Pro — Bedrijfsmodus test",
+  "short_name": "NDT Bedrijf Test",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#071321",
+  "theme_color": "#0a1628",
+  "lang": "nl"
+}
