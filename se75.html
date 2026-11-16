@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071b2e">
+<meta name="description" content="Se-75: snelle mobiele onderzoeksberekening. Geen goedgekeurde RT-belichtingstijd of bedieningsinstructie.">
+<title>Se-75 snel berekenen · NDT Radiography Pro</title>
+<link rel="icon" type="image/webp" href="./brand/ndt-square-192.webp">
+<link rel="manifest" href="./manifest.webmanifest">
+<style>
+:root {color-scheme:dark; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#f0f7ff; background:#061827}
+* {box-sizing:border-box}
+body {margin:0;line-height:1.45}
+button,input,select,a {font:inherit}
+button,input,select {color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible {outline:3px solid #a4d9ff;outline-offset:3px}
+main {width:min(100%,580px);margin:0 auto;padding:0 16px calc(40px + env(safe-area-inset-bottom))}
+header {padding:calc(16px + env(safe-area-inset-top)) 0 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand {display:flex;align-items:center;gap:10px;min-width:0}
+.brand img {width:42px;height:42px;border-radius:12px}
+.brand b {display:block;font-size:15px;line-height:1.2}
+.brand small {display:block;color:#b2cfe0;font-size:11px}
+.back {color:#bfe0ff;text-decoration:none;font-weight:750;font-size:13px;min-height:44px;display:flex;align-items:center}
+.warning {border:1px solid #94753b;border-radius:13px;background:#302b25;color:#ffe1ac;padding:12px 13px;font-size:12px;margin:4px 0 18px}
+.warning strong {display:block;font-size:13px;margin-bottom:3px}
+.overline {color:#9dceff;font-size:11px;letter-spacing:1.4px;font-weight:800;text-transform:uppercase;margin:16px 0 6px}
+h1 {font-size:clamp(26px,7vw,32px);line-height:1.17;margin:0 0 8px}
+.intro {font-size:14px;color:#bad1e2;margin:0 0 20px}
+.source {display:flex;align-items:center;justify-content:space-between;border:1px solid #42799f;background:#123b59;padding:15px;border-radius:15px;margin-bottom:20px}
+.source-label {font-size:12px;color:#bbdff5}
+.source strong {display:block;font-size:22px;letter-spacing:.2px}
+.fixed {font-size:11px;color:#b3d4e7}
+fieldset {padding:0;margin:0;border:0;min-width:0}
+legend {font-size:15px;font-weight:850;margin-bottom:12px}
+.fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field {min-width:0;display:block}
+.field.wide {grid-column:1/-1}
+.field-label {display:block;font-size:13px;font-weight:750;margin:0 0 7px}
+.field-hint {display:block;font-size:11px;color:#bdd3e3;margin-top:5px}
+input,select {display:block;width:100%;min-width:0;min-height:52px;padding:10px 12px;border:1px solid #678aa3;border-radius:11px;background:#17334b;font-size:17px}
+input::placeholder {color:#a8bfd0}
+input:focus,select:focus {border-color:#91caff}
+input[aria-invalid="true"],select[aria-invalid="true"] {border-color:#ffbd9e}
+.conditions {margin:15px 0 12px;color:#bfd6e5;font-size:12px}
+.actions {display:grid;gap:9px;margin-top:20px}
+.primary {width:100%;border:1px solid #82c2ff;background:#1178d9;color:#fff;font-weight:900;font-size:17px;border-radius:14px;min-height:58px;padding:12px;cursor:pointer}
+.secondary {display:block;color:#bcddf5;font-size:13px;text-align:center;text-decoration:underline;text-underline-offset:3px;padding:12px}
+.result {margin:18px 0 12px;border:1px solid #496f8c;background:#102c43;border-radius:16px;padding:17px}
+.result h2 {font-size:14px;letter-spacing:.4px;text-transform:uppercase;margin:0 0 8px;color:#a8d5f8}
+.result-time {font-size:clamp(31px,9vw,46px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2;margin:5px 0}
+.result-message {font-size:13px;color:#d1e0eb;line-height:1.55;margin:8px 0}
+.result-note {border-top:1px solid #3c627a;padding-top:11px;font-size:12px;color:#ffdba9;margin:11px 0 0}
+.result[data-state="blocked"] {border-color:#af785b}
+.result[data-state="research"] {border-color:#73a2c5}
+details {border:1px solid #385d76;border-radius:13px;background:#0d2a40;padding:13px;margin:14px 0}
+summary {cursor:pointer;font-weight:800;font-size:13px}
+details p,details li {font-size:12px;color:#c3d8e7;line-height:1.6}
+details ul {padding-left:19px}
+footer {color:#9fb9ce;text-align:center;font-size:11px;margin-top:20px}
+@media (max-width:390px) {.fields{grid-template-columns:minmax(0,1fr)}.field.wide{grid-column:auto}main{padding-left:13px;padding-right:13px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">
+      <img src="./brand/ndt-square-192.webp" alt="" width="42" height="42">
+      <div><b>NDT Radiography Pro</b><small>Snelle onderzoeksinvoer</small></div>
+    </div>
+    <a class="back" href="./index.html">Alle tools</a>
+  </header>
+  <div class="warning" role="note">
+    <strong>ONDERZOEKSVERSIE · GEEN RT-VRIJGAVE</strong>
+    Dit scherm toont uitsluitend een indicatieve uitkomst uit bestaande onderzoekscurves. Niet gebruiken als instructie voor daadwerkelijke belichtingen.
+  </div>
+  <p class="overline">Gamma · geselecteerde bron</p>
+  <h1>Se-75 berekenen</h1>
+  <p class="intro">Vul alleen je gemeten gegevens in. Geen automatisch ingevulde bronactiviteit, dikte of afstand.</p>
+  <div class="source" aria-label="Geselecteerde bron Se-75">
+    <div><span class="source-label">Bron / isotoop</span><strong>Se-75</strong></div>
+    <span class="fixed">Vast geselecteerd</span>
+  </div>
+  <form id="se75Form" novalidate>
+    <fieldset>
+      <legend>Gegevens voor de onderzoeksberekening</legend>
+      <div class="fields">
+        <label class="field wide" for="thickness">
+          <span class="field-label">Doorstraalde staaldikte w (mm)</span>
+          <input id="thickness" name="thicknessMm" type="text" inputmode="decimal" placeholder="Gemeten dikte" autocomplete="off" required aria-describedby="thicknessHelp">
+          <span class="field-hint" id="thicknessHelp">Werkelijke stralingsweg door staal; bij pijp of schuine opnames niet automatisch t of 2 × t.</span>
+        </label>
+        <label class="field" for="film">
+          <span class="field-label">Filmtype</span>
+          <select id="film" name="film" required>
+            <option value="" selected>Kies film</option>
+            <option value="D4">D4</option>
+            <option value="D5">D5</option>
+            <option value="D7">D7</option>
+          </select>
+        </label>
+        <label class="field" for="density">
+          <span class="field-label">Doelzwarting (D)</span>
+          <input id="density" name="density" type="text" inputmode="decimal" placeholder="Bijv. 2,0" autocomplete="off" required>
+        </label>
+        <label class="field" for="activity">
+          <span class="field-label">Actuele activiteit (Ci)</span>
+          <input id="activity" name="activityCi" type="text" inputmode="decimal" placeholder="Volgens broncertificaat" autocomplete="off" required aria-describedby="activityHelp">
+          <span class="field-hint" id="activityHelp">Zelf controleren voor de gekozen datum; hier vindt geen certificaat-/vervalcontrole plaats.</span>
+        </label>
+        <label class="field" for="distance">
+          <span class="field-label">Bron-filmafstand (mm)</span>
+          <input id="distance" name="distanceMm" type="text" inputmode="decimal" placeholder="Gemeten afstand" autocomplete="off" required>
+        </label>
+      </div>
+    </fieldset>
+    <p class="conditions">Vaste onderzoekscondities: <b>staal (Fe)</b> en <b>loodschermen (Pb)</b>. Voor andere materialen, technieken of een volledige geometrie-/IQI-controle: open de hoofdcalculator.</p>
+    <div class="actions">
+      <button class="primary" id="calculateSe75" type="submit">Bereken (onderzoek)</button>
+      <a class="secondary" href="./index.html">Volledige calculator / certificaat / IQI openen</a>
+    </div>
+  </form>
+  <section class="result" id="se75Result" data-state="idle" role="status" aria-live="polite" aria-atomic="true">
+    <h2 id="resultStatus">Nog geen berekening</h2>
+    <div class="result-time" id="resultTime">—</div>
+    <p class="result-message" id="resultMessage">Vul de gegevens in en druk op Bereken.</p>
+    <p class="result-message" id="resultSource" hidden></p>
+    <p class="result-note">Geen goedgekeurde RT-belichtingstijd. De uitkomst controleert geen IQI, techniek, radiologische veiligheid, kalibratie of procedure.</p>
+  </section>
+  <details>
+    <summary>Welke controles zijn niet automatisch uitgevoerd?</summary>
+    <ul>
+      <li>Broncertificaat, actuele activiteit en bronidentiteit.</li>
+      <li>Werkelijke opnamegeometrie, doorstraalde dikte en afstand.</li>
+      <li>Filmtype, Pb-schermen, verwerking en werkelijk bereikte zwarting.</li>
+      <li>IQI, klasse, procedure, bevoegdheid en stralingsbescherming.</li>
+      <li>Onafhankelijke fysieke validatie van de onderzoeksreferentie.</li>
+    </ul>
+    <p>Een numerieke uitkomst is geen toestemming of instructie om met Se-75 te werken.</p>
+  </details>
+  <footer>Onderzoeksweergave met de bestaande <code>rt-core.mjs</code>-motor. De motor en referentiecurves zijn ongewijzigd.</footer>
+</main>
+<script type="module" src="./se75-quick.mjs"></script>
+</body>
+</html>
