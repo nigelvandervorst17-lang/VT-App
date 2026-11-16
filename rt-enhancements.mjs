@@ -42,6 +42,7 @@ function applyStaticTranslations() {
     ['#bootFailureDetail','static.bootDetail'],
     ['#bootFailure > a','static.openCheck'],
     ['#rtCompactKvField > span','ui.voltage'],
+    ['#rtCompactPanel .rt-compact-help p','ui.researchHelp'],
     ['#rtCompactIqiQuick .rt-iqi-quick-title strong','ui.iqi'],
     ['#rtCompactIqiQuick .rt-iqi-quick-title span','ui.iqiSub'],
     ['#rtCompactIqiQuick .rt-iqi-observed label','ui.observed'],
@@ -50,6 +51,19 @@ function applyStaticTranslations() {
   for (const [selector,key] of textTargets) {
     const node = document.querySelector(selector);
     if (node) node.textContent = tr(key);
+  }
+  const group = $('rtMaterialChoices');
+  const heading = group?.querySelector(':scope > strong');
+  if (heading) {
+    const textNode=[...heading.childNodes].find(n=>n.nodeType===Node.TEXT_NODE);
+    if (textNode) textNode.textContent=tr('ui.material')+' ';
+    const small=heading.querySelector('small');
+    if (small) small.textContent=tr('ui.materialNote');
+  }
+  const custom = $('rtMaterialCustomWrap');
+  if (custom) {
+    const labelNode=[...custom.childNodes].find(n=>n.nodeType===Node.TEXT_NODE);
+    if (labelNode) labelNode.textContent=tr('ui.customFactor')+' ';
   }
   for (const btn of document.querySelectorAll('[data-rt-material]')) {
     const id = btn.dataset.rtMaterial;
@@ -141,7 +155,7 @@ function renderMaterial() {
     Number.isFinite(physical) && Number.isFinite(equivalent);
   output.hidden = !valid;
   if (valid) output.textContent = tr('ui.materialSummary', {
-    thickness:fmt(physical,1), fe_eq:fmt(equivalent,1),
+    thickness:fmt(physical,Number.isInteger(physical)?0:1), fe_eq:fmt(equivalent,1),
     material:tr('materials.'+material)
   });
 }
