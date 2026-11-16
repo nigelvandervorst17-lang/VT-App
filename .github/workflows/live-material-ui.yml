@@ -9,6 +9,9 @@ on:
       - 'rt-material-ui.mjs'
       - 'sw.js'
       - 'research/live-material-preview*'
+      - 'research/material-factor-data.mjs'
+      - 'material-equivalence.mjs'
+      - 'rt-core.mjs'
       - 'research/waygate-six-user-points-unverified.json'
       - '.github/workflows/live-material-ui.yml'
   workflow_dispatch:
@@ -30,6 +33,9 @@ jobs:
           node --check compact-layout.mjs
           node --check rt-material-ui.mjs
           node --check research/live-material-preview.mjs
+          node --check research/material-factor-data.mjs
+          node --check material-equivalence.mjs
+          node --check rt-core.mjs
       # test-3.8.mjs is an older non-current baseline: it asserts a valid
       # Se-75 D=1.4 exposure which the present guarded core intentionally
       # rejects. Keep it unchanged pending an independent test-suite review.

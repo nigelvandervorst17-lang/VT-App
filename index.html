@@ -199,7 +199,7 @@
       <button type="button" id="rtCompactPipe" aria-pressed="false">Buis / Pijp</button>
     </div>
     <section class="rt-material-choice" id="rtMaterialChoices" aria-label="Materiaalkeuze voor onderzoek">
-      <strong>Materiaalkeuze <small>voorgestelde factoren · onderzoek</small></strong>
+      <strong>Materiaalkeuze <small>factor wordt automatisch verwerkt · onderzoek</small></strong>
       <div class="rt-material-tiles" role="group" aria-label="Selecteer materiaal">
         <button type="button" class="active" data-rt-material="Fe" aria-pressed="true">Staal <small>1,00</small></button>
         <button type="button" data-rt-material="RVS300" aria-pressed="false">RVS <small>γ 1,02 · X 1,08</small></button>
@@ -212,7 +212,7 @@
         Eigen factor (0–10, niet gevalideerd)
         <input id="rtMaterialCustomFactor" type="text" inputmode="decimal" placeholder="bijv. 0,85" autocomplete="off">
       </label>
-      <p id="rtMaterialSummary" role="status" aria-live="polite">Staal: factor 1,00. Geen materiaalaanpassing aan de belichtingsmotor.</p>
+      <p id="rtMaterialSummary" role="status" aria-live="polite">Staal: factor 1,00. Onderzoeksberekening op basis van staal.</p>
     </section>
     <div class="rt-compact-pipe" id="rtCompactPipeFields" hidden>
       <div class="rt-compact-pipe-grid">
@@ -864,12 +864,12 @@
   window.BasicRtCometCatalog={models:items.map(x=>x.model),mode:'reference-only',datasetValidated:false};
 })();
 </script>
-<script type="module" src="./app.mjs?v=417"></script>
+<script type="module" src="./app.mjs?v=419"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./compact-layout.mjs?v=418"></script>
-<script type="module" src="./rt-material-ui.mjs?v=418"></script>
+<script type="module" src="./rt-material-ui.mjs?v=419"></script>
 <script type="module" src="./iqi-quick.mjs?v=408"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>

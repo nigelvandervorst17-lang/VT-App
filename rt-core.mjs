@@ -77,10 +77,10 @@ function inputValid(thicknessMm,distanceMm){
   return [thicknessMm,distanceMm].every(finite)&&thicknessMm>=0&&distanceMm>0&&
       thicknessMm<=100&&distanceMm<=100000&&distanceMm>thicknessMm;
 }
-export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,activityCi,material='Fe',screens='Pb'},db){
+export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,activityCi,material='Fe',customFactor,screens='Pb'},db){
   if(!inputValid(thicknessMm,distanceMm)||!finite(activityCi)||activityCi<=0||activityCi>100000) return {ok:false,error:ERROR.INVALID};
   if(screens!=='Pb')return {ok:false,error:ERROR.MATERIAL};
-  const equivalence=materialSteelEquivalent({material,thicknessMm,mode:'gamma',isotope});
+  const equivalence=materialSteelEquivalent({material,thicknessMm,mode:'gamma',isotope,customFactor});
   if(!equivalence.ok)return equivalence;
   const effectiveMm=equivalence.steelEquivalentMm;
   const ds=db?.gamma?.[isotope];
@@ -108,6 +108,7 @@ export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,acti
     densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,
     filmFactorDerived:Boolean(ds.derivedFilms?.[film]),
     status:String(ds.status||'RESEARCH_ONLY_NOT_APPROVED')+
+      (equivalence.researchOnly?'; material_factor_research_unverified':'')+
       (density!==ds.density?'; density_model_unvalidated':'')+
       (ds.derivedFilms?.[film]?'; film_factor_unverified':''),
     material,physicalThicknessMm:thicknessMm,equivalentSteelMm:effectiveMm,
@@ -116,9 +117,9 @@ export function calculateGamma({isotope,film,density,thicknessMm,distanceMm,acti
     comparisonOnly:false
   };
 }
-export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,material='Fe'},db){
+export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,material='Fe',customFactor},db){
   if(!inputValid(thicknessMm,distanceMm)||!finite(ma)||ma<=0||ma>1000) return {ok:false,error:ERROR.INVALID};
-  const equivalence=materialSteelEquivalent({material,thicknessMm,mode:'xray',kv});
+  const equivalence=materialSteelEquivalent({material,thicknessMm,mode:'xray',kv,customFactor});
   if(!equivalence.ok)return equivalence;
   const effectiveMm=equivalence.steelEquivalentMm;
   const ds=db?.xray?.[model];
@@ -135,7 +136,7 @@ export function calculateXray({model,film,density,kv,ma,thicknessMm,distanceMm,m
   if(!finite(mam)||mam<line.minMam-1e-7||mam>line.maxMam+1e-7) return {ok:false,error:ERROR.CHART_LIMIT};
   const minutes=(mam/ma)*(distanceMm/ds.referenceDistanceMm)**2 * densityModel.factor;
   if(!finite(minutes)||minutes<=0||minutes>1e9) return {ok:false,error:ERROR.INVALID};
-  return {ok:true,minutes,material,physicalThicknessMm:thicknessMm,equivalentSteelMm:effectiveMm,materialFactor:equivalence.factor,materialFactorSource:equivalence.source,materialFactorApproximate:equivalence.researchOnly,exposure:mam,exposureUnit:'mA·min',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,screens:ds.screens,status:ds.status+(density!==ds.density?'; 200kv_film_response_applied_to_equipment_unvalidated':'')};
+  return {ok:true,minutes,material,physicalThicknessMm:thicknessMm,equivalentSteelMm:effectiveMm,materialFactor:equivalence.factor,materialFactorSource:equivalence.source,materialFactorApproximate:equivalence.researchOnly,exposure:mam,exposureUnit:'mA·min',datasetId:ds.datasetId,sourceTitle:ds.sourceTitle,referenceDistanceMm:ds.referenceDistanceMm,referenceDensity:ds.density,targetDensity:density,densityFactor:densityModel.factor,densityMethod:densityModel.method,densitySourceUrl:densityModel.sourceUrl,screens:ds.screens,status:ds.status+(equivalence.researchOnly?'; material_factor_research_unverified':'')+(density!==ds.density?'; 200kv_film_response_applied_to_equipment_unvalidated':'')};
 }
 export function hms(minutes){
   if(!finite(minutes)||minutes<=0) return '—';

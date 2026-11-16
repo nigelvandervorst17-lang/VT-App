@@ -46,17 +46,15 @@ test('Android 192px and 512px manifest icons have matching user-logo files',()=>
 });
 test('Service worker has a new cache revision and all the four icon/banner assets',()=>{
  const sw=t('sw.js');
- assert.match(sw,/ndt-radiography-pro-brand-20261116-v1/);
+ assert.match(sw,/ndt-radiography-pro-material-research-20261116-v2/);
  for(const name of ['ndt-square-192.webp','ndt-square-512.webp',
   'ndt-banner-512.webp','ndt-apple-touch-180.png'])assert.ok(sw.includes(name));
  assert.match(sw,/Promise\.allSettled\(ASSETS/);
 });
-test('Unvalidated industrial exposure math modules remain byte-identical',()=>{
+test('Reference curve datasets remain byte-identical in research branch',()=>{
  const sha={
-  'rt-core.mjs':'092fdee99b7910a9427a0cc3031b7d887ccf6fde',
   'rt-curves.mjs':'7438a25576539f79f89d562a70504ccf2cb42d7c',
   'film-response.mjs':'53dbe7aa23317dc55d06862ad82a08006a1daaab',
-  'material-equivalence.mjs':'1878c07b9eb967e49c587df39af2a3294d1e6757',
   'xray-extra-curves.mjs':'8c7182e0f5e1b6ff88feee11a506c6afa012fce9',
  };
  for(const [name,expected] of Object.entries(sha))
@@ -70,9 +68,11 @@ test('The six unverified Waygate points do not become executable X-ray curves',(
  assert.equal(reference.sharedConditions.ma,null);
  assert.equal(reference.sharedConditions.sfdMm,null);
 });
-test('Material and D2.5 factors are still independent research comparisons',()=>{
+test('Material factor research integration preserves D2.5 comparison and warnings',()=>{
  const ui=t('rt-material-ui.mjs');
- assert.match(ui,/NIET TOEGEPAST/);
+ assert.match(ui,/Automatisch meegenomen/);
+ assert.match(t('rt-core.mjs'),/material_factor_research_unverified/);
+ assert.match(t('material-equivalence.mjs'),/validatedForExposure:false/);
  assert.match(ui,/compareGammaDensityD25/);
  assert.doesNotMatch(ui,/resultTime'\)\.textContent\s*=/);
  const research=t('research/live-material-preview.mjs');

@@ -1,7 +1,7 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='ndt-radiography-pro-brand-20261116-v1';
+const CACHE='ndt-radiography-pro-material-research-20261116-v2';
 const ASSETS=['./','./index.html','./styles.css','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs',
-'./rt-material-ui.mjs','./research/live-material-preview.mjs',
+'./rt-material-ui.mjs','./research/live-material-preview.mjs','./research/material-factor-data.mjs',
 './ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./iqi-quick.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',
