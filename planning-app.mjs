@@ -4,7 +4,7 @@
  * No new exposure calculations, IQI acceptance, material factors or safety shortcuts.
  */
 import {makePlanningAPI} from './planning-api.mjs';
-import {buildPlanningInviteLink} from './planning-team-invite.mjs';
+import {buildPlanningTeamInvite} from './planning-team-invite.mjs';
 import {unlockWorkbonCache,WORKBON_OFFLINE_USER,syncWorkbonOutbox} from './workbon-offline-sync.mjs';
 import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
  localISODate,NO_RT_RELEASE} from './planning-data.mjs';
@@ -446,13 +446,20 @@ function populateForm(bon){
  renderImportSummary();
 }
 function renderImportSummary(){
- const form=$('planningBonForm');
- const raw=Object.fromEntries(new FormData(form).entries());
+ const form=$('planningBonForm'),raw=Object.fromEntries(new FormData(form).entries());
  const summary=$('planningImportSummary');summary.replaceChildren();
- summary.append(elem('strong','',raw.klant||'Klant nog onbekend'),
-  elem('small','','Bon '+(raw.bonnummer||'—')+' · Order '+(raw.ordernummer||'—')+
-   ' · '+(raw.datum||'Datum ontbreekt')),
-  elem('small','',raw.adres||'Adres ontbreekt'));
+ const fields=[
+  ['Opdracht- / Bonnummer','bonnummer'],['Klant','klant'],['Adres','adres'],['Order','ordernummer'],
+  ['Datum','datum'],['Start','starttijd'],['Einde','eindtijd'],['Bron / toestel','bron_of_toestel'],
+  ['Materiaal','materiaal'],['Wanddikte','wanddikte_mm'],['SFD','sfd_mm'],
+  ['Film','film'],['Doelzwarting','doelzwarting'],['Procedure','procedure_code'],['Revisie','revisie']
+ ];
+ summary.append(elem('strong','','Controleer gegevens van de werkbon'));
+ for(const [name,key] of fields){
+  const value=String(raw[key]||'').trim();
+  summary.append(elem('small',value?'plan-field-ready':'plan-status-pending',
+   name+': '+(value||'Nog in te vullen')));
+ }
 }
 function openBonDialog(bon=null){
  if(!activeRole('planning')){notice('Alleen Planning kan werkbonnen maken.',true);return;}
@@ -481,7 +488,8 @@ async function autoAnalyze(generation){
   // Only planning values are populated, never the researcher-specific measurements.
   const form=$('planningBonForm');
   for(const field of ['bonnummer','klant','adres','ordernummer','bron_of_toestel',
-   'procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd']){
+   'procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd',
+   'materiaal','materiaal_omschrijving','wanddikte_mm','sfd_mm','film','doelzwarting','activiteit_ci','kv','ma']){
    const input=form.elements.namedItem(field);
    if(input)input.value=values[field]??'';
   }
@@ -537,14 +545,27 @@ async function saveBon(event){
  finally{button.disabled=false;$text('planningSaveBon','Werkbon / Concept opslaan');}
 }
 async function addResearcher(event){
- event.preventDefault();
+ event.preventDefault();if(!activeRole('planning')||!state.client)return;
  const button=event.currentTarget.querySelector('button');button.disabled=true;
  try{
-  await state.client.addResearcher($('planningResearcherEmail').value);
-  const snapshot=await state.client.list();state.members=snapshot.members;
+  const invite=await state.client.createInvite(
+   $('planningResearcherEmail').value,$('planningInviteCompany').value||null);
+  const company=state.companyAdminOptions.find(x=>x.id===invite.company_id);
+  const compose=buildPlanningTeamInvite({
+   email:invite.email,token:invite.token,origin:location.origin,path:location.pathname,
+   companyName:company?.name||'de NDT Planning-werkruimte'
+  });
   $('planningResearcherEmail').value='';
-  renderMembership();$text('planningTeamStatus','Onderzoeker toegevoegd. Je kunt nu bonnen toewijzen.');
- }catch(e){$text('planningTeamStatus','Toevoegen mislukt: '+errorText(e));}
+  const panel=$('planningTeamStatus');panel.replaceChildren();
+  panel.append(elem('span','','Uitnodiging aangemaakt (7 dagen, eenmalig). Er is nog geen e-mail verzonden. '));
+  const link=elem('a','plan-invite-send','Open uitnodigingsmail en klik op Verzenden');
+  link.href=compose.mailto;panel.append(link);
+  const copy=action('Kopieer uitnodigingslink',async()=>{
+   try{await navigator.clipboard.writeText(compose.link);notice('Uitnodigingslink gekopieerd. Deel deze uitsluitend met '+invite.email+'.');}
+   catch{notice('Kopiëren niet toegestaan. Gebruik de uitnodigingsmail.',true);}
+  },'plan-invite-copy');
+  panel.append(copy);
+ }catch(e){$text('planningTeamStatus','Uitnodiging mislukt: '+errorText(e));}
  finally{button.disabled=false;}
 }
 function saveProcedure(event){
