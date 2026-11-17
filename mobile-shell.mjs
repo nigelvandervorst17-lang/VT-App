@@ -142,7 +142,7 @@ function initAuth(){
  emailInput.addEventListener('blur',normalizedEmail);
  const validate=(email,password)=>{
   const missing=!email||!password||password.length<6;
-  const malformed=!missing&&(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||emailInput.validity.typeMismatch);
+  const malformed=!missing&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||emailInput.validity.typeMismatch);
   emailInput.setAttribute('aria-invalid',String(!email||malformed));
   passwordInput.setAttribute('aria-invalid',String(!password||password.length<6));
   if(missing)return 'Vul een e-mailadres en wachtwoord van minimaal 6 tekens in.';
