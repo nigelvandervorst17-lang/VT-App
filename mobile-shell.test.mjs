@@ -140,10 +140,22 @@ test('registration directly below login uses the existing Supabase Auth client',
  const trial=html.indexOf('id="ndtEntryTrial"');
  assert.ok(login>=0&&signup>login&&trial>signup);
  assert.match(html,/id="ndtEntryRegister" class="secondary" type="button">Nieuw account aanmaken<\/button>/);
- assert.match(ui,/await api\(\)\.signUp\(email,passwordInput\.value\)/);
- assert.match(ui,/await api\(\)\.signIn\(email,passwordInput\.value\)/);
- assert.match(ui,/const normalizeEntryEmail=value=>String\(value\?\?''\)\.trim\(\)\.replace\(\/\\\.\+\$\/, ''\)/);
- assert.match(ui,/if\(!entryForm\.reportValidity\(\)\)return/);
+ assert.ok(ui.includes('await supabase.auth.signUp({email:values.email,password:values.password})'));
+ assert.ok(ui.includes('signUp:({email,password})=>api().signUp(email,password)'));
+ assert.ok(ui.includes('await api().signIn(values.email,values.password)'));
+ assert.ok(ui.includes("String(value??'').trim().replace(/\\.+$/, '')"));
+ assert.ok(ui.includes('const missing=!email||!password||password.length<6'));
+ assert.ok(ui.includes("if(message){status(message,'error');return null;}"));
+ assert.doesNotMatch(ui,/entryForm\\.reportValidity/);
+ assert.match(html,/<form id="ndtEntryForm" novalidate>/);
+ const feedback=html.indexOf('id="ndtEntryStatus"');
+ assert.ok(feedback>=0 && feedback<login,'feedback must be above the login button');
+ assert.ok(ui.includes("button.textContent=busy?'Bezig...'"));
+ assert.ok(ui.includes("'Account aangemaakt! Controleer je e-mail om te bevestigen.','success'"));
+ assert.ok(ui.includes("'Registratie mislukt: '+String(err?.message||err),'error'"));
+ const styles=src('mobile-shell.css');
+ assert.ok(styles.includes('#ndtEntryStatus[data-kind="error"]'));
+ assert.ok(styles.includes('#ndtEntryStatus[data-kind="success"]'));
 });
 test('login flow does not grant private Naslag access or bypass company RLS',()=>{
  const naslag=src('private-naslag.mjs');
@@ -151,4 +163,20 @@ test('login flow does not grant private Naslag access or bypass company RLS',()=
  assert.match(naslag,/return result===true/);
  assert.doesNotMatch(ui,/ndt_naslag_admins|is_ndt_naslag_admin/);
  assert.doesNotMatch(ui,/service_role|sb_secret_/);
+});
+
+test('Supabase signup adapter posts credentials through the existing Auth endpoint',async()=>{
+ let request;
+ const cfg={url:'https://test-project.supabase.co',key:'sb_publishable_abcdefghijklmnopqrstuvwxyz'};
+ const adapter=createSupabaseConnection(cfg,{
+  fetch:async(url,init)=>{
+   request={url,init};
+   return new Response(JSON.stringify({id:'new-user',email:'new@example.com'}),{status:200});
+  }
+ });
+ const result=await adapter.signUp('new@example.com','safe-password');
+ assert.equal(result.email,'new@example.com');
+ assert.match(request.url,/\/auth\/v1\/signup$/);
+ assert.equal(request.init.method,'POST');
+ assert.deepEqual(JSON.parse(request.init.body),{email:'new@example.com',password:'safe-password'});
 });
