@@ -140,4 +140,5 @@ export function createSupabaseConnection({url,key},environment=globalThis){
   token,rpc,select,insert,update,root};
 }
 const TABLES=new Set(['companies','company_members','join_requests','company_tubes',
- 'company_sources','company_procedures','exposure_logs']);
+ 'company_sources','company_procedures','exposure_logs',
+ 'planning_members','planning_workbonnen','planning_opnames']);
