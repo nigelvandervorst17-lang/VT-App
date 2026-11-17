@@ -4,12 +4,14 @@
  * No new exposure calculations, IQI acceptance, material factors or safety shortcuts.
  */
 import {makePlanningAPI} from './planning-api.mjs';
+import {buildPlanningInviteLink} from './planning-team-invite.mjs';
+import {unlockWorkbonCache,WORKBON_OFFLINE_USER,syncWorkbonOutbox} from './workbon-offline-sync.mjs';
 import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
- localISODate,buildReport,reportMailto,NO_RT_RELEASE} from './planning-data.mjs';
+ localISODate,NO_RT_RELEASE} from './planning-data.mjs';
 import {extractBonText,parseBonViaGemini,setupBonTurnstile} from './workbon-reader.mjs';
 
 const $=id=>document.getElementById(id);
-const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],
+const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],companyAdminOptions:[],offlineCache:null,offlineUserId:null,
  filter:'today',search:'',activeId:null,setupBonId:null,setupReady:false,
  selectedId:null,editingId:null,pendingFile:null,pendingText:'',readGeneration:0,
  processing:false,loading:false,procedureList:proceduresForStore([])};
@@ -35,7 +37,9 @@ const activeRole=role=>state.role===role;
 const localToday=()=>localISODate();
 function clearUserData(){
  state.client=null;state.role=null;state.user=null;state.bons=[];state.opnames=[];
- state.members=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
+ state.members=[];state.companyAdminOptions=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
+ state.offlineCache?.close();state.offlineCache=null;
+ window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:null,label:''}}));
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
 }
 async function refreshPlanning(){
@@ -51,6 +55,18 @@ async function refreshPlanning(){
   }
   state.client=client;state.role=snapshot.role;state.user=snapshot.user;
   state.bons=snapshot.bons;state.opnames=snapshot.opnames;state.members=snapshot.members;
+  state.companyAdminOptions=snapshot.companyAdminOptions||[];
+  if(state.role==='researcher'){
+   localStorage.setItem(WORKBON_OFFLINE_USER,state.user.id);
+   if(state.offlineCache&&state.offlineCache.userId===state.user.id){
+    await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
+    await flushOfflineOutbox();
+   }
+  }
+  window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{
+   detail:{role:state.role,label:state.role==='planning'?'Planning · '+(state.user.email||'beheer'):
+    state.role==='researcher'?'Onderzoeker · '+(state.user.email||'aangemeld'):state.user.email||''}
+  }));
   if(state.activeId&&!state.bons.some(b=>b.id===state.activeId))state.activeId=null;
   state.procedureList=readProcedures();
   notice(state.role==='planning'?
@@ -86,10 +102,18 @@ function renderMembership(){
  const planning=activeRole('planning');
  $('planningTeam').hidden=!planning;$('planningAdd').hidden=!planning;
  $('planningDraftFilter').hidden=!planning;
- $('planningProcedureForm').querySelector('button[type="submit"]').disabled=!planning;
+ $('planningProcedureForm').hidden=!planning;
+ $('planningOfflinePanel').hidden=!activeRole('researcher');
  $text('planningRole',planning?'Planning · bonnen aanmaken/toewijzen':
   activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':'Voorbeeldplanning');
  const list=state.members.filter(m=>m.role==='researcher');
+ const companies=$('planningInviteCompany');
+ if(companies&&planning){
+  const selected=companies.value;
+  companies.replaceChildren(new Option('Planning-werkruimte',''));
+  for(const item of state.companyAdminOptions)companies.add(new Option(item.name,item.id));
+  companies.value=state.companyAdminOptions.some(x=>x.id===selected)?selected:'';
+ }
  $text('planningTeamStatus',list.length?list.map(m=>m.email).join(' · '):
   'Nog geen onderzoekers toegevoegd. Voeg een bevestigd account toe.');
 }
@@ -135,8 +159,7 @@ function renderCard(bon){
   const assigned=state.members.find(m=>m.user_id===bon.assigned_to);
   actions.append(elem('small','plan-assignee',assigned?'Onderzoeker: '+assigned.email:'Nog niet toegewezen'));
   actions.append(action('Controleer / wijs toe',()=>openBonDialog(bon),'plan-edit'));
-  if(bon.status==='Gereed')
-   actions.append(action('Afronden & Mail rapportage',()=>finalizeBon(bon),'plan-complete'));
+  if(bon.status==='Gereed')actions.append(elem('small','plan-status-pending','Onderzoeker gereed · metingen beschikbaar voor kantoor'));
  }else if(activeRole('researcher')){
   actions.append(action(bon.status==='Gereed'?'Details bekijken':'Start onderzoek',
    ()=>openBon(bon),'plan-start'));
@@ -156,7 +179,7 @@ function renderAgenda(){
   if(state.filter==='done')return b.status==='Gereed'||b.status==='Afgerond';
   if(b.status==='Concept'||b.status==='Afgerond'||b.status==='Gereed')return false;
   const day=bonData(b).datum;
-  return state.filter==='today'?day===date:day>date;
+  return state.filter==='today'?(!day||day===date):day>date;
  }).filter(b=>!state.search||[
   bonData(b).bonnummer,bonData(b).klant,bonData(b).ordernummer
  ].some(v=>String(v||'').toLocaleLowerCase('nl-NL').includes(state.search)));
@@ -208,8 +231,7 @@ function renderActive(){
   'Kies een toegewezen werkbon via Planning.');
  $text('planningLogSummary',bon?bonTitle(bon)+' · '+count+' opnames':
   'Selecteer een werkbon voor het werklogboek.');
- $('planningRecordsMail').hidden=!activeRole('planning');
- $('planningMailReport').hidden=!activeRole('planning');
+
 }
 function renderShots(){
  const box=$('planningLoggedShots');box.replaceChildren();
@@ -413,20 +435,6 @@ async function markReady(){
   document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
  }catch(e){notice('Gereedmelden mislukt: '+errorText(e),true);}
 }
-async function finalizeBon(bon){
- if(!bon||!activeRole('planning'))return;
- try{
-  const shots=state.opnames.filter(s=>s.bon_id===bon.id);
-  const report=buildReport({bon:bonData(bon),opnames:shots.map(s=>({...s.details,date:s.created_at})),
-   onderzoekerEmail:state.user.email,
-   onderzoekerNaam:state.user.user_metadata?.full_name||state.user.user_metadata?.name||null});
-  const href=reportMailto({email:state.user.email,bon:bonData(bon),report});
-  await state.client.setPlannerStatus(bon.id,'Afgerond');
-  bon.status='Afgerond';render();
-  notice('Werkbon afgerond. Mailconcept geopend; controleer en verstuur het zelf.');
-  window.location.href=href;
- }catch(e){notice('Afronden mislukt: '+errorText(e),true);}
-}
 function populateForm(bon){
  const form=$('planningBonForm'),data=bonData(bon);
  form.reset();
@@ -614,14 +622,6 @@ function init(){
  $('planningDetach')?.addEventListener('click',()=>{
   state.activeId=null;state.setupBonId=null;state.setupReady=false;render();
   window.dispatchEvent(new Event('ndt-active-workbon-changed'));
- });
- $('planningMailReport')?.addEventListener('click',()=>{
-  const candidate=state.bons.find(x=>x.status==='Gereed');
-  if(candidate)void finalizeBon(candidate);else notice('Selecteer eerst een gereedgemelde bon.',true);
- });
- $('planningRecordsMail')?.addEventListener('click',()=>{
-  const candidate=state.bons.find(x=>x.status==='Gereed');
-  if(candidate)void finalizeBon(candidate);else notice('Er is geen gereedgemelde bon.',true);
  });
  // The original calculator is untouched; only prevent a new assigned bon
  // being calculated with stale values before its five researcher inputs are set.
