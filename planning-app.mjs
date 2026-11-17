@@ -240,10 +240,19 @@ function press(id){
 }
 function clearResearchInputs(){
  // A new workbon must not inherit any of the five technical values from a prior workbon.
- for(const id of ['workWall','workPenetrated','thickness','distance','manualCi','certCi','iqiTechnique','iqiPenetrated']){
+ for(const id of ['workWall','workPenetrated','thickness','distance','manualCi','certCi','kv','ma','iqiTechnique','iqiPenetrated']){
   const input=$(id);if(!input)continue;
   input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));
   input.dispatchEvent(new Event('change',{bubbles:true}));
+ }
+ // A different workbon must never inherit a previous tube's selected curve.
+ const model=$('xrayModel');
+ if(model){
+  if(![...model.options].some(o=>o.value==='')){
+   const option=document.createElement('option');option.value='';option.textContent='Kies exact toestelmodel';
+   model.prepend(option);
+  }
+  model.value='';model.dispatchEvent(new Event('change',{bubbles:true}));
  }
  state.setupReady=false;state.setupBonId=null;
 }
@@ -329,6 +338,16 @@ function startResearch(event){
   changeInput('iqiTechnique',setup.technique);
   changeInput('distance',setup.distance);
   if(setup.modality==='xray'){
+   // Never leave a previous bon's model selected; the original engine
+   // requires the researcher to choose a supported device curve.
+   const model=$('xrayModel');
+   if(model){
+    if(![...model.options].some(o=>o.value==='')){
+     const option=document.createElement('option');option.value='';option.textContent='Kies exact toestelmodel';
+     model.prepend(option);
+    }
+    model.value='';model.dispatchEvent(new Event('change',{bubbles:true}));
+   }
    changeInput('kv',setup.kv);changeInput('ma',setup.ma);
   }else{
    const radio=document.querySelector('input[name="activityMode"][value="manual"]');
@@ -604,6 +623,14 @@ function init(){
   const candidate=state.bons.find(x=>x.status==='Gereed');
   if(candidate)void finalizeBon(candidate);else notice('Er is geen gereedgemelde bon.',true);
  });
+ // The original calculator is untouched; only prevent a new assigned bon
+ // being calculated with stale values before its five researcher inputs are set.
+ $('calculate')?.addEventListener('click',event=>{
+  if(!activeRole('researcher')||!activeBon()||state.setupReady&&state.setupBonId===activeBon().id)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  notice('Kies eerst Start onderzoek en vul de vijf onderzoekersgegevens in.',true);
+  if(!$('planningResearchDialog').open)openResearchDialog(activeBon(),true);
+ },true);
  $('ndtSaveToLog')?.addEventListener('click',captureShot,true);
  window.addEventListener('ndt-auth-scope-changed',()=>{
   clearUserData();
