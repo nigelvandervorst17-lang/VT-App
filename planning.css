@@ -132,3 +132,9 @@ button:disabled{cursor:not-allowed}
 .plan-field-state{font-size:10px;color:#efc989;font-weight:800;display:block;margin-top:5px}
 .plan-status-pending{font-size:11px;color:#ffdaa0;font-weight:780}
 .plan-usage-note{font-size:11px;color:#a9cadb}
+
+/* Hide planner-only controls for field workers even if display:grid is set on the form. */
+#planningProcedureForm[hidden],#planningTeam[hidden],#planningAdd[hidden],#planningDraftFilter[hidden],#planningOfflinePanel[hidden]{display:none!important}
+.ndt-invite-feedback{font-size:12px;background:#1e4c67;border:1px solid #4a88a5;padding:12px;margin:9px 17px;color:#e7faff;border-radius:10px}
+.ndt-invite-feedback[data-error="true"]{background:#5b2c31;border-color:#b57673;color:#ffe8e4}
+#planningTeamStatus a,#planningTeamStatus button{display:inline-flex;align-items:center;min-height:40px;margin:8px 6px 3px 0;padding:9px 12px;text-decoration:none;background:#175d82;color:#fff;border:1px solid #82b1cb;border-radius:9px;font-size:12px;font-weight:780}
