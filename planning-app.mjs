@@ -422,7 +422,8 @@ function openResearchDialog(bon,fresh=true){
  if(fresh)form.reset();
  if(fresh){
   const source=String(bonData(bon).bron_of_toestel||'');
-  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(source)?'xray':\n   /\b(?:Se-75|Ir-192)\b/i.test(source)?'gamma':'';
+  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(source)?'xray':
+   /\b(?:Se-75|Ir-192)\b/i.test(source)?'gamma':'';
   const iso=source.match(/\bSe-75\b|\bIr-192\b/i)?.[0];
   if(iso)form.elements.namedItem('isotope').value=iso.toLowerCase()==='ir-192'?'Ir-192':'Se-75';
  }
