@@ -72,3 +72,6 @@ button:disabled{cursor:not-allowed}
  .plan-bon-form,.plan-procedure-grid{grid-template-columns:1fr}
  .plan-screen{padding-left:9px;padding-right:9px}
 }
+
+.plan-active-attention{font-size:11px;color:#ffdea7;background:#563d1d;padding:8px 10px;border-radius:8px;line-height:1.45;margin:9px 0}
+.plan-active-attention[hidden]{display:none!important}
