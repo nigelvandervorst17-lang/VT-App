@@ -283,16 +283,59 @@ function displayResearchType(){
  $('planningResearchCiWrap').hidden=xray;$('planningResearchIsotopeWrap').hidden=xray;
  $('planningResearchKvWrap').hidden=!xray;$('planningResearchMaWrap').hidden=!xray;
 }
+const SUGGESTED_FIELDS=Object.freeze([
+ ['material','materiaal'],['film','film'],['density','doelzwarting'],
+ ['wall','wanddikte_mm'],['distance','sfd_mm'],['ci','activiteit_ci'],
+ ['kv','kv'],['ma','ma']
+]);
+function showResearchSuggestions(bon){
+ const form=$('planningResearchForm'),data=bonData(bon);
+ for(const [inputName,bonName] of SUGGESTED_FIELDS){
+  const input=form.elements.namedItem(inputName),value=data[bonName];
+  if(!input)continue;
+  const present=value!==undefined&&value!==null&&String(value).trim()!=='';
+  const supported=input.tagName!=='SELECT'||[...input.options].some(o=>o.value===String(value));
+  if(present&&supported)input.value=String(value);
+  input.classList.toggle('plan-proposed',present&&supported);
+  input.classList.toggle('plan-missing',!present||!supported);
+  input.title=present&&supported?'Voorstel van de werkbon: zelf controleren':
+   'Nog in te vullen op locatie. Geen waarde geraden.';
+ }
+ for(const key of ['geometry','technique']){
+  const input=form.elements.namedItem(key);if(input)input.classList.add('plan-missing');
+ }
+ const count=SUGGESTED_FIELDS.filter(([_,field])=>data[field]!=null&&String(data[field]).trim()).length;
+ $text('planningResearchBonSummary',bonTitle(bon)+' · '+(data.procedure_code||'Procedure ontbreekt')+
+  ' · '+count+' technisch(e) bonvoorstel(len). Alles blijft handmatig aanpasbaar.');
+}
+function markMissingCalculatorInputs(bon){
+ const d=bonData(bon);
+ const pairs=[['workWall','wanddikte_mm'],['distance','sfd_mm'],
+  ['material','materiaal'],['film','film'],['density','doelzwarting'],
+  ['manualCi','activiteit_ci'],['kv','kv'],['ma','ma']];
+ for(const [id,field] of pairs){
+  const input=$(id);if(!input)continue;
+  input.classList.toggle('plan-missing',d[field]==null||String(d[field]).trim()==='');
+  input.title=d[field]==null?'Nog in te vullen: niet vermeld op bon. Controleer op locatie.':
+   'Bonvoorstel: controleer de actuele waarde.';
+ }
+ $('iqiTechnique')?.classList.add('plan-missing');
+}
+function clearMissingCalculatorMarkers(){
+ for(const input of document.querySelectorAll('.plan-missing,.plan-proposed')){
+  input.classList.remove('plan-missing','plan-proposed');input.removeAttribute('title');
+ }
+}
 function openResearchDialog(bon,fresh=true){
  const form=$('planningResearchForm');
  if(fresh)form.reset();
- $text('planningResearchBonSummary',bonTitle(bon)+' · '+(bonData(bon).procedure_code||'Geen procedure')+
-  '. Kies alle onderzoeksgegevens zelf; geen enkele waarde wordt automatisch geraden.');
  if(fresh){
-  const s=String(bonData(bon).bron_of_toestel||'');
-  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(s)?'xray':'gamma';
-  // Do not automatically select geometry, thickness, SFD, activity or technique.
+  const source=String(bonData(bon).bron_of_toestel||'');
+  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(source)?'xray':'gamma';
+  const iso=source.match(/\bSe-75\b|\bIr-192\b/i)?.[0];
+  if(iso)form.elements.namedItem('isotope').value=iso.toLowerCase()==='ir-192'?'Ir-192':'Se-75';
  }
+ showResearchSuggestions(bon);
  displayResearchType();$('planningResearchError').hidden=true;
  $('planningResearchDialog').showModal();
 }
