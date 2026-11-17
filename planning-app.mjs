@@ -79,6 +79,9 @@ function renderActive(){
  const label=bon?'Actief: Bon '+(bon.bonnummer||'—')+' · '+(bon.klant||'—')+' ('+procedureText(bon)+')':'';
  if(bon){
   $('planningActiveLabel').textContent=label;
+  const missing=[!bon.geometrie?'geometrie':null,!bon.techniek?'opnametechniek':null,!bon.wanddikte_mm?'wanddikte':null].filter(Boolean);
+  $('planningActiveWarning').hidden=missing.length===0;
+  $('planningActiveWarning').textContent=missing.length?'Niet vermeld op werkbon: '+missing.join(', ')+'. Kies zelf in Rekenen.':'';
   const details=$('planningActiveDetails');details.replaceChildren();
   details.append(el('p','',bon.adres||'Adres niet vermeld'),el('p','',bon.opmerkingen||'Geen werkinstructies op de bon'));
   if(bon.adres){
@@ -399,6 +402,16 @@ function init(){
   $(id)?.addEventListener('click',finishAndMail);
  // Capture is before the existing async sticky handler. It never modifies the saved result.
  $('ndtSaveToLog')?.addEventListener('click',captureLog,true);
+ window.addEventListener('ndt-auth-scope-changed',()=>{
+  state.scope=null;state.user=null;state.store=null;state.data=null;
+  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+ });
+ window.addEventListener('offline',()=>{
+  if(state.scope?.startsWith('user:')){
+   state.scope=null;state.user=null;state.store=null;state.data=null;
+   render();msg('Planning opnieuw openen na een online sessiecontrole. Rekenen blijft beschikbaar.',true);
+  }
+ });
  window.addEventListener('ndt-private-naslag-logout',()=>{
   state.scope=null;state.user=null;state.store=null;state.data=null;
   render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
