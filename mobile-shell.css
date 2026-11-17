@@ -30,7 +30,12 @@ html.ndt-entry-loading .bottom-nav,html.ndt-entry-loading #stickyOutcome{display
 .ndt-entry-card button{width:100%;min-height:52px;border:1px solid #6dbbff;border-radius:12px;color:#fff;background:#087bdf;font-weight:850;margin-top:8px}
 .ndt-entry-card button.secondary{background:#244663;border-color:#5b8099}
 .ndt-entry-card button:disabled{opacity:.6}
-.ndt-entry-card #ndtEntryStatus{margin:7px 0 0;min-height:24px}
+.ndt-entry-card #ndtEntryStatus{display:block;margin:11px 0 6px;min-height:24px;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.45;font-weight:750;overflow-wrap:anywhere}
+.ndt-entry-card #ndtEntryStatus[data-kind="info"]{color:#d9e7f4;background:#213e55}
+.ndt-entry-card #ndtEntryStatus[data-kind="busy"]{color:#d8eafc;background:#214b65}
+.ndt-entry-card #ndtEntryStatus[data-kind="error"]{color:#fff0ed;background:#73282b;border:1px solid #f39e91}
+.ndt-entry-card #ndtEntryStatus[data-kind="success"]{color:#dcffe8;background:#21543e;border:1px solid #73d5a2}
+.ndt-entry-card input[aria-invalid="true"]{border-color:#f39e91;outline:1px solid #f39e91}
 .ndt-entry-card #ndtEntryOffline[hidden]{display:none!important}
 #ndtAssetDialog{width:min(520px,calc(100vw - 22px));max-height:80dvh;border-radius:18px;background:#0e2d44;color:#edf7ff;border:1px solid #6791ac;padding:17px}
 #ndtAssetDialog::backdrop{background:#020c17c9}
