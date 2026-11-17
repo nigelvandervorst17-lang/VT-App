@@ -17,14 +17,16 @@ export function connectionConfig(storage=globalThis.localStorage){
 }
 export function dispatchStatus({status,assigned_to,data}){
  const required=Boolean(data?.bonnummer?.trim()&&data?.klant?.trim()&&data?.datum);
- if(!required)return 'Concept';
+ // A known, assigned workbon can be released for completion of missing fields in the field.
  if(!assigned_to)return 'Concept';
+ // Missing order/customer/date fields remain visible as Nog in te vullen; no guessed values.
+
  return ['In behandeling','Gereed','Afgerond'].includes(status)?status:'Ingepland';
 }
 export function planningRecord(values){
  const data=sanitizeBon(values);
  // Only planning metadata is stored. Researcher setup always lives in the opnames.
- const administrative=['bonnummer','klant','adres','ordernummer','bron_of_toestel','procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd'];
+ const administrative=['bonnummer','klant','adres','ordernummer','bron_of_toestel','procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd','materiaal','materiaal_omschrijving','wanddikte_mm','sfd_mm','film','doelzwarting','activiteit_ci','kv','ma'];
  return Object.fromEntries(administrative.map(key=>[key,data[key]??null]));
 }
 export function makePlanningAPI(options={}){
@@ -65,7 +67,20 @@ export function makePlanningAPI(options={}){
   await requirePlanner();
   const normalized=String(email||'').trim().replace(/\.+$/,'').toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error('Vul een geldig bestaand onderzoeker-e-mailadres in.');
-  const result=await api.rpc('planning_add_researcher',{p_email:normalized});
+  async function createInvite(email,companyId=null){
+  await requirePlanner();
+  const normalized=String(email||'').trim().replace(/\.+$/,'').toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error('Geef een geldig e-mailadres op.');
+  return api.rpc('planning_create_invitation',{p_email:normalized,p_company_id:companyId||null});
+ }
+ async function acceptInvite(token){
+  // Can be called immediately after login, even before membership exists.
+  if(!online()||!api.restore())throw Error('Meld je eerst aan met je bevestigde e-mailadres.');
+  const valid=String(token||'').trim();
+  if(!/^[0-9a-f]{64}$/.test(valid))throw Error('Geen geldige uitnodigingslink.');
+  return api.rpc('planning_accept_invitation',{p_token:valid});
+ }
+ const result=await api.rpc('planning_add_researcher',{p_email:normalized});
   if(result!==true)throw Error('Dit account heeft al een andere rol. Neem contact op met de beheerder.');
   return result;
  }
@@ -103,9 +118,12 @@ export function makePlanningAPI(options={}){
   await requireResearcher();
   if(!bon?.id||bon.assigned_to!==sessionUser.id||bon.status!=='In behandeling')
    throw Error('Open eerst je toegewezen werkbon en kies Start onderzoek.');
-  const rows=await api.insert('planning_opnames',{bon_id:bon.id,created_by:sessionUser.id,details});
-  if(!rows?.length)throw Error('Opname is niet opgeslagen bij de werkbon.');
-  return rows[0];
+  const clientId=details?.client_id||env.crypto.randomUUID();
+  const rowData={...details};delete rowData.client_id;
+  const savedId=await api.rpc('planning_save_opname',{p_bon_id:bon.id,p_client_id:clientId,p_details:rowData});
+  if(savedId!==clientId)throw Error('De server bevestigde de opname niet.');
+  return {id:clientId,bon_id:bon.id,created_by:sessionUser.id,details:rowData,created_at:new Date().toISOString()};
+
  }
  async function attachmentRequest(path,{method='GET',file=null}={}){
   await requireAuth();
@@ -148,7 +166,7 @@ export function makePlanningAPI(options={}){
   const ext=bon.original_path.split('.').at(-1)||'bin';
   return {blob,filename:'Werkbon-'+(bon.data?.bonnummer||bon.id).replace(/[^a-z0-9-]/gi,'_')+'.'+ext};
  }
- return {authenticate,list,addResearcher,saveBon,setPlannerStatus,
+ return {authenticate,list,addResearcher,createInvite,acceptInvite,saveBon,setPlannerStatus,
   changeResearchStatus,addOpname,uploadOriginal,downloadOriginal,
   get user(){return sessionUser},get role(){return role},clear(){sessionUser=null;role=null}};
 }
