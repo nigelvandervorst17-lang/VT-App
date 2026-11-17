@@ -226,7 +226,7 @@ function renderCard(bon){
   actions.append(action('Controleer / wijs toe',()=>openBonDialog(bon),'plan-edit'));
   if(bon.status==='Gereed')actions.append(elem('small','plan-status-pending','Onderzoeker gereed · metingen beschikbaar voor kantoor'));
  }else if(activeRole('researcher')){
-  actions.append(action(bon.status==='Gereed'?'Details bekijken':'Start onderzoek',
+  actions.append(action(['Gereed','Afgerond'].includes(bon.status)?'Details bekijken':'Start onderzoek',
    ()=>openBon(bon),'plan-start'));
  }
  const opnameCount=state.opnames.filter(x=>x.bon_id===bon.id).length;
@@ -273,9 +273,9 @@ function renderActive(){
  const bon=activeBon(),bar=$('planningActiveBar'),researcher=activeRole('researcher');
  bar.hidden=!researcher||!bon;
  $('planningNextShot').hidden=!(researcher&&state.setupReady&&state.setupBonId===bon?.id);
- $('planningCalculate').hidden=!(researcher&&bon);
- $('planningStartResearch').hidden=!researcher||!bon||bon.status==='Gereed';
- $('planningFinish').hidden=!researcher||!bon||bon.status==='Gereed';
+ $('planningCalculate').hidden=!(researcher&&bon&&!['Gereed','Afgerond'].includes(bon.status));
+ $('planningStartResearch').hidden=!researcher||!bon||['Gereed','Afgerond'].includes(bon.status);
+ $('planningFinish').hidden=!researcher||!bon||['Gereed','Afgerond'].includes(bon.status);
  if(researcher&&bon){
   $text('planningActiveLabel','Actief: '+bonTitle(bon));
   const missing=state.setupReady&&state.setupBonId===bon.id?[]:[
@@ -346,7 +346,8 @@ function clearResearchInputs(){
 }
 function displayResearchType(){
  const xray=$('planningResearchModality').value==='xray';
- $('planningResearchCiWrap').hidden=xray;$('planningResearchIsotopeWrap').hidden=xray;
+ const gamma=$('planningResearchModality').value==='gamma';
+ $('planningResearchCiWrap').hidden=!gamma;$('planningResearchIsotopeWrap').hidden=!gamma;
  $('planningResearchKvWrap').hidden=!xray;$('planningResearchMaWrap').hidden=!xray;
 }
 const SUGGESTED_FIELDS=Object.freeze([
@@ -397,7 +398,7 @@ function openResearchDialog(bon,fresh=true){
  if(fresh)form.reset();
  if(fresh){
   const source=String(bonData(bon).bron_of_toestel||'');
-  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(source)?'xray':'gamma';
+  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(source)?'xray':\n   /\b(?:Se-75|Ir-192)\b/i.test(source)?'gamma':'';
   const iso=source.match(/\bSe-75\b|\bIr-192\b/i)?.[0];
   if(iso)form.elements.namedItem('isotope').value=iso.toLowerCase()==='ir-192'?'Ir-192':'Se-75';
  }
@@ -411,7 +412,13 @@ async function openBon(bon){
   else notice('Log in als toegewezen onderzoeker om te starten.',true);
   return;
  }
- if(bon.status==='Gereed'){notice(bonTitle(bon)+' is als gereed gemeld en kan niet worden bewerkt.');return;}
+ if(['Gereed','Afgerond'].includes(bon.status)){
+  state.activeId=bon.id;state.setupReady=false;state.setupBonId=null;
+  clearMissingCalculatorMarkers();
+  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+  notice(bonTitle(bon)+' is gereed. Gekoppelde opnames zijn hieronder in te zien; bewerken is niet toegestaan.');
+  return;
+ }
  if(bon.status==='Ingepland'){
   try{
    if(navigator.onLine&&state.client)await state.client.changeResearchStatus(bon.id,'In behandeling');
@@ -440,6 +447,7 @@ function currentSetup(){
    !['D4','D5','D7'].includes(raw.film)||!num(raw.density)||
    !num(raw.wall)||!num(raw.distance))
   throw Error('Kies en controleer materiaal, film, zwarting, geometrie, techniek, wanddikte en SFD.');
+ if(!['gamma','xray'].includes(raw.modality))throw Error('Kies de bronsoort; deze is niet op de bon vermeld.');
  if(raw.modality==='xray'){
   if(!num(raw.kv)||!num(raw.ma))throw Error('Vul kV én mA zelf in.');
   return {...raw,wall:num(raw.wall),distance:num(raw.distance),kv:num(raw.kv),ma:num(raw.ma)};
