@@ -297,7 +297,7 @@ function renderShots(){
   box.append(elem('div','plan-shot',
    (row.created_at||'').slice(0,16).replace('T',' ')+' · '+
    (d.source||'Bron onbekend')+' · '+(d.result||'Geen indicatieve tijd')+
-   ' · IQI '+(d.iqiWire||'onbekend')+' · '+NO_RT_RELEASE));
+   ' · IQI '+(d.iqiWire||'onbekend')+(row.pending_sync?' · WACHT OP SYNCHRONISATIE':'')+' · '+NO_RT_RELEASE));
  }
 }
 function render(){
@@ -402,8 +402,10 @@ async function openBon(bon){
  if(bon.status==='Gereed'){notice(bonTitle(bon)+' is als gereed gemeld en kan niet worden bewerkt.');return;}
  if(bon.status==='Ingepland'){
   try{
-   await state.client.changeResearchStatus(bon.id,'In behandeling');
+   if(navigator.onLine&&state.client)await state.client.changeResearchStatus(bon.id,'In behandeling');
+   else if(!state.offlineCache)throw Error('Ontgrendel eerst de versleutelde offline werkbonnen.');
    bon.status='In behandeling';
+   if(!navigator.onLine&&state.offlineCache)await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
   }catch(e){notice('Start onderzoek: '+errorText(e),true);return;}
  }
  if(bon.status!=='In behandeling'){
@@ -510,17 +512,35 @@ function readCurrentShot(){
 }
 async function captureShot(event){
  if(!activeBon()||!activeRole('researcher'))return;
- // Suppress the old generic-save event only for active assigned workbonnen.
  event.preventDefault();event.stopImmediatePropagation();
  const button=$('ndtSaveToLog');if(button.disabled)return;
  button.disabled=true;
  try{
-  const details=readCurrentShot(),bon=activeBon();
-  const row=await state.client.addOpname(bon,details);
+  const details=readCurrentShot(),bon=activeBon(),client_id=crypto.randomUUID();
+  let row=null,queued=false;
+  if(navigator.onLine&&state.client){
+   try{row=await state.client.addOpname(bon,{...details,client_id});}
+   catch(error){
+    // Never queue authorization failures: only recoverable connection errors.
+    if(!/network|fetch|netwerk|verbinding|timeout|offline/i.test(errorText(error))||
+      !state.offlineCache)throw error;
+   }
+  }
+  if(!row){
+   if(!state.offlineCache)throw Error('Offline opslag niet ontgrendeld: de opname is niet bewaard.');
+   await state.offlineCache.queueShot({client_id,bon_id:bon.id,details});
+   row={id:client_id,bon_id:bon.id,created_by:state.user.id,created_at:new Date().toISOString(),
+    details,pending_sync:true};
+   queued=true;
+  }
   state.opnames.unshift(row);
-  $('saveResult')?.click(); // Reuse existing local logbook without changing its formulas.
-  $text('ndtStickyReason','Opname centraal opgeslagen bij bon '+idLabel(bon)+'. '+NO_RT_RELEASE);
-  notice('Opname veilig opgeslagen bij '+bonTitle(bon)+'. Kies Volgende opname om instellingen te hergebruiken.');
+  if(state.offlineCache)await state.offlineCache.saveSnapshot({
+   bons:state.bons,opnames:state.opnames,role:'researcher'});
+  // Do not write a second, unencrypted copy into the legacy localStorage logbook.
+  const message=queued?'Opname versleuteld in wachtrij; synchroniseert na verbinding.':
+   'Opname centraal opgeslagen bij bon '+idLabel(bon)+'.';
+  $text('ndtStickyReason',message+' '+NO_RT_RELEASE);
+  notice(message+' Volgende opname behoudt de eerder gekozen instellingen.');
   render();
  }catch(e){
   $text('ndtStickyReason','Opslaan bij werkbon mislukt: '+errorText(e));
@@ -532,11 +552,23 @@ async function markReady(){
  if(!state.opnames.some(s=>s.bon_id===bon.id)){
   notice('Sla eerst minimaal één opname bij deze werkbon op.',true);return;
  }
+ if(!navigator.onLine||!state.client){
+  notice('Er is geen verbinding. Bewaar metingen versleuteld en meld pas Gereed na synchronisatie.',true);
+  return;
+ }
  try{
+  if(state.offlineCache){
+   await flushOfflineOutbox();
+   const pending=await state.offlineCache.draftLogs();
+   if(pending.some(x=>x.bon_id===bon.id)){
+    notice('Er staan nog niet-verstuurde opnames in de wachtrij. Eerst synchroniseren.',true);
+    return;
+   }
+  }
   await state.client.changeResearchStatus(bon.id,'Gereed');
   bon.status='Gereed';state.activeId=null;state.setupReady=false;state.setupBonId=null;
   render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
-  notice('Werkbon '+idLabel(bon)+' als Gereed gemeld. Planning ziet de voortgang en resultaten.');
+  notice('Werkbon '+idLabel(bon)+' als Gereed gemeld. Planning ontvangt de opgeslagen metingen.');
   document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
  }catch(e){notice('Gereedmelden mislukt: '+errorText(e),true);}
 }
