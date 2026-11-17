@@ -10,6 +10,8 @@ import {trialCounter,TRIAL_MAX} from './research/company-suite/trial-50.mjs';
 const $=id=>document.getElementById(id);
 const TRIAL_CHOICE='ndt-ui-trial-choice-v1';
 const OFFLINE_READY='ndt-offline-cache-ready-v1';
+const normalizeEntryEmail=value=>String(value??'').trim().replace(/\.+$/, '');
+
 const ASSET_TRANSFER='ndt-main-asset-selection-v1';
 const trial=trialCounter();
 const state={api:null,user:null,mode:'initializing',timer:null,signature:null,lastCounted:null};
@@ -121,18 +123,41 @@ async function bootAuth(){
 }
 function closeMenu(){$('ndtAccountMenu').hidden=true;$('ndtAccountButton').setAttribute('aria-expanded','false');}
 function initAuth(){
- $('ndtEntryForm').addEventListener('submit',async e=>{
+ const entryForm=$('ndtEntryForm');
+ const emailInput=$('ndtEntryEmail'),passwordInput=$('ndtEntryPassword');
+ const loginButton=$('ndtEntrySubmit'),registerButton=$('ndtEntryRegister');
+ const normalizedEmail=()=>{
+  emailInput.value=normalizeEntryEmail(emailInput.value);
+  return emailInput.value;
+ };
+ emailInput.addEventListener('blur',normalizedEmail);
+ const lockEntry=locked=>{
+  loginButton.disabled=locked;registerButton.disabled=locked;
+ };
+ entryForm.addEventListener('submit',async e=>{
   e.preventDefault();
-  const btn=$('ndtEntrySubmit');btn.disabled=true;status('Aanmelden…');
+  const email=normalizedEmail();
+  if(!entryForm.reportValidity())return;
+  lockEntry(true);status('Aanmelden…');
   try{
-   await api().signIn($('ndtEntryEmail').value.trim(),$('ndtEntryPassword').value);
+   await api().signIn(email,passwordInput.value);
    state.user=await api().user();
    if(!state.user?.id)throw Error('Je identiteit kon niet worden gecontroleerd.');
    remove(localStorage,TRIAL_CHOICE);
-   $('ndtEntryPassword').value='';
+   passwordInput.value='';
    showMain('signed-in');
   }catch(err){status('Inloggen mislukt: '+String(err?.message||err));}
-  finally{btn.disabled=false;$('ndtEntryPassword').value='';}
+  finally{lockEntry(false);passwordInput.value='';}
+ });
+ registerButton.addEventListener('click',async()=>{
+  const email=normalizedEmail();
+  if(!entryForm.reportValidity())return;
+  lockEntry(true);status('Accountregistratie aanvragen…');
+  try{
+   await api().signUp(email,passwordInput.value);
+   status('Registratie aangevraagd. Controleer je e-mail (ook spam) om je account te bevestigen en log daarna in.');
+  }catch(err){status('Registratie mislukt: '+String(err?.message||err));}
+  finally{lockEntry(false);passwordInput.value='';}
  });
  $('ndtEntryTrial').addEventListener('click',()=>{
   if(!trial.status().ok){status('De proefregistratie is niet beschikbaar op dit toestel.');return;}
