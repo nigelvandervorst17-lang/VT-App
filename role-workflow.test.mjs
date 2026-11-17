@@ -113,3 +113,18 @@ test('AI interaction-only challenge for verified users, normal trial challenge, 
  assert.match(ai,/window\.turnstile\?\.getResponse\(widgetId\)/);
  assert.doesNotMatch(ai,/Authorization.*service_role/);
 });
+
+test('planning sees full linked research parameters for office reporting, no generated report',()=>{
+ assert.match(planning,/Bekijk meetdata/);
+ assert.match(planning,/Wanddikte mm/);
+ assert.match(planning,/Doorstraalde dikte mm/);
+ assert.match(planning,/Bron-filmafstand mm/);
+ assert.match(planning,/Waargenomen IQI draad/);
+ assert.match(planning,/plan-shot-detail/);
+ assert.doesNotMatch(planning,/mailto:/);
+});
+test('unknown source stays unselected, the researcher chooses Gamma or X-ray',()=>{
+ assert.match(html,/id="planningResearchModality" required/);
+ assert.match(planning,/Kies de bronsoort; deze is niet op de bon vermeld/);
+ assert.match(planning,/\?\x27gamma\x27:\x27\x27/);
+});
