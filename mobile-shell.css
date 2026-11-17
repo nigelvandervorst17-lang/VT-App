@@ -85,3 +85,13 @@ body.ndt-mobile-live #screen-calc{padding-bottom:190px}
 .rt-compact-grid>.ndt-picker-button{width:100%;align-self:center;margin:5px 0;padding:8px;min-height:49px}
 
 .ndt-se75-quicklink{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 11px;border:1px solid #5684a1;border-radius:10px;font-size:12px;font-weight:800;text-decoration:none;color:#cde8fb;background:#133853}
+
+/* Owner-only Naslag images: deny-before-JS, even when accordions relocate nodes. */
+body:not(.ndt-naslag-authorized) #ndtNaslagCharts,
+body:not(.ndt-naslag-authorized) #ndtNaslagWeld,
+body:not(.ndt-naslag-authorized) #privateNaslagUpload{display:none!important}
+body.ndt-naslag-authorized #privateNaslagMessage{display:none!important}
+#privateNaslagMessage{border:1px solid #7e957c;background:#1e2f35;border-radius:14px;line-height:1.6}
+#privateNaslagMessage p{font-size:13px;margin:7px 0 0}
+#privateNaslagUpload input[type=file]{min-height:48px;display:block;width:100%;padding:12px 9px;border:1px solid #456c84;border-radius:10px;margin:9px 0}
+#privateNaslagUpload button{min-height:46px}
