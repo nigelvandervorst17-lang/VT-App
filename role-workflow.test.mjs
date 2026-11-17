@@ -98,7 +98,7 @@ test('no in-app mail reporting, only ready after synced central results',()=>{
  assert.match(planning,/await state\.client\.changeResearchStatus\(bon\.id,'Gereed'\)/);
  assert.match(planning,/draftLogs\(\)/);
  assert.match(planning,/if\(pending\.some\(x=>x\.bon_id===bon\.id\)\)/);
- assert.match(planning,/planning_save_opname/);
+ assert.match(source('planning-api.mjs'),/planning_save_opname/);
 });
 test('verified account hides top demo strip, but calculator and result non-release notices remain',()=>{
  assert.match(source('mobile-shell.css'),/body\.ndt-verified-session #ndtResearchSafetyStrip\{display:none!important\}/);
