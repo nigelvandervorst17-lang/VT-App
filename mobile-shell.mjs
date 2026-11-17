@@ -159,6 +159,7 @@ function initAuth(){
   remove(localStorage,TRIAL_CHOICE);
   remove(sessionStorage,ASSET_TRANSFER);
   remove(sessionStorage,'ndt-offline-workspace-v1');
+  window.dispatchEvent(new Event('ndt-private-naslag-logout'));
   state.user=null;state.api=null;state.signature=null;state.lastCounted=null;
   showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
  });
