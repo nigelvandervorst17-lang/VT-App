@@ -799,8 +799,9 @@ function init(){
   if(!$('planningResearchDialog').open)openResearchDialog(activeBon(),true);
  },true);
  $('ndtSaveToLog')?.addEventListener('click',captureShot,true);
- window.addEventListener('ndt-auth-scope-changed',()=>{
+ window.addEventListener('ndt-auth-scope-changed',event=>{
   clearUserData();
+  if(event.detail?.mode==='signed-in')void refreshPlanning(); // Role is resolved from server, never a role selector.
  });
  window.addEventListener('ndt-private-naslag-logout',()=>clearUserData());
  window.addEventListener('offline',()=>{
