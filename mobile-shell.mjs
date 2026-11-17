@@ -49,6 +49,8 @@ function connection(){
 }
 function showMain(mode){
  state.mode=mode;
+ document.body.classList.toggle('ndt-verified-session',mode==='signed-in');
+ document.body.classList.toggle('ndt-demo-session',mode==='trial');
  $('ndtEntryGate').hidden=true;
  document.documentElement.classList.remove('ndt-entry-loading');
  document.body.classList.remove('ndt-entry-active');
@@ -56,7 +58,8 @@ function showMain(mode){
  connection();
  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
  renderSticky();
- window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode}}));
+ window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode,email:state.user?.email||null}}));
+ updateHeaderContext();
 }
 async function hasEncryptedOfflineCache(){
  if(get(localStorage,OFFLINE_READY))return true;
@@ -82,6 +85,8 @@ async function hasEncryptedOfflineCache(){
 
 function showGate(reason=''){
  state.mode='signed-out';state.user=null;
+ document.body.classList.remove('ndt-verified-session','ndt-demo-session');
+ updateHeaderContext();
  window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode:'signed-out'}}));
  document.documentElement.classList.add('ndt-entry-loading');
  document.body.classList.add('ndt-entry-active');
@@ -127,11 +132,39 @@ async function bootAuth(){
   else showGate('Aanmelden is tijdelijk niet beschikbaar. Proefversie blijft mogelijk.');
  }
 }
+let currentRoleLabel='';
+function updateHeaderContext(){
+ const field=$('ndtActiveAccountContext');if(!field)return;
+ const bon=typeof window.ndtWorkbonContext==='function'?window.ndtWorkbonContext():null;
+ const loggedIn=state.mode==='signed-in';
+ field.hidden=!loggedIn;
+ field.textContent=!loggedIn?'':bon?.bonnummer?
+  'Bon '+bon.bonnummer+' · '+(bon.klant||'Onderzoeker'):
+  currentRoleLabel||'Bedrijfsaccount · '+(state.user?.email||'aangemeld');
+}
+window.addEventListener('ndt-planning-role-ready',event=>{
+ currentRoleLabel=event.detail?.label||'';updateHeaderContext();
+});
+window.addEventListener('ndt-active-workbon-changed',updateHeaderContext);
 function closeMenu(){$('ndtAccountMenu').hidden=true;$('ndtAccountButton').setAttribute('aria-expanded','false');}
 function initAuth(){
  const entryForm=$('ndtEntryForm');
  const emailInput=$('ndtEntryEmail'),passwordInput=$('ndtEntryPassword');
  const loginButton=$('ndtEntrySubmit'),registerButton=$('ndtEntryRegister');
+ const registerLink=$('ndtEntryRegisterLink'),demoButton=$('ndtEntryTrial');
+ let registering=false;
+ const setRegisterView=next=>{
+  registering=Boolean(next);
+  registerButton.hidden=!registering;
+  loginButton.hidden=registering;
+  demoButton.hidden=registering;
+  registerLink.textContent=registering?'Al een account? Terug naar Inloggen':
+   'Nog geen account? Nieuw account registreren (klaar binnen 1 minuut)';
+  registerLink.setAttribute('aria-expanded',String(registering));
+  status(registering?'Vul je bedrijfs-e-mailadres en een wachtwoord van minimaal 6 tekens in.':
+   'Vul je e-mailadres en wachtwoord in.');
+ };
+ registerLink.addEventListener('click',()=>setRegisterView(!registering));
  // The project uses its existing lightweight Supabase Auth REST client rather
  // than loading another browser SDK. This is the same Auth /signup endpoint.
  const supabase={auth:{
@@ -153,7 +186,7 @@ function initAuth(){
  };
  const lockEntry=(busy,button)=>{
   loginButton.disabled=busy;registerButton.disabled=busy;
-  if(button)button.textContent=busy?'Bezig...':button===loginButton?'Inloggen':'Nieuw account aanmaken';
+  if(button)button.textContent=busy?'Bezig...':button===loginButton?'Inloggen':'Account registreren';
  };
  const entryValues=()=>{
   const email=normalizedEmail(),password=passwordInput.value;
@@ -218,7 +251,7 @@ function initAuth(){
   remove(sessionStorage,'ndt-offline-workspace-v1');
   window.dispatchEvent(new Event('ndt-private-naslag-logout'));
   state.user=null;state.api=null;state.signature=null;state.lastCounted=null;
-  showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
+  currentRoleLabel='';showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
  });
  $('ndtEraseOffline').addEventListener('click',async()=>{
   if(!confirm('Alle versleutelde bedrijfsgegevens op dit toestel verwijderen? Dit verwijdert ook nog niet gesynchroniseerde conceptlogs.'))return;
