@@ -531,16 +531,28 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <label>Bron/toestel<input name="bron_of_toestel" maxlength="260"></label>
   <label>Procedurecode<input name="procedure_code" maxlength="70"></label>
   <label>Revisie<input name="revisie" maxlength="20"></label>
+  <label>Materiaal op bon<select name="materiaal"><option value="">Nog in te vullen</option><option value="Fe">Staal</option><option value="RVS300">RVS 300</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Ti">Titanium</option></select></label>
+  <label>Materiaalomschrijving<input name="materiaal_omschrijving" maxlength="260" placeholder="Letterlijke aanduiding op bon"></label>
+  <label>Wanddikte op bon (mm)<input name="wanddikte_mm" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Bron-filmafstand op bon (mm)<input name="sfd_mm" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Filmtype<select name="film"><option value="">Nog in te vullen</option><option>D4</option><option>D5</option><option>D7</option></select></label>
+  <label>Doelzwarting op bon<input name="doelzwarting" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Activiteit (Ci) op bon<input name="activiteit_ci" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Spanning (kV) op bon<input name="kv" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Stroom (mA) op bon<input name="ma" inputmode="decimal" placeholder="Nog in te vullen"></label>
   <label>Overige gegevens / opmerkingen<textarea name="opmerkingen" rows="3" maxlength="2000"></textarea></label>
   <label>Onderzoeker toewijzen<select name="assigned_to" id="planningAssignee"><option value="">Nog niet toegewezen · Concept</option></select></label>
-  <p class="small-muted plan-form-note">Planning voert geen geometrie, techniek, wanddikte, SFD of activiteit in. Die kiest de onderzoeker op het rekenscherm.</p>
+  <p class="small-muted plan-form-note">Alle bonwaarden zijn voorstellen. Onbekende gegevens blijven “Nog in te vullen”. De onderzoeker controleert en wijzigt de technische waarden vóór Berekenen. Geometrie en opnametechniek kiest uitsluitend de onderzoeker.</p>
   <div class="plan-import-actions"><button type="submit" id="planningSaveBon">Werkbon / Concept opslaan</button><button id="planningCancel" type="button">Annuleren</button></div>
  </form>
 </dialog>
 <dialog id="planningResearchDialog" class="plan-import-dialog plan-research-dialog" aria-labelledby="planningResearchHeading">
  <h2 id="planningResearchHeading">Start onderzoek · Werkbon</h2>
- <p id="planningResearchBonSummary" class="small-muted">Vul de vijf onderzoekersgegevens zelf in. Er wordt niets geraden.</p>
+ <p id="planningResearchBonSummary" class="small-muted">Gevonden bonwaarden zijn voorstellen. Controleer ze vóór onderzoek; ontbrekende waarden worden niet geraden.</p>
  <form id="planningResearchForm" class="plan-bon-form">
+  <label>Materiaal<select name="material" required><option value="">Nog in te vullen · kies zelf</option><option value="Fe">Staal</option><option value="RVS300">RVS 300</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Ti">Titanium</option></select></label>
+  <label>Filmtype<select name="film" required><option value="">Nog in te vullen · kies zelf</option><option>D4</option><option>D5</option><option>D7</option></select></label>
+  <label>Doelzwarting<input name="density" type="text" inputmode="decimal" required placeholder="Nog in te vullen"></label>
   <label>Bronsoort<select name="modality" id="planningResearchModality"><option value="gamma">Gamma</option><option value="xray">X-ray</option></select></label>
   <label id="planningResearchIsotopeWrap">Isotoop<select name="isotope"><option value="">Zelf kiezen</option><option>Se-75</option><option>Ir-192</option></select></label>
   <label>1. Geometrie<select name="geometry" required><option value="">Kies zelf</option><option value="plate">Plaat / Las</option><option value="pipe">Buis / Pijp</option></select></label>
@@ -550,7 +562,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <label id="planningResearchCiWrap">5. Activiteit (Ci)<input name="ci" type="text" inputmode="decimal" placeholder="Actuele activiteit"></label>
   <label id="planningResearchKvWrap" hidden>5. Spanning (kV)<input name="kv" type="text" inputmode="decimal" placeholder="kV"></label>
   <label id="planningResearchMaWrap" hidden>5. Stroom (mA)<input name="ma" type="text" inputmode="decimal" placeholder="mA"></label>
-  <p class="small-muted plan-form-note">Bij X-ray moet je bovendien zelf een exact ondersteund toestelmodel kiezen in Rekenen. De bestaande IQI-, curve- en veiligheidsvalidaties blijven leidend.</p>
+  <p class="small-muted plan-form-note">Bonwaarden zijn niet automatisch geverifieerd. Kies zelf geometrie/techniek, controleer actuele waarden en het exact ondersteunde toestelmodel. De originele IQI-, curve- en veiligheidsvalidaties blijven leidend.</p>
   <p id="planningResearchError" role="alert" class="plan-research-error" hidden></p>
   <div class="plan-import-actions"><button id="planningResearchConfirm" type="submit">Start onderzoek</button><button id="planningResearchCancel" type="button">Annuleren</button></div>
  </form>
