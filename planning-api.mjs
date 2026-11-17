@@ -72,6 +72,10 @@ export function makePlanningAPI(options={}){
   await requirePlanner();
   const normalized=String(email||'').trim().replace(/\.+$/,'').toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error('Vul een geldig bestaand onderzoeker-e-mailadres in.');
+ const result=await api.rpc('planning_add_researcher',{p_email:normalized});
+  if(result!==true)throw Error('Dit account heeft al een andere rol. Neem contact op met de beheerder.');
+  return result;
+ }
   async function createInvite(email,companyId=null){
   await requirePlanner();
   const normalized=String(email||'').trim().replace(/\.+$/,'').toLowerCase();
@@ -84,10 +88,6 @@ export function makePlanningAPI(options={}){
   const valid=String(token||'').trim();
   if(!/^[0-9a-f]{64}$/.test(valid))throw Error('Geen geldige uitnodigingslink.');
   return api.rpc('planning_accept_invitation',{p_token:valid});
- }
- const result=await api.rpc('planning_add_researcher',{p_email:normalized});
-  if(result!==true)throw Error('Dit account heeft al een andere rol. Neem contact op met de beheerder.');
-  return result;
  }
  async function saveBon({id=null,values,assignedTo=null,status=null}){
   await requirePlanner();
