@@ -102,12 +102,12 @@ export function procedurePrefill(bon,procedure){
  if(bon.activiteit_ci)updates.ci=bon.activiteit_ci;
  return updates;
 }
-export function buildReport({bon,opnames,onderzoekerEmail,datum=localISODate()}){
+export function buildReport({bon,opnames,onderzoekerEmail,onderzoekerNaam=null,datum=localISODate()}){
  if(!bon||!Array.isArray(opnames))throw Error('Geen werkbon of opnames');
  const line=(label,value)=>label+': '+(value===null||value===undefined||value===''?'Niet vastgelegd':String(value));
  const lines=['NDT RADIOGRAPHY PRO - WERKRAPPORT (ONDERZOEKSVERSIE)',
  line('Bonnummer',bon.bonnummer),line('Ordernummer',bon.ordernummer),
- line('Klant',bon.klant),line('Datum',datum),line('Onderzoeker e-mail',onderzoekerEmail||'Niet ingelogd'),
+ line('Klant',bon.klant),line('Datum',datum),line('Onderzoeker naam',onderzoekerNaam),line('Onderzoeker e-mail',onderzoekerEmail||'Niet ingelogd'),
  line('Procedure',bon.procedure_code?(bon.procedure_code+' Rev. '+(bon.revisie||'?')):'Niet vastgelegd'),
  '', 'OPNAMES ('+opnames.length+')'];
  if(!opnames.length)lines.push('Geen opgeslagen onderzoeksopnames voor deze werkbon.');
