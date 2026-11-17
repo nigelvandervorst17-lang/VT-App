@@ -72,11 +72,11 @@ export function makeStore(storage,scope){
   let raw=null;
   try{raw=JSON.parse(storage.getItem(key)||'null');}catch{}
   if(raw&&raw.scope===scope&&Array.isArray(raw.workbonnen)&&Array.isArray(raw.procedures)&&Array.isArray(raw.opnames))
-   return {scope,workbonnen:raw.workbonnen,procedures:proceduresForStore(raw.procedures),opnames:raw.opnames};
-  return {scope,workbonnen:demoWorkbonnen(),procedures:proceduresForStore([]),opnames:[]};
+   return {scope,activeId:typeof raw.activeId==='string'?raw.activeId:null,workbonnen:raw.workbonnen,procedures:proceduresForStore(raw.procedures),opnames:raw.opnames};
+  return {scope,activeId:null,workbonnen:demoWorkbonnen(),procedures:proceduresForStore([]),opnames:[]};
  }
  function save(payload){
-  const next={scope,workbonnen:payload.workbonnen,procedures:payload.procedures,opnames:payload.opnames};
+  const next={scope,activeId:payload.activeId||null,workbonnen:payload.workbonnen,procedures:payload.procedures,opnames:payload.opnames};
   storage.setItem(key,JSON.stringify(next));
   return next;
  }
