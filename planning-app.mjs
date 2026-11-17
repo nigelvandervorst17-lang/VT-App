@@ -288,7 +288,7 @@ function finishAndMail(){
  const target=bon||{bonnummer:'Werkdag '+today,ordernummer:'Meerdere orders',klant:'Werkdagoverzicht',procedure_code:null};
  const opnames=bon?state.data.opnames.filter(r=>r.bonId===bon.id):
   state.data.opnames.filter(r=>r.day===today);
- const report=buildReport({bon:target,opnames,onderzoekerEmail:state.user.email,datum:today});
+ const report=buildReport({bon:target,opnames,onderzoekerEmail:state.user.email,onderzoekerNaam:state.user.user_metadata?.full_name||state.user.user_metadata?.name||null,datum:today});
  let href;
  try{href=reportMailto({email:state.user.email,bon:target,report});}
  catch(err){msg(String(err?.message||err),true);return;}
