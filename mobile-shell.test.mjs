@@ -133,3 +133,22 @@ test('offline assets include both new mobile shells',()=>{
  for(const name of ['mobile-shell.css','mobile-shell.mjs','mobile-company.css'])assert.ok(sw.includes(name),name);
  assert.ok(sub.includes('./mobile-company.css'));
 });
+
+test('registration directly below login uses the existing Supabase Auth client',()=>{
+ const login=html.indexOf('id="ndtEntrySubmit"');
+ const signup=html.indexOf('id="ndtEntryRegister"');
+ const trial=html.indexOf('id="ndtEntryTrial"');
+ assert.ok(login>=0&&signup>login&&trial>signup);
+ assert.match(html,/id="ndtEntryRegister" class="secondary" type="button">Nieuw account aanmaken<\/button>/);
+ assert.match(ui,/await api\(\)\.signUp\(email,passwordInput\.value\)/);
+ assert.match(ui,/await api\(\)\.signIn\(email,passwordInput\.value\)/);
+ assert.match(ui,/const normalizeEntryEmail=value=>String\(value\?\?''\)\.trim\(\)\.replace\(\/\\\.\+\$\/, ''\)/);
+ assert.match(ui,/if\(!entryForm\.reportValidity\(\)\)return/);
+});
+test('login flow does not grant private Naslag access or bypass company RLS',()=>{
+ const naslag=src('private-naslag.mjs');
+ assert.match(naslag,/api\.rpc\('can_view_private_naslag',\{\}\)/);
+ assert.match(naslag,/return result===true/);
+ assert.doesNotMatch(ui,/ndt_naslag_admins|is_ndt_naslag_admin/);
+ assert.doesNotMatch(ui,/service_role|sb_secret_/);
+});
