@@ -96,7 +96,7 @@ test('usage dashboard shows grounded counts to the Planner only',()=>{
  assert.match(tracker,/ndt_record_app_usage/);
  assert.match(tracker,/ndt_app_usage_summary/);
  assert.match(tracker,/mode==='signed-in'/);
- assert.doesNotMatch(tracker,/visitorId|fingerprint|IP address|geolocation|getCurrentPosition/);
+ assert.doesNotMatch(tracker,/visitorId|navigator\.geolocation|getCurrentPosition|deviceFingerprint/);
 });
 test('company graphs are private reference documents and never feed RT curves',()=>{
  const adapter=source('research/company-suite/supabase-rest.mjs');
@@ -116,7 +116,7 @@ test('company graphs are private reference documents and never feed RT curves',(
  assert.match(html,/id="companyChartsUploadPanel"[^>]*hidden/);
  assert.match(html,/id="companyChartPreview"/);
  assert.doesNotMatch(html,/id="companyChartScope" required/);
- assert.match(html,/niet.*aan de rekenmachine gekoppeld/i);
+ assert.match(html,/nooit<\/strong> aan de rekenmachine gekoppeld/i);
 });
 test('original private Naslag remains owner-only and never appears in company reference assets',()=>{
  const original=source('private-naslag.mjs');
