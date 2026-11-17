@@ -98,3 +98,6 @@
  .plan-usage-grid strong{font-size:21px}
  .company-chart-dialog{padding:12px}
 }
+
+.rt-copper-status{border:1px solid #b88b44;background:#473a21;color:#fff4cd;border-radius:10px;padding:10px 12px;margin:9px 0;font-size:12px;line-height:1.6;font-weight:720}
+.rt-copper-status[hidden]{display:none!important}
