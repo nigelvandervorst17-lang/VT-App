@@ -101,3 +101,6 @@
 
 .rt-copper-status{border:1px solid #b88b44;background:#473a21;color:#fff4cd;border-radius:10px;padding:10px 12px;margin:9px 0;font-size:12px;line-height:1.6;font-weight:720}
 .rt-copper-status[hidden]{display:none!important}
+
+/* Keep the app-login gate in front of the desktop menu as on phones. */
+body.ndt-entry-active .ndt-desktop-nav,html.ndt-entry-loading .ndt-desktop-nav{display:none!important}
