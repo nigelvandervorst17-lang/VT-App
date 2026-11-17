@@ -8,7 +8,9 @@ import assert from 'node:assert/strict';
 import {calculateGamma, hms, certificateActivity} from '../rt-core.mjs';
 import {curves} from '../rt-curves.mjs';
 import {densityCorrectionFactor, FILM_RESPONSE} from '../film-response.mjs';
-import {geometryPreview} from '../workflow-shape.mjs';
+// Geometry also owns a browser UI entrypoint; keep it inert during this Node-only audit.
+globalThis.document ??= {readyState:'loading',addEventListener(){}};
+const {geometryPreview}=await import('../workflow-shape.mjs');
 
 const BASE={film:'D4',activityCi:70,distanceMm:800,material:'Fe',screens:'Pb'};
 const DENSITIES=[2,2.5,2.8,3];
