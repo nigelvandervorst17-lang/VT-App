@@ -116,3 +116,19 @@ button:disabled{cursor:not-allowed}
 @media(max-width:420px){.plan-row{padding:10px 8px;gap:9px}.plan-heading h1{font-size:23px}}
 
 .plan-active-row #planningCalculate{background:#1275b4;border-color:#78c3f2}
+
+.plan-team select,.plan-offline-panel input{min-height:46px;border:1px solid #6187a2;background:#1c435a;color:#fff;border-radius:9px;padding:9px 12px;font-size:13px;max-width:100%;flex:1 1 190px}
+.plan-team form{display:flex;gap:8px;flex-wrap:wrap}
+.plan-offline-panel{padding:14px;margin:12px 0;border:1px solid #426580;border-radius:13px;background:#112e43}
+.plan-offline-panel[hidden]{display:none!important}
+.plan-offline-panel h2{font-size:15px;margin:0 0 8px}
+.plan-offline-panel p{font-size:11px;line-height:1.6}
+.plan-offline-panel form{display:flex;gap:9px;flex-wrap:wrap}
+.plan-offline-panel button,.plan-team form button{min-height:44px;padding:8px 12px;background:#126ca7;border:1px solid #64acd1;color:#fff;border-radius:9px;font-weight:780}
+.plan-missing{outline:2px solid #e6b76b!important;outline-offset:2px!important;background:#3b3428!important}
+.plan-proposed{outline:2px solid #5dabc6!important;outline-offset:2px!important}
+.plan-research-preview{padding:11px 12px;background:#234158;border:1px solid #577c98;border-radius:11px;font-size:12px;line-height:1.6;margin:9px 0}
+.plan-import-dialog label:has(input:not([required]):placeholder-shown) input{border-style:dashed}
+.plan-field-state{font-size:10px;color:#efc989;font-weight:800;display:block;margin-top:5px}
+.plan-status-pending{font-size:11px;color:#ffdaa0;font-weight:780}
+.plan-usage-note{font-size:11px;color:#a9cadb}
