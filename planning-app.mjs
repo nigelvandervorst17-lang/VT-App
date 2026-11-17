@@ -277,6 +277,7 @@ function clearResearchInputs(){
   model.value='';model.dispatchEvent(new Event('change',{bubbles:true}));
  }
  state.setupReady=false;state.setupBonId=null;
+ clearMissingCalculatorMarkers();
 }
 function displayResearchType(){
  const xray=$('planningResearchModality').value==='xray';
@@ -358,6 +359,7 @@ async function openBon(bon){
  const switching=state.activeId!==bon.id;
  state.activeId=bon.id;
  if(switching)clearResearchInputs();
+ markMissingCalculatorInputs(bon);
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
  if(switching||!state.setupReady)openResearchDialog(bon,true);
@@ -367,8 +369,10 @@ function currentSetup(){
  const form=$('planningResearchForm'),raw=Object.fromEntries(new FormData(form).entries());
  const num=value=>{const str=String(value??'').trim().replace(',','.');return /^\d+(?:\.\d+)?$/.test(str)&&Number(str)>0?str:null;};
  if(!['plate','pipe'].includes(raw.geometry)||!['sw','dwsi','dwdi'].includes(raw.technique)||
+   !['Fe','RVS300','Al','Cu','Ti'].includes(raw.material)||
+   !['D4','D5','D7'].includes(raw.film)||!num(raw.density)||
    !num(raw.wall)||!num(raw.distance))
-  throw Error('Kies geometrie en techniek, en vul een positieve wanddikte en SFD in.');
+  throw Error('Kies en controleer materiaal, film, zwarting, geometrie, techniek, wanddikte en SFD.');
  if(raw.modality==='xray'){
   if(!num(raw.kv)||!num(raw.ma))throw Error('Vul kV én mA zelf in.');
   return {...raw,wall:num(raw.wall),distance:num(raw.distance),kv:num(raw.kv),ma:num(raw.ma)};
@@ -392,6 +396,10 @@ function startResearch(event){
    if(proc.klasse)changeInput('iqiClass',proc.klasse);
    if(proc.iqiSide)changeInput('iqiSide',proc.iqiSide);
   }
+  // The researcher must confirm all values, even those explicitly stated in the workbon.
+  changeInput('material',setup.material);
+  changeInput('film',setup.film);
+  changeInput('density',setup.density);
   if(setup.modality==='xray')press('modeXray');
   else{
    press('modeGamma');
@@ -420,6 +428,7 @@ function startResearch(event){
    changeInput('manualCi',setup.ci);
   }
   state.setupReady=true;state.setupBonId=bon.id;
+  clearMissingCalculatorMarkers();
   $('planningResearchDialog').close();render();
   notice('Onderzoeksgegevens ingevuld voor bon '+idLabel(bon)+'. Controleer het toestelmodel, de doorstraalde dikte, IQI en de originele veiligheidscontroles. Klik daarna Berekenen.');
  }catch(e){
