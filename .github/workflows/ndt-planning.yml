@@ -4,6 +4,13 @@ on:
     paths:
       - 'index.html'
       - 'planning-app.mjs'
+      - 'company-charts.mjs'
+      - 'usage-tracker.mjs'
+      - 'desktop-workspace.mjs'
+      - 'desktop-workspace.css'
+      - 'rt-material-ui.mjs'
+      - 'workspace-upgrade.test.mjs'
+      - 'HANDLEIDING-NDT-RADIOGRAPHY-PRO.md'
       - 'planning-data.mjs'
       - 'planning-api.mjs'
       - 'research/company-suite/supabase-rest.mjs'
@@ -29,9 +36,13 @@ jobs:
           node-version: '22'
       - name: Test planning, first-use login, owner-only Naslag and original research UI
         run: |
-          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs
+          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs workspace-upgrade.test.mjs research/live-material-preview.test.mjs
           node --check planning-data.mjs
           node --check planning-api.mjs
+          node --check usage-tracker.mjs
+          node --check company-charts.mjs
+          node --check desktop-workspace.mjs
+          node --check rt-material-ui.mjs
           node --check planning-app.mjs
           node --check workbon-reader.mjs
           node --check ai-expert.mjs
