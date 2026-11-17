@@ -183,6 +183,7 @@ function renderActive(){
  const bon=activeBon(),bar=$('planningActiveBar'),researcher=activeRole('researcher');
  bar.hidden=!researcher||!bon;
  $('planningNextShot').hidden=!(researcher&&state.setupReady&&state.setupBonId===bon?.id);
+ $('planningCalculate').hidden=!(researcher&&bon);
  $('planningStartResearch').hidden=!researcher||!bon||bon.status==='Gereed';
  $('planningFinish').hidden=!researcher||!bon||bon.status==='Gereed';
  if(researcher&&bon){
@@ -565,6 +566,15 @@ function init(){
  $('planningNextShot')?.addEventListener('click',()=>{
   notice('Volgende opname: eerdere instellingen blijven staan. Controleer gewijzigde parameters en klik Berekenen.');
   document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
+ });
+ $('planningCalculate')?.addEventListener('click',()=>{
+  const bon=activeBon();
+  if(!bon||!state.setupReady||state.setupBonId!==bon.id){
+   notice('Kies eerst Start onderzoek en vul de vijf onderzoeksgegevens in.',true);
+   if(bon)openResearchDialog(bon,true);
+   return;
+  }
+  $('calculate')?.click(); // Never an independent exposure calculation.
  });
  $('planningFinish')?.addEventListener('click',()=>void markReady());
  $('planningActiveInfo')?.addEventListener('click',()=>{
