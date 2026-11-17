@@ -113,3 +113,19 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-stat
 .top-header .lang-control select{min-height:37px!important}
 .ndt-account-button{width:39px;height:39px}
 @media(max-width:420px){.top-header .ndt-brand-banner{height:32px!important}.ndt-mobile-header-tools{gap:4px}}
+
+/* Calm login/registration and role-aware account title. */
+.ndt-entry-card #ndtEntrySubmit,.ndt-entry-card #ndtEntryTrial{min-height:54px}
+.ndt-entry-card #ndtEntryRegisterLink{background:none!important;border:0!important;padding:12px 2px!important;margin:5px 0!important;color:#b5ddfc!important;text-decoration:underline;text-underline-offset:4px;font-size:13px;line-height:1.5;font-weight:780;min-height:44px}
+.ndt-entry-card button[hidden]{display:none!important}
+.ndt-entry-footer{font-size:11px!important;color:#b4cdda!important;line-height:1.65!important;margin:15px 0 0!important}
+.ndt-offline-login{margin-top:10px;border-top:1px solid #42627a;padding-top:10px}
+.ndt-offline-login summary{cursor:pointer;font-size:11px;font-weight:780;color:#b9d3e3}
+.ndt-offline-login p{font-size:11px!important;margin:8px 0!important}
+.ndt-active-account-context{font-size:11px;color:#b7e5fa;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:790}
+.ndt-active-account-context[hidden]{display:none!important}
+/* The top orange demo banner is removed only after online-verified login.
+ * The always-visible nearby calculation disclaimer is never suppressed. */
+body.ndt-verified-session #ndtResearchSafetyStrip{display:none!important}
+.ndt-research-disclaimer{background:#263849;border-left:3px solid #e4b26b;border-radius:8px;padding:8px 10px;color:#ebeff5;font-size:11px;font-weight:760;line-height:1.55;margin:8px 0 10px}
+@media(max-width:480px){.ndt-active-account-context{max-width:105px;font-size:10px}.top-header .brand{max-width:125px}.top-header .ndt-brand-banner{max-width:125px!important}}
