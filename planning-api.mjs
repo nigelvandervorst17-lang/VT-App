@@ -56,12 +56,17 @@ export function makePlanningAPI(options={}){
  const requireResearcher=async()=>{await requireAuth();if(role!=='researcher')throw Error('Alleen toegewezen onderzoekers kunnen opnames opslaan.');};
  async function list(){
   await requireAuth();
-  const [bons,opnames,members]=await Promise.all([
+  const [bons,opnames,members,ownCompanyMemberships,companies]=await Promise.all([
    api.select('planning_workbonnen',{order:'created_at.desc'}),
    api.select('planning_opnames',{order:'created_at.desc'}),
-   role==='planning'?api.select('planning_members'):[]
+   role==='planning'?api.select('planning_members'):[],
+   role==='planning'?api.select('company_members',{filters:{user_id:sessionUser.id}}):[],
+   role==='planning'?api.select('companies'):[]
   ]);
-  return {user:sessionUser,role,bons:bons||[],opnames:opnames||[],members:members||[]};
+  const admins=(ownCompanyMemberships||[]).filter(m=>m.user_id===sessionUser.id&&m.active&&m.role==='admin');
+  return {user:sessionUser,role,bons:bons||[],opnames:opnames||[],members:members||[],
+   companyAdminOptions:admins.map(m=>({id:m.company_id,
+    name:companies?.find(c=>c.id===m.company_id)?.name||'Bedrijf'}))};
  }
  async function addResearcher(email){
   await requirePlanner();
