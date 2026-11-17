@@ -56,6 +56,7 @@ function showMain(mode){
  connection();
  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
  renderSticky();
+ window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode}}));
 }
 async function hasEncryptedOfflineCache(){
  if(get(localStorage,OFFLINE_READY))return true;
@@ -81,6 +82,7 @@ async function hasEncryptedOfflineCache(){
 
 function showGate(reason=''){
  state.mode='signed-out';state.user=null;
+ window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode:'signed-out'}}));
  document.documentElement.classList.add('ndt-entry-loading');
  document.body.classList.add('ndt-entry-active');
  $('ndtEntryGate').hidden=false;
