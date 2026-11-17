@@ -22,7 +22,8 @@ test('Bottom navigation has exactly five requested items and charts under Meer',
  const nav=html.match(/<nav class="bottom-nav"[\s\S]*?<\/nav>/)?.[0];
  assert.ok(nav);
  const choices=[...nav.matchAll(/data-nav="([^"]+)"/g)].map(x=>x[1]);
- assert.deepEqual(choices,['calc','sources','refs','ai']);
+ assert.deepEqual(choices,['calc','planning','refs','ai']);
+ assert.match(html,/id="moreMenu"[\s\S]*?data-nav="sources"/);
  assert.equal((nav.match(/id="moreToggle"/g)||[]).length,1);
  assert.match(html,/id="moreMenu"[\s\S]*?data-nav="curves"/);
 });

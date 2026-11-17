@@ -1,0 +1,52 @@
+name: Planning workbons and research safety regressions
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'planning-app.mjs'
+      - 'planning-data.mjs'
+      - 'workbon-reader.mjs'
+      - 'planning.css'
+      - 'planning.test.mjs'
+      - 'ai-expert.mjs'
+      - 'sw.js'
+      - '.github/workflows/ndt-planning.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  planning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test planning, first-use login, owner-only Naslag and original research UI
+        run: |
+          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs
+          node --check planning-data.mjs
+          node --check planning-app.mjs
+          node --check workbon-reader.mjs
+          node --check ai-expert.mjs
+          node --check sw.js
+          node --check app.mjs
+          node --check rt-core.mjs
+      - name: Reject modifications to RT calculation and safety source files
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "$GITHUB_BASE_REF"
+          forbidden="$(git diff --name-only "origin/$GITHUB_BASE_REF"...HEAD -- \
+             app.mjs rt-core.mjs rt-curves.mjs rt-curves.json \
+             xray-extra-curves.mjs xray-extra-curves.json \
+             material-equivalence.mjs film-response.mjs iqi.mjs \
+             rt-procedure.mjs research/material-factor-data.mjs \
+             research/xray-core.mjs)"
+          if [ -n "$forbidden" ]; then
+            echo "Forbidden research engine modifications detected:" >&2
+            printf '%s\n' "$forbidden" >&2
+            exit 1
+          fi

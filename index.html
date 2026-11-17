@@ -163,6 +163,7 @@
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
 <link rel="stylesheet" href="./mobile-shell.css?v=2">
+<link rel="stylesheet" href="./planning.css?v=1">
 <script>
 try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
 catch{document.documentElement.classList.add('ndt-entry-loading')}
@@ -227,6 +228,8 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <!-- Compact research-calculator view. Real input elements remain in extended settings and
        are bridged by compact-layout.mjs; when JS is unavailable, the full form remains visible. -->
   <section class="rt-compact-calculator" id="rtCompactPanel" aria-label="Compact rekenoverzicht" hidden>
+    <div class="plan-calc-top"><button id="planningOpenTop" type="button">▦ Planning · Werkbonnen</button></div>
+    <div id="planningActiveBar" class="plan-active-bar" hidden><div class="plan-active-row"><strong id="planningActiveLabel">Actieve werkbon</strong><button id="planningActiveInfo" type="button" aria-label="Werkboninformatie">ⓘ</button><button id="planningFinish" type="button">Afronden &amp; Mail rapportage</button><button id="planningDetach" type="button" aria-label="Werkbon loskoppelen">×</button></div><p id="planningActiveWarning" class="plan-active-attention" hidden></p><div id="planningActiveDetails" hidden></div></div>
     <div class="rt-compact-toolbar">
       <strong id="rtCompactTitle">Snelle onderzoeksberekening</strong>
       <a class="ndt-se75-quicklink" id="ndtSe75ResearchShortcut" href="./se75.html" aria-label="Open het aparte mobiele Se-75 onderzoeksinvoerscherm">Se-75 snelinvoer</a>
@@ -464,6 +467,62 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   </details>
 </section>
 </section>
+<section class="screen plan-screen" data-screen="planning" id="screen-planning" hidden>
+ <div class="plan-heading"><div><p class="overline">WERKBONNEN · AGENDA</p><h1>Planning</h1><p class="small-muted">Opdracht- / Bonnummer · Universele NDO-werkbonnen · Onderzoek</p></div><button id="planningAdd" type="button" aria-label="Nieuwe werkbon toevoegen">+</button></div>
+ <div class="plan-tabs" role="group" aria-label="Planningsfilter">
+  <button type="button" data-plan-filter="today" class="active" aria-pressed="true">Vandaag</button>
+  <button type="button" data-plan-filter="upcoming" aria-pressed="false">Komende</button>
+  <button type="button" data-plan-filter="done" aria-pressed="false">Afgerond</button>
+ </div>
+ <label class="plan-search">Zoek werkbon<input id="planningSearch" type="search" placeholder="Zoek op klant, bonnummer of order" autocomplete="off"></label>
+ <p id="planningNotice" class="small-muted" role="status" aria-live="polite">Persoonlijke planning laden…</p>
+ <div id="planningDayList" class="plan-day-list"></div>
+ <details class="plan-library"><summary>Procedure-bibliotheek · Bekijk en voeg procedures toe</summary>
+  <p class="small-muted">Proceduregegevens vullen bestaande invoervelden alleen vooraf in; geen technische goedkeuring of RT-vrijgave.</p>
+  <div id="planningProcedures"></div>
+  <form id="planningProcedureForm" class="plan-procedure-grid">
+   <label>Procedurecode<input name="code" required maxlength="70" placeholder="Bijv. RT-MIJN-B"></label>
+   <label>Revisie<input name="revision" required maxlength="20" placeholder="01"></label>
+   <label>Norm<input name="norm" maxlength="90" placeholder="ISO 17636-1"></label>
+   <label>Klasse<select name="klasse"><option value="">Niet vermeld</option><option>A</option><option>B</option></select></label>
+   <label>Film<select name="film"><option value="">Niet vermeld</option><option>D4</option><option>D5</option><option>D7</option></select></label>
+   <label>Min. zwarting<input name="minDensity" inputmode="decimal" placeholder="bijv. 2,3"></label>
+   <label>IQI-positie<select name="iqiSide"><option value="">Niet vermeld</option><option value="source">Bronzijde</option><option value="film">Filmzijde</option></select></label>
+   <button type="submit">Procedure opslaan</button>
+  </form>
+ </details>
+ <section class="plan-day-logs" aria-labelledby="planningLogHeading"><h2 id="planningLogHeading">Werklogboek en rapportage</h2><p id="planningLogSummary" class="small-muted">Geen actieve werkbon.</p><div id="planningLoggedShots"></div><button type="button" id="planningMailReport">Afronden &amp; Mail rapportage</button></section>
+</section>
+<dialog id="planningImportDialog" class="plan-import-dialog" aria-labelledby="planningImportHeading">
+ <h2 id="planningImportHeading">Nieuwe werkbon</h2>
+ <p class="small-muted">PDF, foto of tekst wordt lokaal gelezen. Pas na je klik op AI uitlezen gaat herkende tekst naar je ingestelde Gemini Worker. Controleer ALLE ingevulde velden.</p>
+ <label>Upload werkbon (PDF / foto / TXT)<input type="file" id="planningFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain"></label>
+ <label>Of plak de bontekst<textarea id="planningText" rows="5" placeholder="Plak hier de inhoud van een willekeurige werkbon…"></textarea></label>
+ <div class="plan-import-actions"><button type="button" id="planningReadFile">Bestand lokaal uitlezen</button><button type="button" id="planningAIRead">AI uitlezen</button></div>
+ <div id="planningTurnstile"></div>
+ <p id="planningImportStatus" role="status" aria-live="polite">Vul handmatig in of lees een bestand uit.</p>
+ <form id="planningBonForm" class="plan-bon-form">
+  <label>Opdracht- / Bonnummer<input name="bonnummer" maxlength="100" required></label>
+  <label>Klant<input name="klant" maxlength="260" required></label>
+  <label>Adres<input name="adres" maxlength="260"></label>
+  <label>Ordernummer<input name="ordernummer" maxlength="100"></label>
+  <label>Datum<input type="date" name="datum" required></label>
+  <label>Starttijd<input type="time" name="starttijd"></label>
+  <label>Eindtijd<input type="time" name="eindtijd"></label>
+  <label>Bron/toestel<input name="bron_of_toestel" maxlength="260"></label>
+  <label>Geometrie<select name="geometrie"><option value="">Niet vermeld · zelf kiezen</option><option>Buis / Pijp</option><option>Plaat / Las</option></select></label>
+  <label>Techniek<select name="techniek"><option value="">Niet vermeld · zelf kiezen</option><option>SWSI</option><option>DWSI</option><option>DWDI</option></select></label>
+  <label>Procedurecode<input name="procedure_code" maxlength="70"></label>
+  <label>Revisie<input name="revisie" maxlength="20"></label>
+  <label>kV<input name="kv" inputmode="decimal"></label>
+  <label>mA<input name="ma" inputmode="decimal"></label>
+  <label>Activiteit (Ci)<input name="activiteit_ci" inputmode="decimal"></label>
+  <label>Wanddikte (mm)<input name="wanddikte_mm" inputmode="decimal"></label>
+  <label>SFD (mm)<input name="sfd_mm" inputmode="decimal"></label>
+  <label>Opmerkingen<textarea name="opmerkingen" rows="3" maxlength="2000"></textarea></label>
+  <div class="plan-import-actions"><button type="submit">Werkbon opslaan</button><button id="planningCancel" type="button">Annuleren</button></div>
+ </form>
+</dialog>
 <section class="screen" data-screen="sources" id="screen-sources" hidden><div class="section-heading"><p class="overline" data-i18n="tools">GEREEDSCHAP</p><h1 data-i18n="sources">Bronnen & verval</h1><p class="subtitle" data-i18n="sourcesSub">Controleer de activiteit van een gamma-bron aan de hand van het certificaat.</p></div><div class="panel"><div class="row-title"><span data-i18n="sourceCurrent">Gekozen isotoop</span><strong id="sourceIso">Se-75</strong></div><div class="row-title"><span data-i18n="halfLife">Halveringstijd</span><strong id="sourceHalfLife">119,78 d</strong></div><div class="row-title"><span data-i18n="sourceActivity">Huidige invoer</span><strong id="sourceActiveCi">36 Ci</strong></div><div class="divider"></div><p class="small-muted" data-i18n="sourcesNote">Het bronverval is een afzonderlijke wiskundige berekening; het bewijst geen juiste filmzwarting of beeldkwaliteit.</p><button class="outline-button" type="button" id="toCertificate" data-i18n="editCertificate">Certificaatgegevens invullen</button></div><div class="panel" id="decayPanel">
   <h2 data-i18n="decayTitle">Bronverval op certificaatdatum</h2>
   <p class="small-muted" data-i18n="decayExplanation">Wiskundige prognose; gebruik de activiteit op de juiste referentiedatum. Controleer het originele broncertificaat.</p>
@@ -652,6 +711,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <div class="section-heading"><p class="overline">FYSIEKE FILMTESTEN · LOKAAL</p>
     <h1>Praktijkmetingen</h1>
     <p class="subtitle">Registreer werkelijk gemaakte filmopnames en gemeten filmzwarting, apart van theoretische onderzoeksberekeningen.</p></div>
+  <section id="planningRecordsCard" class="plan-records-card"><h2>Werkbonrapportage</h2><p id="planningRecordsSummary">Kies een werkbon bij Planning.</p><button id="planningRecordsMail" type="button">Afronden &amp; Mail rapportage</button></section>
   <div class="panel ft-panel" id="fieldTestsPanel">
     <h2>Densitometerregister</h2>
     <p class="small-muted"><strong>Dit zijn alleen jouw eigen meetregistraties.</strong> Alle records blijven lokaal in deze browser. Er worden geen meetgegevens aan GitHub, Cloudflare of Gemini verzonden. Exporteren is nodig voor een back-up of overdracht naar een ander toestel.</p>
@@ -850,7 +910,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
     <p class="small-muted">De Gemini API-key en Turnstile-secret staan uitsluitend in de Cloudflare Worker. Alleen deze publieke waarden worden lokaal opgeslagen.</p>
       <div class="ai-settings-privacy">
   <div class="panel ai-context"><label class="ai-check"><input type="checkbox" id="aiSendContext" checked> Huidige RT-invoer en app-uitkomst meesturen bij mijn vraag</label>
-    <p class="small-muted">Dit verstuurt uitsluitend relevante RT-velden naar jouw Worker en Google Gemini. Geen bronregister, opgeslagen records, persoonlijke namen of certificaatdocumenten. Op de gratis Gemini-laag kunnen gegevens voor productverbetering worden gebruikt. Uitschakelen kan.</p>
+    <p class="small-muted">Dit verstuurt de huidige RT-invoer naar jouw Worker en Google Gemini. Bij een actieve werkbon wordt ook de geselecteerde bon- en procedurecontext meegestuurd (waaronder klant/order). Geen compleet bronregister, opgeslagen logboek of certificaatbestanden. Op de gratis Gemini-laag kunnen gegevens voor productverbetering worden gebruikt. Uitschakelen kan.</p>
     <div class="ai-actions"><button type="button" id="aiRecalculate" class="ghost-button">Reken opnieuw met app</button>
     <button type="button" id="aiPreviewToggle" class="ghost-button" aria-expanded="false">Bekijk context</button></div>
     <pre id="aiPreview" hidden aria-label="Voorbeeld meegestuurde RT-gegevens"></pre>
@@ -872,7 +932,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <div id="ndtAssetList"></div>
   <button id="ndtAssetClose" type="button" class="ndt-asset-close">Sluiten</button>
 </dialog>
-<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="sources" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg><span data-i18n="tabSources">Bronnen</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="ai" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5zM8 11h.01M16 11h.01M9 15h6"/></svg><span>AI Expert</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation">
+<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="planning" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h4"/></svg><span>Planning</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="ai" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5zM8 11h.01M16 11h.01M9 15h6"/></svg><span>AI Expert</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation"><button data-nav="sources" class="nav" type="button">Bronnen</button>
   <button data-nav="curves" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-10"/></svg><span data-i18n="tabCurves">Grafieken</span></button>
   <button class="nav" data-nav="tools" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3h8l1 4 4 2v6l-4 2-1 4H8l-1-4-4-2V9l4-2z"></path><circle cx="12" cy="12" r="3"/></svg><span data-ui-i18n="toolsNav">Tools</span></button><button data-nav="records" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM9 10h6M9 14h6M9 18h4"/></svg><span data-i18n="tabRecords">Records</span></button><button data-nav="settings" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span data-i18n="tabSettings">Instellingen</span></button></div>
 </div>
@@ -939,6 +999,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <script type="module" src="./mobile-shell.mjs?v=2"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
+<script type="module" src="./planning-app.mjs?v=1"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./compact-layout.mjs?v=418"></script>
 <script type="module" src="./rt-material-ui.mjs?v=419"></script>

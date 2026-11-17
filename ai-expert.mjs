@@ -62,7 +62,8 @@ function snapshot(){
       time:getText('resultTime'),reason:getText('resultReason'),
       provenance:getText('resultProvenance')
     }:{status:'nog geen actuele berekening — geen tijd beschikbaar'},
-    chartStatus:getText('rt29StatusText')
+    chartStatus:getText('rt29StatusText'),
+    activeWorkbon:typeof window.ndtWorkbonContext==='function'?window.ndtWorkbonContext():null
   };
 }
 function preview(){
@@ -228,6 +229,7 @@ function init(){
     status('De bestaande calculator is uitgevoerd. Controleer de status en uitkomst.');
   });
   $('aiSendContext').addEventListener('change',preview);
+  window.addEventListener('ndt-active-workbon-changed',preview);
   // If a site key was configured previously, initialize on first visit to AI Expert.
   document.querySelector('[data-nav="ai"]')?.addEventListener('click',()=>{
     if(widgetId===null) installTurnstile(); preview();
