@@ -3,7 +3,7 @@ export const PROCEDURE_SEEDS=Object.freeze([
  Object.freeze({code:'MM 18100 E',revision:'22',norm:'ISO 17636-1',klasse:'B',film:'D4',minDensity:2.3,iqiSide:'source'}),
  Object.freeze({code:'RT-ISO-A',revision:'04',norm:'ISO 17636-1',klasse:'A',film:'D5',minDensity:2.0,iqiSide:'film'})
 ]);
-export const WORKBON_FIELDS=Object.freeze(['bonnummer','klant','adres','ordernummer','bron_of_toestel','geometrie','techniek','procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd','kv','ma','activiteit_ci','wanddikte_mm','sfd_mm','materiaal','film']);
+export const WORKBON_FIELDS=Object.freeze(['bonnummer','klant','adres','ordernummer','bron_of_toestel','geometrie','techniek','procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd','kv','ma','activiteit_ci','wanddikte_mm','sfd_mm','materiaal','materiaal_omschrijving','film','doelzwarting']);
 export const NO_RT_RELEASE='Onderzoek / niet gevalideerd / geen RT-vrijgave';
 const text=(v,max=260)=>typeof v==='string'?v.trim().slice(0,max):v==null?'':String(v).trim().slice(0,max);
 const maybe=(v,max=260)=>v==null||String(v).trim()===''?null:text(v,max);
@@ -41,6 +41,12 @@ export function sanitizeBon(input){
   const v=values[key];
   values[key]=v!==null&&/^\d+(?:[.,]\d+)?$/.test(v)&&Number(v.replace(',','.'))>0?v:null;
  }
+ if(values.doelzwarting&&!/^\d+(?:[.,]\d+)?$/.test(values.doelzwarting))values.doelzwarting=null;
+ if(values.doelzwarting&&!(Number(values.doelzwarting.replace(',','.'))>0))values.doelzwarting=null;
+ if(values.film&&!['D4','D5','D7'].includes(values.film))values.film=null;
+ // Material is a *suggestion*, not a new equivalence curve. Only explicit known codes.
+ const codes={STAAL:'Fe',FE:'Fe','RVS 300':'RVS300',RVS300:'RVS300',ALUMINIUM:'Al',AL:'Al',KOPER:'Cu',CU:'Cu',TITANIUM:'Ti',TI:'Ti'};
+ values.materiaal=codes[String(values.materiaal||'').trim().toUpperCase()]||null;
  if(values.datum&&!/^\d{4}-\d\d-\d\d$/.test(values.datum))values.datum=null;
  for(const key of ['starttijd','eindtijd'])if(values[key]&&!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(values[key]))values[key]=null;
  return values;
