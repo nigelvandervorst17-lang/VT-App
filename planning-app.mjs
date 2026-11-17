@@ -225,6 +225,10 @@ function renderCard(bon){
   const assigned=state.members.find(m=>m.user_id===bon.assigned_to);
   actions.append(elem('small','plan-assignee',assigned?'Onderzoeker: '+assigned.email:'Nog niet toegewezen'));
   actions.append(action('Controleer / wijs toe',()=>openBonDialog(bon),'plan-edit'));
+  actions.append(action('Bekijk meetdata',()=>{
+   state.activeId=bon.id;render();
+   $('planningLoggedShots')?.scrollIntoView({behavior:'smooth',block:'center'});
+  },'plan-measurements'));
   if(bon.status==='Gereed')actions.append(elem('small','plan-status-pending','Onderzoeker gereed · metingen beschikbaar voor kantoor'));
  }else if(activeRole('researcher')){
   actions.append(action(['Gereed','Afgerond'].includes(bon.status)?'Details bekijken':'Start onderzoek',
@@ -305,12 +309,31 @@ function renderShots(){
  const shots=bon?state.opnames.filter(x=>x.bon_id===bon.id):
   activeRole('planning')?state.opnames:[];
  if(!shots.length){box.append(elem('p','small-muted','Nog geen opgeslagen onderzoeksopnames.'));return;}
- for(const row of shots.slice(0,80)){
-  const d=row.details||{};
-  box.append(elem('div','plan-shot',
-   (row.created_at||'').slice(0,16).replace('T',' ')+' · '+
-   (d.source||'Bron onbekend')+' · '+(d.result||'Geen indicatieve tijd')+
-   ' · IQI '+(d.iqiWire||'onbekend')+(row.pending_sync?' · WACHT OP SYNCHRONISATIE':'')+' · '+NO_RT_RELEASE));
+ const fields=[
+  ['Bron / toestel','source'],['Spanning kV','kv'],['Stroom mA','ma'],
+  ['Activiteit Ci','activityCi'],['Materiaal','material'],['Wanddikte mm','wall'],
+  ['Doorstraalde dikte mm','thickness'],['Bron-filmafstand mm','distance'],
+  ['Film','film'],['Doelzwarting','density'],['Geometrie','geometry'],
+  ['Opnametechniek','technique'],['Indicatieve tijd','result'],
+  ['IQI rekenkundige eis','iqiWire'],['Waargenomen IQI draad','iqiObserved']
+ ];
+ for(const row of shots.slice(0,120)){
+  const d=row.details||{},card=elem('details','plan-shot-detail');
+  const summary=elem('summary','',
+   (row.created_at||'').slice(0,16).replace('T',' ')+' · Bon '+(d.workbonnummer||'—')+
+   ' · '+(d.source||'Bron onbekend')+
+   (row.pending_sync?' · WACHT OP SYNCHRONISATIE':''));
+  card.append(summary);
+  const user=state.members.find(x=>x.user_id===row.created_by);
+  const header=elem('p','plan-shot-researcher','Onderzoeker: '+(user?.email||
+   (row.created_by===state.user?.id?state.user?.email:'Gekoppeld account')));
+  card.append(header);
+  for(const [name,key] of fields){
+   card.append(elem('p','plan-shot-field',name+': '+(d[key]===undefined||d[key]===null||
+    String(d[key]).trim()===''?'Nog in te vullen / niet vastgelegd':String(d[key]))));
+  }
+  card.append(elem('p','plan-shot-not-approved',NO_RT_RELEASE));
+  box.append(card);
  }
 }
 function render(){
