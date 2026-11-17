@@ -162,7 +162,7 @@
 <link rel="stylesheet" href="./ndt-pro-theme.css?v=ui1">
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
-<link rel="stylesheet" href="./mobile-shell.css?v=1">
+<link rel="stylesheet" href="./mobile-shell.css?v=2">
 <script>
 try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
 catch{document.documentElement.classList.add('ndt-entry-loading')}
@@ -202,15 +202,15 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
  <div class="ndt-entry-card">
   <h1>Welkom bij NDT Radiography Pro</h1>
   <p>Log eenmalig in. Daarna herkent dit toestel je sessie, ook wanneer de verbinding wegvalt. Bedrijfsgegevens blijven offline versleuteld en vragen een aparte wachtzin.</p>
-  <form id="ndtEntryForm">
+  <form id="ndtEntryForm" novalidate>
    <label for="ndtEntryEmail">E-mailadres<input id="ndtEntryEmail" type="email" autocomplete="email" required placeholder="naam@bedrijf.nl"></label>
    <label for="ndtEntryPassword">Wachtwoord<input id="ndtEntryPassword" type="password" autocomplete="current-password" required placeholder="Wachtwoord"></label>
+   <p id="ndtEntryStatus" class="ndt-entry-feedback" role="status" aria-live="polite" data-kind="info">Vul je e-mailadres en wachtwoord in.</p>
    <button id="ndtEntrySubmit" type="submit">Inloggen</button>
    <button id="ndtEntryRegister" class="secondary" type="button">Nieuw account aanmaken</button>
   </form>
   <button id="ndtEntryTrial" class="secondary" type="button">Start gratis proefversie (50 berekeningen)</button>
   <button id="ndtEntryOffline" class="secondary" type="button" hidden>Doorgaan in Offline Bunker-modus</button>
-  <p id="ndtEntryStatus" role="status" aria-live="polite">Log in of kies de proefversie.</p>
   <p>Een nieuw account moet eerst per e-mail worden bevestigd. De proefversie is een lokale onderzoeksdemo, geen licentie- of veiligheidsvrijgave.</p>
  </div>
 </section>
@@ -936,7 +936,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 })();
 </script>
 <script type="module" src="./app.mjs?v=419"></script>
-<script type="module" src="./mobile-shell.mjs?v=1"></script>
+<script type="module" src="./mobile-shell.mjs?v=2"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
