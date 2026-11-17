@@ -126,3 +126,19 @@ test('no alternative calculator, auto guessed fields, open raw reference assets 
  assert.match(ai,/activeWorkbon:typeof window\.ndtWorkbonContext/);
  assert.match(html,/id="aiSendContext" checked/);
 });
+
+test('planning hours have a dedicated fixed-width column and sufficient mobile gap',()=>{
+ const styles=src('planning.css');
+ assert.match(styles,/grid-template-columns:112px minmax\(0,1fr\) auto;column-gap:12px/);
+ assert.match(styles,/grid-template-columns:105px minmax\(0,1fr\);column-gap:12px/);
+ assert.match(styles,/\.plan-hours\{min-width:105px/);
+ assert.match(styles,/font-variant-numeric:tabular-nums/);
+});
+test('opaque sticky header fills safe-area during scrolling',()=>{
+ const css=src('mobile-shell.css');
+ assert.match(css,/body::before\{[^}]*height:var\(--rt-statusbar-height,env\(safe-area-inset-top,0px\)\)!important;[^}]*background:#061628!important/);
+ assert.match(css,/\.top-header\{background:#061628!important;background-image:none!important\}/);
+ assert.match(css,/\.top-header::before\{[^}]*bottom:100%;[^}]*background:#061628/);
+ assert.match(html,/planning\.css\?v=2/);
+ assert.match(html,/mobile-shell\.css\?v=3/);
+});
