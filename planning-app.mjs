@@ -137,7 +137,8 @@ async function refreshPlanning(){
    'Planning · centraal opgeslagen. Wijs bestaande, bevestigde accounts aan een werkbon toe.':
    'Mijn toegewezen werkbonnen · gedeeld tussen computer en telefoon.');
  }catch(e){
-  if(!navigator.onLine&&state.offlineCache&&await showOfflineSnapshot())return;
+  const connectionFailure=!navigator.onLine||/network|netwerk|fetch|verbinding|timeout|load failed/i.test(errorText(e));
+  if(connectionFailure&&state.offlineCache&&await showOfflineSnapshot())return;
   clearUserData();
   // Trial users can inspect the two sample orders but cannot publish private data.
   if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial'){
@@ -816,7 +817,15 @@ function init(){
   // transition. It will be discarded if the online user ID differs.
   const restored=event.detail?.mode==='signed-in';
   clearUserData({keepEncryptedCache:restored&&Boolean(state.offlineCache)});
-  if(restored)void refreshPlanning(); // Server verifies role; no user role selector.
+  if(restored){
+   void refreshPlanning().then(()=>{
+    // Open the authorized workboard on first sign-in (without a role picker).
+    if(['planning','researcher'].includes(state.role)&&
+       !document.querySelector('#screen-planning')?.hidden)return;
+    if(['planning','researcher'].includes(state.role))
+      document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
+   });
+  }
  });
  window.addEventListener('ndt-private-naslag-logout',()=>clearUserData());
  window.addEventListener('offline',()=>{
