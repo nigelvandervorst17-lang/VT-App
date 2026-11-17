@@ -28,7 +28,11 @@ function api(){
  if(!state.api)state.api=createSupabaseConnection(config());
  return state.api;
 }
-function status(text){if($('ndtEntryStatus'))$('ndtEntryStatus').textContent=text;}
+function status(text,kind='info'){
+ const feedback=$('ndtEntryStatus');if(!feedback)return;
+ feedback.textContent=text;
+ feedback.dataset.kind=kind;
+}
 function modeLabel(){
  if(state.user?.email)return state.user.email;
  if(state.mode==='trial')return 'Gratis proefversie · '+trial.status().remaining+' van '+TRIAL_MAX+' over';
@@ -126,38 +130,64 @@ function initAuth(){
  const entryForm=$('ndtEntryForm');
  const emailInput=$('ndtEntryEmail'),passwordInput=$('ndtEntryPassword');
  const loginButton=$('ndtEntrySubmit'),registerButton=$('ndtEntryRegister');
+ // The project uses its existing lightweight Supabase Auth REST client rather
+ // than loading another browser SDK. This is the same Auth /signup endpoint.
+ const supabase={auth:{
+  signUp:({email,password})=>api().signUp(email,password)
+ }};
  const normalizedEmail=()=>{
   emailInput.value=normalizeEntryEmail(emailInput.value);
   return emailInput.value;
  };
  emailInput.addEventListener('blur',normalizedEmail);
- const lockEntry=locked=>{
-  loginButton.disabled=locked;registerButton.disabled=locked;
+ const validate=(email,password)=>{
+  const missing=!email||!password||password.length<6;
+  const malformed=!missing&&(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||emailInput.validity.typeMismatch);
+  emailInput.setAttribute('aria-invalid',String(!email||malformed));
+  passwordInput.setAttribute('aria-invalid',String(!password||password.length<6));
+  if(missing)return 'Vul een e-mailadres en wachtwoord van minimaal 6 tekens in.';
+  if(malformed)return 'Vul een geldig e-mailadres in.';
+  return '';
  };
+ const lockEntry=(busy,button)=>{
+  loginButton.disabled=busy;registerButton.disabled=busy;
+  if(button)button.textContent=busy?'Bezig...':button===loginButton?'Inloggen':'Nieuw account aanmaken';
+ };
+ const entryValues=()=>{
+  const email=normalizedEmail(),password=passwordInput.value;
+  const message=validate(email,password);
+  if(message){status(message,'error');return null;}
+  return {email,password};
+ };
+ for(const input of [emailInput,passwordInput]){
+  input.addEventListener('input',()=>{
+   if($('ndtEntryStatus')?.dataset.kind==='error')status('','info');
+   input.removeAttribute('aria-invalid');
+  });
+ }
  entryForm.addEventListener('submit',async e=>{
   e.preventDefault();
-  const email=normalizedEmail();
-  if(!entryForm.reportValidity())return;
-  lockEntry(true);status('Aanmelden…');
+  const values=entryValues();if(!values)return;
+  lockEntry(true,loginButton);status('Inloggen...','busy');
   try{
-   await api().signIn(email,passwordInput.value);
+   await api().signIn(values.email,values.password);
    state.user=await api().user();
    if(!state.user?.id)throw Error('Je identiteit kon niet worden gecontroleerd.');
    remove(localStorage,TRIAL_CHOICE);
    passwordInput.value='';
    showMain('signed-in');
-  }catch(err){status('Inloggen mislukt: '+String(err?.message||err));}
-  finally{lockEntry(false);passwordInput.value='';}
+  }catch(err){status('Inloggen mislukt: '+String(err?.message||err),'error');}
+  finally{lockEntry(false,loginButton);passwordInput.value='';}
  });
  registerButton.addEventListener('click',async()=>{
-  const email=normalizedEmail();
-  if(!entryForm.reportValidity())return;
-  lockEntry(true);status('Accountregistratie aanvragen…');
+  const values=entryValues();if(!values)return;
+  lockEntry(true,registerButton);status('Accountregistratie verwerken...','busy');
   try{
-   await api().signUp(email,passwordInput.value);
-   status('Registratie aangevraagd. Controleer je e-mail (ook spam) om je account te bevestigen en log daarna in.');
-  }catch(err){status('Registratie mislukt: '+String(err?.message||err));}
-  finally{lockEntry(false);passwordInput.value='';}
+   const response=await supabase.auth.signUp({email:values.email,password:values.password});
+   if(!response||response.error)throw Error(response?.error?.message||'De registratie werd niet bevestigd door Supabase.');
+   status('Account aangemaakt! Controleer je e-mail om te bevestigen.','success');
+  }catch(err){status('Registratie mislukt: '+String(err?.message||err),'error');}
+  finally{lockEntry(false,registerButton);passwordInput.value='';}
  });
  $('ndtEntryTrial').addEventListener('click',()=>{
   if(!trial.status().ok){status('De proefregistratie is niet beschikbaar op dit toestel.');return;}
