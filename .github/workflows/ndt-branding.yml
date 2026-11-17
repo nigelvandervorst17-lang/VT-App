@@ -7,6 +7,11 @@ on:
       - 'mobile-shell.mjs'
       - 'mobile-shell.css'
       - 'mobile-shell.test.mjs'
+      - 'private-naslag.mjs'
+      - 'private-naslag.test.mjs'
+      - 'reference-data.mjs'
+      - 'reference-tools.mjs'
+      - 'reference-recovery.mjs'
       - 'se75.html'
       - 'se75-quick.mjs'
       - 'se75-quick.test.mjs'
@@ -30,8 +35,10 @@ jobs:
           node-version: '22'
       - name: Verify logos, research guards and original models
         run: |
-          node --test research/brand-logos.test.mjs research/live-material-preview.test.mjs mobile-shell.test.mjs se75-quick.test.mjs
+          node --test research/brand-logos.test.mjs research/live-material-preview.test.mjs mobile-shell.test.mjs se75-quick.test.mjs private-naslag.test.mjs
           node --check se75-quick.mjs
+          node --check private-naslag.mjs
+          node --check reference-tools.mjs
           node --check mobile-shell.mjs
           node --check research/company-suite/company-app.mjs
           node --check research/company-suite/supabase-rest.mjs
