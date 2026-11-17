@@ -1,192 +1,232 @@
 /**
- * Agenda, universal work orders, procedure metadata, per-user draft shot logs and mail.
- * UI-only integration: reads the existing result and writes only existing input controls.
- * No exposure engine, material, IQI or safety formula is imported or modified.
+ * Shared planning / researcher workflow. Cloud data is always scoped by Supabase RLS.
+ * The existing RT calculator is only driven via its original input controls.
+ * No new exposure calculations, IQI acceptance, material factors or safety shortcuts.
  */
-import {createSupabaseConnection,PUBLIC_CONFIG_KEY} from './research/company-suite/supabase-rest.mjs';
-import {DEFAULT_SUPABASE_PROJECT} from './research/company-suite/project-config.mjs';
-import {localISODate,normalizeStatus,sanitizeBon,proceduresForStore,findProcedure,
- procedurePrefill,makeStore,safeUserScope,NO_RT_RELEASE,buildReport,reportMailto} from './planning-data.mjs';
+import {makePlanningAPI} from './planning-api.mjs';
+import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
+ localISODate,buildReport,reportMailto,NO_RT_RELEASE} from './planning-data.mjs';
 import {extractBonText,parseBonViaGemini,setupBonTurnstile} from './workbon-reader.mjs';
 
 const $=id=>document.getElementById(id);
-const state={scope:null,user:null,store:null,data:null,filter:'today',search:'',loading:false};
-const msg=(content,isError=false)=>{
- const el=$('planningNotice');if(!el)return;
- el.textContent=content;el.dataset.error=String(isError);
+const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],
+ filter:'today',search:'',activeId:null,setupBonId:null,setupReady:false,
+ selectedId:null,editingId:null,pendingFile:null,pendingText:'',readGeneration:0,
+ processing:false,loading:false,procedureList:proceduresForStore([])};
+const $text=(id,value)=>{if($(id))$(id).textContent=String(value??'');};
+const elem=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text??'');return n;};
+const errorText=e=>String(e?.message||e);
+function notice(message,isError=false){
+ $text('planningNotice',message);
+ if($('planningNotice'))$('planningNotice').dataset.error=String(isError);
+}
+function importNotice(message,isError=false){
+ $text('planningImportStatus',message);
+ if($('planningImportStatus'))$('planningImportStatus').dataset.error=String(isError);
+}
+const activeBon=()=>state.bons.find(b=>b.id===state.activeId)||null;
+const bonData=bon=>bon?.data||bon||{};
+const idLabel=bon=>(bonData(bon).bonnummer||'Zonder nummer');
+const bonTitle=bon=>{
+ const data=bonData(bon);
+ return 'Bon '+idLabel(bon)+' · '+(data.klant||'Klant niet vermeld');
 };
-const importMsg=(content,isError=false)=>{
- const el=$('planningImportStatus');if(!el)return;
- el.textContent=content;el.dataset.error=String(isError);
-};
-function config(){
- let saved=null;try{saved=JSON.parse(localStorage.getItem(PUBLIC_CONFIG_KEY)||'null');}catch{}
- return saved?.url&&saved?.key?saved:DEFAULT_SUPABASE_PROJECT;
+const activeRole=role=>state.role===role;
+const localToday=()=>localISODate();
+function clearUserData(){
+ state.client=null;state.role=null;state.user=null;state.bons=[];state.opnames=[];
+ state.members=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
+ render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
 }
-function el(tag,cls,text){
- const node=document.createElement(tag);if(cls)node.className=cls;
- if(text!==undefined)node.textContent=String(text);return node;
-}
-function userNotice(){
- return 'Werkbonnen blijven lokaal in deze browser per account opgeslagen. Geen synchronisatie of versleuteling. Deel dit toestel niet zonder je lokale gegevens te wissen.';
-}
-function activeBon(){
- return state.data?.workbonnen.find(b=>b.id===state.data.activeId)||null;
-}
-function persist(){
- if(!state.store||!state.data)return false;
- try{state.data=state.store.save(state.data);return true;}
- catch(e){msg('Opslaan mislukt op dit toestel: '+String(e?.message||e),true);return false;}
-}
-async function openScope(){
+async function refreshPlanning(){
  if(state.loading)return;
  state.loading=true;
+ const oldId=state.user?.id;
  try{
-  let scope=null,user=null;
-  const api=createSupabaseConnection(config());
-  if(api.restore()){
-   if(!navigator.onLine)throw Error('Persoonlijke planning vereist online sessiecontrole. De calculator blijft offline beschikbaar.');
-   user=await api.user();scope=safeUserScope(user?.id);
-   if(!scope)throw Error('Geen verifieerbaar gebruikersaccount. Log opnieuw in.');
-  }else if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial')scope='trial';
-  else throw Error('Log in of start de proefversie om je planning te bekijken.');
-  if(state.scope!==scope){
-   state.scope=scope;state.user=user;state.store=makeStore(localStorage,scope);
-   state.data=state.store.read();
-  }else state.user=user;
-  msg((scope==='trial'?'Proefplanning · ':'Mijn planning · ')+userNotice());
-  render();
- }catch(error){
-  // Never show data belonging to a previous user while the new session is unresolved.
-  state.scope=null;state.user=null;state.store=null;state.data=null;
-  render();msg(String(error?.message||error),true);
- }finally{state.loading=false;}
-}
-function openPlanning(){
- state.filter='today';$('planningSearch').value='';state.search='';
- document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
-}
-function procedureFor(bon){
- return findProcedure(state.data?.procedures||[],bon?.procedure_code,bon?.revisie);
-}
-function procedureText(bon){
- const ref=bon.procedure_code?bon.procedure_code+(bon.revisie?' Rev. '+bon.revisie:''):'Geen procedure';
- return ref;
-}
-function renderActive(){
- const bon=activeBon(),bar=$('planningActiveBar'),records=$('planningRecordsSummary');
- bar.hidden=!bon;
- const label=bon?'Actief: Bon '+(bon.bonnummer||'—')+' · '+(bon.klant||'—')+' ('+procedureText(bon)+')':'';
- if(bon){
-  $('planningActiveLabel').textContent=label;
-  const missing=[!bon.geometrie?'geometrie':null,!bon.techniek?'opnametechniek':null,!bon.wanddikte_mm?'wanddikte':null].filter(Boolean);
-  $('planningActiveWarning').hidden=missing.length===0;
-  $('planningActiveWarning').textContent=missing.length?'Niet vermeld op werkbon: '+missing.join(', ')+'. Kies zelf in Rekenen.':'';
-  const details=$('planningActiveDetails');details.replaceChildren();
-  details.append(el('p','',bon.adres||'Adres niet vermeld'),el('p','',bon.opmerkingen||'Geen werkinstructies op de bon'));
-  if(bon.adres){
-   const maps=el('a','plan-link','📍 Google Maps'),apple=el('a','plan-link','Apple Kaarten');
-   maps.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(bon.adres);
-   apple.href='https://maps.apple.com/?q='+encodeURIComponent(bon.adres);
-   maps.target='_blank';apple.target='_blank';maps.rel='noopener noreferrer';apple.rel='noopener noreferrer';
-   details.append(maps,apple);
+  const client=state.client||makePlanningAPI();
+  const auth=await client.authenticate();
+  const snapshot=await client.list();
+  if(oldId&&oldId!==auth.user.id){
+   state.activeId=null;state.setupBonId=null;state.setupReady=false;
   }
- }
- const count=bon?state.data.opnames.filter(x=>x.bonId===bon.id).length:
-  state.data?state.data.opnames.filter(x=>x.day===localISODate()).length:0;
- const logText=bon?(label+' · '+count+' opgeslagen onderzoeksopname(s)'):'Werkdag vandaag · '+count+' opgeslagen onderzoeksopname(s)';
- if(records)records.textContent=state.data?logText:'Log in of kies de proefversie.';
- const summary=$('planningLogSummary');
- if(summary)summary.textContent=state.data?logText:'Geen persoonlijke planning geladen.';
- for(const id of ['planningMailReport','planningRecordsMail']){
-  const button=$(id);if(button)button.disabled=!state.data;
+  state.client=client;state.role=snapshot.role;state.user=snapshot.user;
+  state.bons=snapshot.bons;state.opnames=snapshot.opnames;state.members=snapshot.members;
+  if(state.activeId&&!state.bons.some(b=>b.id===state.activeId))state.activeId=null;
+  state.procedureList=readProcedures();
+  notice(state.role==='planning'?
+   'Planning · centraal opgeslagen. Wijs bestaande, bevestigde accounts aan een werkbon toe.':
+   'Mijn toegewezen werkbonnen · gedeeld tussen computer en telefoon.');
+ }catch(e){
+  clearUserData();
+  // Trial users can inspect the two sample orders but cannot publish private data.
+  if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial'){
+   state.role='trial';state.bons=demoWorkbonnen().map(b=>({...b,data:b}));
+   notice('Proefweergave · twee voorbeeldbonnen. Log in voor gedeelde werkbonnen en rollen.');
+  }else notice('Gedeelde Planning: '+errorText(e),true);
+ }finally{
+  state.loading=false;render();
  }
 }
-function statusClass(status){
- return status==='Afgerond'?'done':status==='In behandeling'?'doing':'queued';
-}
-function rowForBon(bon){
- const row=el('div','plan-row');
- const hours=el('div','plan-hours',(bon.starttijd||'--:--')+' – '+(bon.eindtijd||'--:--'));
- const info=el('div','plan-info');
- const action=el('button','plan-open');
- action.type='button';
- const name=el('strong','',bon.klant||'Klant onbekend');
- const secondary=el('small','',bon.adres||'Adres onbekend');
- const technical=el('small','',(bon.bron_of_toestel||'Bron/toestel onbekend')+' • '+procedureText(bon));
- const number=el('small','','Opdracht- / Bonnummer: '+(bon.bonnummer||'—')+' · Order: '+(bon.ordernummer||'—'));
- action.append(name,secondary,technical,number);
- action.addEventListener('click',()=>activate(bon.id));
- info.append(action);
- if(bon.adres){
-  const nav=el('a','plan-map','📍 Open route');
-  nav.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(bon.adres);
-  nav.target='_blank';nav.rel='noopener noreferrer';nav.title='Navigeer naar '+bon.adres;
-  info.append(nav);
- }
- const badge=el('span','plan-status '+statusClass(bon.status),normalizeStatus(bon.status));
- row.append(hours,info,badge);return row;
+function readProcedures(){
+ try{const raw=JSON.parse(localStorage.getItem('ndt-planning-procedures-'+state.user?.id)||'[]');return proceduresForStore(raw);}
+ catch{return proceduresForStore([]);}
 }
 function renderProcedures(){
- const box=$('planningProcedures');box.replaceChildren();
- if(!state.data)return;
- for(const p of state.data.procedures){
-  const item=el('div','plan-procedure-item');
-  item.append(el('strong','',p.code+' · Rev. '+p.revision),
-   el('small','',(p.norm||'Geen norm')+' · Klasse '+(p.klasse||'—')+' · Film '+(p.film||'—')+
+ const box=$('planningProcedures');if(!box)return;
+ box.replaceChildren();
+ for(const p of state.procedureList){
+  const card=elem('div','plan-procedure-item');
+  card.append(elem('strong','',p.code+' · Rev. '+p.revision),
+   elem('small','',(p.norm||'Norm onbekend')+' · Klasse '+(p.klasse||'—')+' · Film '+(p.film||'—')+
      ' · Min. zwarting '+(p.minDensity??'—')+' · IQI '+(p.iqiSide==='source'?'Bronzijde':p.iqiSide==='film'?'Filmzijde':'—')));
-  box.append(item);
+  box.append(card);
  }
 }
-function renderLog(){
+function renderMembership(){
+ const planning=activeRole('planning');
+ $('planningTeam').hidden=!planning;$('planningAdd').hidden=!planning;
+ $('planningDraftFilter').hidden=!planning;
+ $('planningProcedureForm').querySelector('button[type="submit"]').disabled=!planning;
+ $text('planningRole',planning?'Planning · bonnen aanmaken/toewijzen':
+  activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':'Voorbeeldplanning');
+ const list=state.members.filter(m=>m.role==='researcher');
+ $text('planningTeamStatus',list.length?list.map(m=>m.email).join(' · '):
+  'Nog geen onderzoekers toegevoegd. Voeg een bevestigd account toe.');
+}
+function timeText(bon){const d=bonData(bon);return (d.starttijd||'--:--')+' – '+(d.eindtijd||'--:--');}
+function badgeClass(status){
+ return status==='Afgerond'||status==='Gereed'?'done':status==='In behandeling'?'doing':'queued';
+}
+function action(label,click,cls=''){
+ const button=elem('button',cls,label);button.type='button';button.addEventListener('click',click);return button;
+}
+function originalAction(bon){
+ return action('Originele bon',async()=>{
+  try{
+   if(!state.client)throw Error('Alleen na aanmelden beschikbaar.');
+   notice('Originele werkbon ophalen…');
+   const {blob,filename}=await state.client.downloadOriginal(bon);
+   const url=URL.createObjectURL(blob),anchor=elem('a');
+   anchor.href=url;anchor.download=filename;document.body.append(anchor);anchor.click();anchor.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),30000);
+   notice('Originele bon gedownload uit privéopslag.');
+  }catch(e){notice('Originele bon: '+errorText(e),true);}
+ },'plan-original');
+}
+function renderCard(bon){
+ const data=bonData(bon),row=elem('article','plan-row');
+ const times=elem('div','plan-hours',timeText(bon));
+ const content=elem('div','plan-info');
+ const open=action('',()=>openBon(bon),'plan-open');
+ open.append(elem('strong','',data.klant||'Klant niet vermeld'),
+  elem('small','',data.adres||'Adres niet vermeld'),
+  elem('small','',(data.bron_of_toestel||'Bron/toestel niet vermeld')+' · '+(data.procedure_code||'Procedure ontbreekt')+
+   (data.revisie?' Rev. '+data.revisie:'')),
+  elem('small','','Opdracht- / Bonnummer: '+idLabel(bon)+' · Order: '+(data.ordernummer||'—')));
+ content.append(open);
+ const actions=elem('div','plan-card-actions');
+ if(data.adres){
+  const link=elem('a','plan-map','📍 Route');
+  link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(data.adres);
+  link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
+ }
+ if(bon.original_path)actions.append(originalAction(bon));
+ if(activeRole('planning')){
+  const assigned=state.members.find(m=>m.user_id===bon.assigned_to);
+  actions.append(elem('small','plan-assignee',assigned?'Onderzoeker: '+assigned.email:'Nog niet toegewezen'));
+  actions.append(action('Controleer / wijs toe',()=>openBonDialog(bon),'plan-edit'));
+  if(bon.status==='Gereed')
+   actions.append(action('Afronden & Mail rapportage',()=>finalizeBon(bon),'plan-complete'));
+ }else if(activeRole('researcher')){
+  actions.append(action(bon.status==='Gereed'?'Details bekijken':'Start onderzoek',
+   ()=>openBon(bon),'plan-start'));
+ }
+ content.append(actions);
+ const status=elem('span','plan-status '+badgeClass(bon.status),bon.status||'Concept');
+ row.append(times,content,status);
+ return row;
+}
+function renderAgenda(){
+ const list=$('planningDayList');list.replaceChildren();
+ const date=localToday();
+ const matches=state.bons.filter(b=>{
+  if(state.filter==='draft')return b.status==='Concept';
+  if(state.filter==='done')return b.status==='Gereed'||b.status==='Afgerond';
+  if(b.status==='Concept'||b.status==='Afgerond'||b.status==='Gereed')return false;
+  const day=bonData(b).datum;
+  return state.filter==='today'?day===date:day>date;
+ }).filter(b=>!state.search||[
+  bonData(b).bonnummer,bonData(b).klant,bonData(b).ordernummer
+ ].some(v=>String(v||'').toLocaleLowerCase('nl-NL').includes(state.search)));
+ matches.sort((a,b)=>String(bonData(a).datum||'9999').localeCompare(String(bonData(b).datum||'9999'))||
+  String(bonData(a).starttijd||'').localeCompare(String(bonData(b).starttijd||'')));
+ document.querySelectorAll('[data-plan-filter]').forEach(button=>{
+  const on=button.dataset.planFilter===state.filter;
+  button.classList.toggle('active',on);button.setAttribute('aria-pressed',String(on));
+ });
+ if(!matches.length){
+  list.append(elem('p','plan-empty',state.role?'Geen werkbonnen in dit filter.':'Log in om je gedeelde werkbonnen te zien.'));
+  return;
+ }
+ let lastDay=null;
+ for(const bon of matches){
+  const day=bonData(bon).datum||'Datum niet vermeld';
+  if(day!==lastDay){
+   lastDay=day;
+   const heading=day===date?'VANDAAG · '+day:day==='Datum niet vermeld'?day:state.filter==='draft'?'CONCEPT · '+day:day;
+   list.append(elem('h2','plan-date-header',heading));
+  }
+  list.append(renderCard(bon));
+ }
+}
+function renderActive(){
+ const bon=activeBon(),bar=$('planningActiveBar'),researcher=activeRole('researcher');
+ bar.hidden=!researcher||!bon;
+ $('planningNextShot').hidden=!(researcher&&state.setupReady&&state.setupBonId===bon?.id);
+ $('planningStartResearch').hidden=!researcher||!bon||bon.status==='Gereed';
+ $('planningFinish').hidden=!researcher||!bon||bon.status==='Gereed';
+ if(researcher&&bon){
+  $text('planningActiveLabel','Actief: '+bonTitle(bon));
+  const missing=state.setupReady&&state.setupBonId===bon.id?[]:[
+   'geometrie','techniek','wanddikte','SFD en broninstelling'];
+  $('planningActiveWarning').hidden=!missing.length;
+  $text('planningActiveWarning',missing.length?
+   'Vul zelf in vóór Berekenen: '+missing.join(', ')+'. De vorige werkboninstellingen worden niet overgenomen.':'');
+  const details=$('planningActiveDetails');details.replaceChildren();
+  const d=bonData(bon);
+  details.append(elem('p','',(d.adres||'Adres ontbreekt')+' · '+(d.opmerkingen||'Geen opmerkingen')),
+   elem('p','','Procedure: '+(d.procedure_code||'—')+' Rev. '+(d.revisie||'—')));
+  if(bon.original_path)details.append(originalAction(bon));
+ }
+ const saving=$('ndtSaveToLog');
+ if(saving)saving.textContent=researcher&&bon?'Opslaan bij werkbon':'Opslaan in logboek';
+ const count=bon?state.opnames.filter(x=>x.bon_id===bon.id).length:0;
+ $text('planningRecordsSummary',bon?bonTitle(bon)+' · '+count+' onderzoeksopname(s)':
+  'Kies een toegewezen werkbon via Planning.');
+ $text('planningLogSummary',bon?bonTitle(bon)+' · '+count+' opnames':
+  'Selecteer een werkbon voor het werklogboek.');
+ $('planningRecordsMail').hidden=!activeRole('planning');
+ $('planningMailReport').hidden=!activeRole('planning');
+}
+function renderShots(){
  const box=$('planningLoggedShots');box.replaceChildren();
- if(!state.data)return;
  const bon=activeBon();
- const rows=(bon?state.data.opnames.filter(x=>x.bonId===bon.id):
-  state.data.opnames.filter(x=>x.day===localISODate())).slice().reverse();
- if(!rows.length){box.append(el('p','small-muted','Nog geen onderzoeksopnames opgeslagen.'));return;}
- for(const item of rows){
-  box.append(el('div','plan-shot',item.date+' · '+(item.source||'Bron onbekend')+
-   ' · '+(item.result||'Geen uitkomst')+' · IQI '+(item.iqiWire||'niet bepaald')+
-   ' · '+NO_RT_RELEASE));
+ const shots=bon?state.opnames.filter(x=>x.bon_id===bon.id):
+  activeRole('planning')?state.opnames:[];
+ if(!shots.length){box.append(elem('p','small-muted','Nog geen opgeslagen onderzoeksopnames.'));return;}
+ for(const row of shots.slice(0,80)){
+  const d=row.details||{};
+  box.append(elem('div','plan-shot',
+   (row.created_at||'').slice(0,16).replace('T',' ')+' · '+
+   (d.source||'Bron onbekend')+' · '+(d.result||'Geen indicatieve tijd')+
+   ' · IQI '+(d.iqiWire||'onbekend')+' · '+NO_RT_RELEASE));
  }
 }
 function render(){
- const list=$('planningDayList');if(!list)return;list.replaceChildren();
- document.querySelectorAll('[data-plan-filter]').forEach(btn=>{
-  const selected=btn.dataset.planFilter===state.filter;
-  btn.classList.toggle('active',selected);btn.setAttribute('aria-pressed',String(selected));
- });
- renderActive();renderProcedures();renderLog();
- if(!state.data){
-  list.append(el('p','plan-empty','Geen persoonlijke planning geopend. Meld je aan of gebruik de proefversie.'));
-  return;
- }
- const today=localISODate(),search=state.search;
- const matches=state.data.workbonnen.filter(b=>{
-  if(state.filter==='done')return b.status==='Afgerond';
-  if(b.status==='Afgerond')return false;
-  if(state.filter==='today'&&b.datum!==today)return false;
-  if(state.filter==='upcoming'&&(!b.datum||b.datum<=today))return false;
-  return true;
- }).filter(b=>!search||[b.klant,b.bonnummer,b.ordernummer].some(v=>String(v||'').toLocaleLowerCase('nl-NL').includes(search)));
- matches.sort((a,b)=>(a.datum||'').localeCompare(b.datum||'')||(a.starttijd||'').localeCompare(b.starttijd||''));
- if(!matches.length){list.append(el('p','plan-empty','Geen werkbonnen gevonden in dit filter.'));return;}
- const grouped=new Map();
- for(const bon of matches){
-  const key=bon.datum||'Datum niet vermeld';
-  if(!grouped.has(key))grouped.set(key,[]);
-  grouped.get(key).push(bon);
- }
- for(const [date,items] of grouped){
-  const title=date===today?'VANDAAG · '+date:state.filter==='upcoming'?'KOMENDE · '+date:'AFGEROND · '+date;
-  list.append(el('h2','plan-date-header',title));
-  for(const bon of items)list.append(rowForBon(bon));
- }
+ renderMembership();renderProcedures();renderAgenda();renderActive();renderShots();
 }
-function setValue(id,value){
- if(value===undefined||value===null||String(value)==='')return;
- const input=$(id);if(!input)return;
+function changeInput(id,value){
+ const input=$(id);if(!input||value===null||value===undefined)return;
  if(input.tagName==='SELECT'&&![...input.options].some(o=>o.value===String(value)))return;
  input.value=String(value);
  input.dispatchEvent(new Event('input',{bubbles:true}));
@@ -195,228 +235,361 @@ function setValue(id,value){
 function press(id){
  const node=$(id);if(node&&node.getAttribute('aria-pressed')!=='true')node.click();
 }
-function applyBon(bon){
- if(!window.basicRTAppReady){msg('De rekenmachine is nog niet gestart; probeer opnieuw.',true);return;}
- const proc=procedureFor(bon),fields=procedurePrefill(bon,proc);
- const source=String(bon.bron_of_toestel||'');
- const isGamma=/\b(?:Se-75|Ir-192)\b/i.test(source);
- const isXray=/\bx[\s-]?ray\b|\br[oö]ntgen\b/i.test(source);
- // An unknown X-ray tube is NOT assigned the curve of a different model.
- if(isXray){
-  press('modeXray');
-  const raw=source.replace(/^[^(]*\(/,'').split(',')[0].replace(/[)]/g,'').trim();
-  const norm=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  const brands=$('xrayBrand'),model=$('xrayModel');
-  const matchingBrand=[...brands.options].find(o=>norm(raw).startsWith(norm(o.textContent))||norm(raw).startsWith(norm(o.value)));
-  if(matchingBrand)setValue('xrayBrand',matchingBrand.value);
-  const matched=[...model.options].find(o=>norm(o.value)===norm(raw)||norm(o.textContent)===norm(raw));
-  if(matched)setValue('xrayModel',matched.value);
-  else if(raw){
-   if(![...model.options].some(o=>o.value==='')){
-    const unavailable=document.createElement('option');unavailable.value='';unavailable.textContent='Onbekend model · kies zelf';model.prepend(unavailable);
-   }
-   setValue('xrayModel','');
-   model.value='';model.dispatchEvent(new Event('change',{bubbles:true}));
-   msg('Bron/toestel niet exact gekoppeld aan bestaande referentiecurve. Kies zelf het juiste model; geen automatische onderzoeksuitkomst.',true);
-  }
- }else if(isGamma){
-  press('modeGamma');
-  const iso=source.match(/Se-75|Ir-192/i)?.[0];
-  const radio=document.querySelector('input[name="isotope"][value="'+(iso?.toLowerCase()==='ir-192'?'Ir-192':'Se-75')+'"]');
-  if(radio&&!radio.checked){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}));}
+function clearResearchInputs(){
+ // A new workbon must not inherit any of the five technical values from a prior workbon.
+ for(const id of ['workWall','workPenetrated','thickness','distance','manualCi','certCi','iqiTechnique','iqiPenetrated']){
+  const input=$(id);if(!input)continue;
+  input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.dispatchEvent(new Event('change',{bubbles:true}));
  }
- // Null geometry and technique intentionally do nothing. Never choose automatically.
- if(fields.shape)press(fields.shape==='pipe'?'workPipe':'workPlate');
- if(fields.wall)setValue('workWall',fields.wall);
- if(fields.technique)setValue('iqiTechnique',fields.technique);
- if(fields.iqiClass)setValue('iqiClass',fields.iqiClass);
- if(fields.iqiSide)setValue('iqiSide',fields.iqiSide);
- if(fields.film)setValue('film',fields.film);
- if(fields.density)setValue('density',fields.density);
- if(fields.sfd)setValue('distance',fields.sfd);
- if(isXray){if(fields.kv)setValue('kv',fields.kv);if(fields.ma)setValue('ma',fields.ma);}
- if(isGamma&&fields.ci){
-  const manual=document.querySelector('input[name="activityMode"][value="manual"]');
-  if(manual&&!manual.checked){manual.checked=true;manual.dispatchEvent(new Event('change',{bubbles:true}));}
-  setValue('manualCi',fields.ci);
- }
- // Do not automatically calculate or claim validation. Existing calculator reacts to inputs itself.
+ state.setupReady=false;state.setupBonId=null;
 }
-function activate(id){
- const bon=state.data?.workbonnen.find(x=>x.id===id);if(!bon)return;
- bon.status='In behandeling';state.data.activeId=id;persist();render();
+function displayResearchType(){
+ const xray=$('planningResearchModality').value==='xray';
+ $('planningResearchCiWrap').hidden=xray;$('planningResearchIsotopeWrap').hidden=xray;
+ $('planningResearchKvWrap').hidden=!xray;$('planningResearchMaWrap').hidden=!xray;
+}
+function openResearchDialog(bon,fresh=true){
+ const form=$('planningResearchForm');
+ if(fresh)form.reset();
+ $text('planningResearchBonSummary',bonTitle(bon)+' · '+(bonData(bon).procedure_code||'Geen procedure')+
+  '. Kies alle onderzoeksgegevens zelf; geen enkele waarde wordt automatisch geraden.');
+ if(fresh){
+  const s=String(bonData(bon).bron_of_toestel||'');
+  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(s)?'xray':'gamma';
+  // Do not automatically select geometry, thickness, SFD, activity or technique.
+ }
+ displayResearchType();$('planningResearchError').hidden=true;
+ $('planningResearchDialog').showModal();
+}
+async function openBon(bon){
+ if(!activeRole('researcher')){
+  if(activeRole('planning'))openBonDialog(bon);
+  else notice('Log in als toegewezen onderzoeker om te starten.',true);
+  return;
+ }
+ if(bon.status==='Gereed'){notice(bonTitle(bon)+' is als gereed gemeld en kan niet worden bewerkt.');return;}
+ if(bon.status==='Ingepland'){
+  try{
+   await state.client.changeResearchStatus(bon.id,'In behandeling');
+   bon.status='In behandeling';
+  }catch(e){notice('Start onderzoek: '+errorText(e),true);return;}
+ }
+ if(bon.status!=='In behandeling'){
+  notice('Deze werkbon is niet vrijgegeven voor onderzoek. Vraag Planning om toewijzing.',true);return;
+ }
+ const switching=state.activeId!==bon.id;
+ state.activeId=bon.id;
+ if(switching)clearResearchInputs();
+ render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
- applyBon(bon);
- window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+ if(switching||!state.setupReady)openResearchDialog(bon,true);
+ else notice('Werkbon '+idLabel(bon)+' actief. Gebruik Volgende opname om instellingen te hergebruiken.');
 }
-function detach(){
- if(!state.data)return;
- state.data.activeId=null;persist();render();
- window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+function currentSetup(){
+ const form=$('planningResearchForm'),raw=Object.fromEntries(new FormData(form).entries());
+ const num=value=>{const str=String(value??'').trim().replace(',','.');return /^\d+(?:\.\d+)?$/.test(str)&&Number(str)>0?str:null;};
+ if(!['plate','pipe'].includes(raw.geometry)||!['sw','dwsi','dwdi'].includes(raw.technique)||
+   !num(raw.wall)||!num(raw.distance))
+  throw Error('Kies geometrie en techniek, en vul een positieve wanddikte en SFD in.');
+ if(raw.modality==='xray'){
+  if(!num(raw.kv)||!num(raw.ma))throw Error('Vul kV én mA zelf in.');
+  return {...raw,wall:num(raw.wall),distance:num(raw.distance),kv:num(raw.kv),ma:num(raw.ma)};
+ }
+ if(!['Se-75','Ir-192'].includes(raw.isotope)||!num(raw.ci))
+  throw Error('Kies Se-75 of Ir-192 en vul de actuele activiteit in Ci in.');
+ return {...raw,wall:num(raw.wall),distance:num(raw.distance),ci:num(raw.ci)};
+}
+function startResearch(event){
+ event.preventDefault();
+ const bon=activeBon();if(!bon)return;
+ try{
+  const setup=currentSetup();
+  if(setup.modality==='xray')press('modeXray');
+  else{
+   press('modeGamma');
+   const radio=document.querySelector('input[name="isotope"][value="'+setup.isotope+'"]');
+   if(radio&&!radio.checked){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}));}
+  }
+  press(setup.geometry==='pipe'?'workPipe':'workPlate');
+  changeInput('workWall',setup.wall);
+  changeInput('iqiTechnique',setup.technique);
+  changeInput('distance',setup.distance);
+  if(setup.modality==='xray'){
+   changeInput('kv',setup.kv);changeInput('ma',setup.ma);
+  }else{
+   const radio=document.querySelector('input[name="activityMode"][value="manual"]');
+   if(radio&&!radio.checked){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}));}
+   changeInput('manualCi',setup.ci);
+  }
+  state.setupReady=true;state.setupBonId=bon.id;
+  $('planningResearchDialog').close();render();
+  notice('Onderzoeksgegevens ingevuld voor bon '+idLabel(bon)+'. Controleer het toestelmodel, de doorstraalde dikte, IQI en de originele veiligheidscontroles. Klik daarna Berekenen.');
+ }catch(e){
+  $('planningResearchError').hidden=false;$text('planningResearchError',errorText(e));
+ }
 }
 function readCurrentShot(){
- const $val=id=>$(id)?.value||null;
+ const bon=activeBon();
+ if(!bon||!state.setupReady||state.setupBonId!==bon.id)throw Error('Kies eerst Start onderzoek en controleer de vijf onderzoeksgegevens.');
+ if(!$('resultCard')?.classList.contains('success')||$('saveResult')?.disabled)
+  throw Error('Geen geldige actuele onderzoeksuitkomst. Gebruik eerst Berekenen.');
+ const get=id=>$(id)?.value||null;
  const gamma=$('modeGamma')?.getAttribute('aria-pressed')==='true';
- const valid=$('resultCard')?.classList.contains('success')&&
-  $('saveResult')?.disabled!==true;
- if(!valid)return null;
- const bon=activeBon();if(!bon)return null;
  return {
-  id:crypto.randomUUID(),bonId:bon.id,day:localISODate(),
-  date:new Date().toLocaleString('nl-NL',{timeZone:'Europe/Amsterdam'}),
-  source:gamma?document.querySelector('input[name="isotope"]:checked')?.value:$val('xrayModel'),
-  kv:gamma?null:$val('kv'),ma:gamma?null:$val('ma'),
-  activityCi:gamma?($('sourceActiveCi')?.textContent?.trim()||$val('manualCi')):null,
-  material:$val('material'),wall:$val('workWall'),thickness:$val('thickness'),
-  distance:$val('distance'),film:$val('film'),density:$val('density'),
-  result:$('resultTime')?.textContent?.trim()||null,
-  iqiWire:$('iqiWire')?.textContent?.trim()||null,
-  iqiObserved:$val('rtIqiObserved'),status:NO_RT_RELEASE
+  source:gamma?document.querySelector('input[name="isotope"]:checked')?.value:get('xrayModel'),
+  kv:gamma?null:get('kv'),ma:gamma?null:get('ma'),
+  activityCi:gamma?($('sourceActiveCi')?.textContent?.trim()||get('manualCi')):null,
+  material:get('material'),wall:get('workWall'),thickness:get('thickness'),
+  distance:get('distance'),film:get('film'),density:get('density'),
+  result:$('resultTime')?.textContent?.trim()||null,iqiWire:$('iqiWire')?.textContent?.trim()||null,
+  iqiObserved:get('rtIqiObserved'),workbonnummer:idLabel(bon),
+  ordernummer:bonData(bon).ordernummer,klant:bonData(bon).klant,
+  geometry:$('workPipe')?.getAttribute('aria-pressed')==='true'?'Buis / Pijp':'Plaat / Las',
+  technique:get('iqiTechnique'),status:NO_RT_RELEASE
  };
 }
-function captureLog(){
- if(!state.data||!activeBon())return;
- const row=readCurrentShot();if(!row)return;
- state.data.opnames.push(row);
- if(state.data.opnames.length>400)state.data.opnames=state.data.opnames.slice(-400);
- persist();render();
+async function captureShot(event){
+ if(!activeBon()||!activeRole('researcher'))return;
+ // Suppress the old generic-save event only for active assigned workbonnen.
+ event.preventDefault();event.stopImmediatePropagation();
+ const button=$('ndtSaveToLog');if(button.disabled)return;
+ button.disabled=true;
+ try{
+  const details=readCurrentShot(),bon=activeBon();
+  const row=await state.client.addOpname(bon,details);
+  state.opnames.unshift(row);
+  $('saveResult')?.click(); // Reuse existing local logbook without changing its formulas.
+  $text('ndtStickyReason','Opname centraal opgeslagen bij bon '+idLabel(bon)+'. '+NO_RT_RELEASE);
+  notice('Opname veilig opgeslagen bij '+bonTitle(bon)+'. Kies Volgende opname om instellingen te hergebruiken.');
+  render();
+ }catch(e){
+  $text('ndtStickyReason','Opslaan bij werkbon mislukt: '+errorText(e));
+  notice('Opslaan bij werkbon mislukt: '+errorText(e),true);
+ }finally{button.disabled=$('saveResult')?.disabled===true;}
 }
-function finishAndMail(){
- if(!state.data){msg('Open eerst je eigen planning.',true);return;}
- if(!state.user?.email){msg('Meld je online aan met je werkmailadres om een rapport te adresseren.',true);return;}
- const bon=activeBon(),today=localISODate();
- const target=bon||{bonnummer:'Werkdag '+today,ordernummer:'Meerdere orders',klant:'Werkdagoverzicht',procedure_code:null};
- const opnames=bon?state.data.opnames.filter(r=>r.bonId===bon.id):
-  state.data.opnames.filter(r=>r.day===today);
- const report=buildReport({bon:target,opnames,onderzoekerEmail:state.user.email,onderzoekerNaam:state.user.user_metadata?.full_name||state.user.user_metadata?.name||null,datum:today});
- let href;
- try{href=reportMailto({email:state.user.email,bon:target,report});}
- catch(err){msg(String(err?.message||err),true);return;}
- if(bon){bon.status='Afgerond';state.data.activeId=null;if(!persist())return;}
- render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
- msg('Werkbon afgerond. Je e-mailprogramma opent met een concept. Controleer het rapport en druk zelf op Verzenden.');
- window.location.href=href;
+async function markReady(){
+ const bon=activeBon();if(!bon||!activeRole('researcher'))return;
+ if(!state.opnames.some(s=>s.bon_id===bon.id)){
+  notice('Sla eerst minimaal één opname bij deze werkbon op.',true);return;
+ }
+ try{
+  await state.client.changeResearchStatus(bon.id,'Gereed');
+  bon.status='Gereed';state.activeId=null;state.setupReady=false;state.setupBonId=null;
+  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+  notice('Werkbon '+idLabel(bon)+' als Gereed gemeld. Planning ziet de voortgang en resultaten.');
+  document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
+ }catch(e){notice('Gereedmelden mislukt: '+errorText(e),true);}
 }
-function formDataObject(form){
- const raw=Object.fromEntries(new FormData(form).entries());
- for(const key of Object.keys(raw))if(raw[key]==='')raw[key]=null;
- return sanitizeBon(raw);
+async function finalizeBon(bon){
+ if(!bon||!activeRole('planning'))return;
+ try{
+  const shots=state.opnames.filter(s=>s.bon_id===bon.id);
+  const report=buildReport({bon:bonData(bon),opnames:shots.map(s=>({...s.details,date:s.created_at})),
+   onderzoekerEmail:state.user.email,
+   onderzoekerNaam:state.user.user_metadata?.full_name||state.user.user_metadata?.name||null});
+  const href=reportMailto({email:state.user.email,bon:bonData(bon),report});
+  await state.client.setPlannerStatus(bon.id,'Afgerond');
+  bon.status='Afgerond';render();
+  notice('Werkbon afgerond. Mailconcept geopend; controleer en verstuur het zelf.');
+  window.location.href=href;
+ }catch(e){notice('Afronden mislukt: '+errorText(e),true);}
 }
-function populateBonForm(bon){
+function populateForm(bon){
+ const form=$('planningBonForm'),data=bonData(bon);
+ form.reset();
+ for(const [key,value] of Object.entries(data)){
+  const input=form.elements.namedItem(key);
+  if(input)input.value=value??'';
+ }
+ form.elements.namedItem('assigned_to').value=bon?.assigned_to||'';
+ renderImportSummary();
+}
+function renderImportSummary(){
  const form=$('planningBonForm');
- for(const [key,value] of Object.entries(bon)){
-  const element=form.elements.namedItem(key);
-  if(element)element.value=value??'';
- }
+ const raw=Object.fromEntries(new FormData(form).entries());
+ const summary=$('planningImportSummary');summary.replaceChildren();
+ summary.append(elem('strong','',raw.klant||'Klant nog onbekend'),
+  elem('small','','Bon '+(raw.bonnummer||'—')+' · Order '+(raw.ordernummer||'—')+
+   ' · '+(raw.datum||'Datum ontbreekt')),
+  elem('small','',raw.adres||'Adres ontbreekt'));
 }
-function openAdd(){
- if(!state.data){msg('Log eerst in of kies de proefversie.',true);return;}
- $('planningBonForm').reset();$('planningText').value='';$('planningFile').value='';
- importMsg('Vul handmatig in of lees een bestand uit.');
+function openBonDialog(bon=null){
+ if(!activeRole('planning')){notice('Alleen Planning kan werkbonnen maken.',true);return;}
+ state.editingId=bon?.id||null;state.pendingFile=null;state.pendingText='';
+ state.readGeneration++;$('planningFile').value='';$('planningText').value='';
+ const assignee=$('planningAssignee');assignee.replaceChildren(new Option('Nog niet toegewezen · Concept',''));
+ for(const member of state.members.filter(m=>m.role==='researcher'))assignee.add(new Option(member.email,member.user_id));
+ populateForm(bon);
+ $text('planningImportHeading',bon?'Werkbon controleren / toewijzen':'Nieuwe werkbon of concept');
+ importNotice('Kies een bestand voor automatische herkenning, of corrigeer de velden handmatig.');
  $('planningImportDialog').showModal();
- if(!navigator.onLine)return;
- // A distinct Turnstile widget ensures the workbon reader uses the existing Worker safely.
- setupBonTurnstile($('planningTurnstile')).catch(err=>importMsg(String(err?.message||err),true));
+ setupBonTurnstile($('planningTurnstile'),()=>{
+  if(state.pendingText&&!state.processing)void autoAnalyze(state.readGeneration);
+ }).catch(e=>importNotice('AI-beveiliging niet beschikbaar: '+errorText(e)+'. Handmatig invullen kan altijd.',true));
 }
-async function readFile(){
- const file=$('planningFile').files?.[0];if(!file){importMsg('Selecteer een PDF, foto of tekstbestand.',true);return;}
- const button=$('planningReadFile');button.disabled=true;
- try{
-  const raw=await extractBonText(file,message=>importMsg(message));
-  if(!raw.trim())throw Error('Geen tekst gevonden. Plak de gegevens of voer ze zelf in.');
-  $('planningText').value=raw;
-  importMsg('Tekst lokaal gelezen. Controleer hem en klik op AI uitlezen. De originele afbeelding is niet verstuurd.');
- }catch(error){importMsg(String(error?.message||error),true);}
- finally{button.disabled=false;}
-}
-async function aiRead(){
- const button=$('planningAIRead');button.disabled=true;
- try{
-  if($('planningFile').files?.[0]&&!$('planningText').value.trim())await readFile();
-  const parsed=await parseBonViaGemini($('planningText').value,$('planningTurnstile'),m=>importMsg(m));
-  populateBonForm(parsed);
-  importMsg('AI heeft mogelijke bonvelden voorgesteld. Ontbrekende waarden blijven leeg. Controleer en corrigeer alle velden vóór Opslaan.');
- }catch(error){importMsg('AI-uitlezen niet voltooid: '+String(error?.message||error)+'. Handmatig invoeren blijft mogelijk.',true);}
- finally{button.disabled=false;}
-}
-function saveBon(event){
- event.preventDefault();if(!state.data)return;
- const form=$('planningBonForm'),values=formDataObject(form);
- if(!values.bonnummer||!values.klant||!values.datum){
-  importMsg('Opdracht- / Bonnummer, klant en datum zijn verplicht. Geen waarden raden.',true);return;
+async function autoAnalyze(generation){
+ if(state.processing||!state.pendingText||generation!==state.readGeneration)return;
+ if(!window.turnstile?.getResponse(Number($('planningTurnstile')?.dataset.widgetId))) {
+  importNotice('Tekst herkend. Voltooi de beveiligingscontrole; daarna worden bonvelden automatisch ingevuld.');
+  return;
  }
- const bon={...values,id:crypto.randomUUID(),status:'Ingepland',demo:false};
- state.data.workbonnen.push(bon);
- if(!persist()){importMsg('Kon werkbon niet opslaan.',true);return;}
- $('planningImportDialog').close();
- render();msg('Werkbon '+bon.bonnummer+' opgeslagen. Tik op de rij om deze te activeren.');
+ state.processing=true;
+ try{
+  const values=await parseBonViaGemini(state.pendingText,$('planningTurnstile'),importNotice);
+  if(generation!==state.readGeneration)return;
+  // Only planning values are populated, never the researcher-specific measurements.
+  const form=$('planningBonForm');
+  for(const field of ['bonnummer','klant','adres','ordernummer','bron_of_toestel',
+   'procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd']){
+   const input=form.elements.namedItem(field);
+   if(input)input.value=values[field]??'';
+  }
+  renderImportSummary();
+  state.pendingText=''; // Prevent automatic repeated submissions on Turnstile reset.
+  importNotice('Herkenning gereed. Controleer en corrigeer de bonvelden; onvolledig mag als concept.');
+ }catch(e){
+  importNotice('Automatische herkenning: '+errorText(e)+'. Corrigeer of vul handmatig in.',true);
+ }finally{state.processing=false;}
+}
+async function autoReadFile(){
+ const file=$('planningFile').files?.[0];
+ if(!file)return;
+ const generation=++state.readGeneration;
+ state.pendingFile=file;state.pendingText='';
+ importNotice('Bestand automatisch herkennen…');
+ try{
+  const text=await extractBonText(file,message=>{
+   if(generation===state.readGeneration)importNotice(message);
+  });
+  if(generation!==state.readGeneration)return;
+  if(!text.trim())throw Error('Geen leesbare tekst; vul de bon handmatig in.');
+  state.pendingText=text;$('planningText').value=text;
+  await autoAnalyze(generation);
+ }catch(e){
+  if(generation===state.readGeneration)importNotice('Herkenning niet compleet: '+errorText(e)+'. Handmatige correctie blijft mogelijk.',true);
+ }
+}
+async function saveBon(event){
+ event.preventDefault();
+ if(!activeRole('planning')||!state.client)return;
+ const button=$('planningSaveBon');button.disabled=true;$text('planningSaveBon','Opslaan…');
+ try{
+  const form=$('planningBonForm');
+  const values=Object.fromEntries(new FormData(form).entries());
+  const assignedTo=values.assigned_to||null;delete values.assigned_to;
+  const existing=state.bons.find(b=>b.id===state.editingId);
+  const saved=await state.client.saveBon({
+   id:state.editingId,values,assignedTo,status:existing?.status||null
+  });
+  let uploadFailure=null;
+  if(state.pendingFile){
+   try{saved.original_path=await state.client.uploadOriginal(saved,state.pendingFile);}
+   catch(e){uploadFailure=errorText(e);}
+  }
+  const index=state.bons.findIndex(b=>b.id===saved.id);
+  if(index<0)state.bons.unshift(saved);else state.bons[index]=saved;
+  $('planningImportDialog').close();state.pendingFile=null;state.pendingText='';
+  render();
+  notice('Werkbon '+idLabel(saved)+' opgeslagen als '+saved.status+
+   (uploadFailure?'. Privébestand niet opgeslagen: '+uploadFailure:''),Boolean(uploadFailure));
+ }catch(e){importNotice('Werkbon niet opgeslagen: '+errorText(e),true);}
+ finally{button.disabled=false;$text('planningSaveBon','Werkbon / Concept opslaan');}
+}
+async function addResearcher(event){
+ event.preventDefault();
+ const button=event.currentTarget.querySelector('button');button.disabled=true;
+ try{
+  await state.client.addResearcher($('planningResearcherEmail').value);
+  const snapshot=await state.client.list();state.members=snapshot.members;
+  $('planningResearcherEmail').value='';
+  renderMembership();$text('planningTeamStatus','Onderzoeker toegevoegd. Je kunt nu bonnen toewijzen.');
+ }catch(e){$text('planningTeamStatus','Toevoegen mislukt: '+errorText(e));}
+ finally{button.disabled=false;}
 }
 function saveProcedure(event){
- event.preventDefault();if(!state.data)return;
- const form=$('planningProcedureForm');
+ event.preventDefault();if(!activeRole('planning'))return;
+ const form=event.currentTarget;
  const raw=Object.fromEntries(new FormData(form).entries());
- if(!raw.code?.trim()||!raw.revision?.trim()){msg('Procedurecode en revisie zijn verplicht.',true);return;}
- if(raw.minDensity&&(!/^\d+(?:[.,]\d+)?$/.test(raw.minDensity)||Number(raw.minDensity.replace(',','.'))>10)){msg('Voer een geldige minimale zwarting in.',true);return;}
+ if(!raw.code?.trim()||!raw.revision?.trim())return notice('Procedurecode en revisie zijn verplicht.',true);
  if(raw.minDensity)raw.minDensity=raw.minDensity.replace(',','.');
- const old=state.data.procedures;
- const merged=proceduresForStore([...old,raw]);
- state.data.procedures=merged;
- if(!persist()){state.data.procedures=old;return;}
- form.reset();render();msg('Procedure opgeslagen als administratief voorstel. Geen RT-vrijgave.');
+ state.procedureList=proceduresForStore([...state.procedureList,raw]);
+ try{localStorage.setItem('ndt-planning-procedures-'+state.user.id,JSON.stringify(state.procedureList));}
+ catch(e){return notice('Procedure niet opgeslagen: '+errorText(e),true);}
+ form.reset();renderProcedures();notice('Procedureadministratie bijgewerkt; dit geeft geen RT-vrijgave.');
 }
-function workbonContext(){
- const bon=activeBon();if(!bon||!state.user?.id&&state.scope!=='trial')return null;
- const procedure=procedureFor(bon);
- return {
-  bonnummer:bon.bonnummer,ordernummer:bon.ordernummer,klant:bon.klant,
-  bron_of_toestel:bon.bron_of_toestel,geometrie:bon.geometrie,
-  techniek:bon.techniek,procedure_code:bon.procedure_code,revisie:bon.revisie,
-  procedure:procedure?{code:procedure.code,revision:procedure.revision,norm:procedure.norm,
-   klasse:procedure.klasse,film:procedure.film,minDensity:procedure.minDensity,iqiSide:procedure.iqiSide}:null,
-  caution:NO_RT_RELEASE
- };
+function context(){
+ const bon=activeBon();if(!bon||!activeRole('researcher'))return null;
+ const d=bonData(bon);
+ const p=findProcedure(state.procedureList,d.procedure_code,d.revisie);
+ return {bonnummer:d.bonnummer,ordernummer:d.ordernummer,klant:d.klant,
+  bron_of_toestel:d.bron_of_toestel,procedure_code:d.procedure_code,revisie:d.revisie,
+  procedure:p?{code:p.code,revision:p.revision,norm:p.norm,klasse:p.klasse,film:p.film}:null,
+  onderzoeksstatus:NO_RT_RELEASE};
 }
 function init(){
  if(!$('screen-planning'))return;
- // The existing app.mjs navigation handles every .screen, including this new screen.
- $('planningOpenTop')?.addEventListener('click',openPlanning);
- document.querySelector('.bottom-nav [data-nav="planning"]')?.addEventListener('click',()=>{
-  state.filter='today';state.search='';$('planningSearch').value='';
-  openScope();
+ window.ndtWorkbonContext=context;
+ const planningNav=document.querySelector('.bottom-nav [data-nav="planning"]');
+ planningNav?.addEventListener('click',()=>{
+  state.filter='today';state.search='';$('planningSearch').value='';void refreshPlanning();
  });
- document.querySelectorAll('[data-plan-filter]').forEach(btn=>btn.addEventListener('click',()=>{
-  state.filter=btn.dataset.planFilter;render();
+ $('planningOpenTop')?.addEventListener('click',()=>planningNav?.click());
+ $('planningRefresh')?.addEventListener('click',()=>void refreshPlanning());
+ $('planningAdd')?.addEventListener('click',()=>openBonDialog());
+ $('planningAddResearcherForm')?.addEventListener('submit',addResearcher);
+ document.querySelectorAll('[data-plan-filter]').forEach(b=>b.addEventListener('click',()=>{
+  state.filter=b.dataset.planFilter;renderAgenda();
  }));
- $('planningSearch')?.addEventListener('input',e=>{state.search=e.target.value.toLocaleLowerCase('nl-NL').trim();render();});
- $('planningAdd')?.addEventListener('click',openAdd);
- $('planningCancel')?.addEventListener('click',()=>$('planningImportDialog').close());
- $('planningReadFile')?.addEventListener('click',readFile);
- $('planningAIRead')?.addEventListener('click',aiRead);
+ $('planningSearch')?.addEventListener('input',e=>{
+  state.search=e.target.value.trim().toLocaleLowerCase('nl-NL');renderAgenda();
+ });
+ $('planningBonForm')?.addEventListener('input',renderImportSummary);
+ $('planningBonForm')?.addEventListener('change',renderImportSummary);
  $('planningBonForm')?.addEventListener('submit',saveBon);
+ $('planningCancel')?.addEventListener('click',()=>$('planningImportDialog').close());
+ $('planningFile')?.addEventListener('change',()=>void autoReadFile());
+ $('planningText')?.addEventListener('paste',()=>{
+  setTimeout(()=>{
+   const text=$('planningText').value.trim();
+   if(!text)return;state.pendingText=text;state.readGeneration++;void autoAnalyze(state.readGeneration);
+  },100);
+ });
  $('planningProcedureForm')?.addEventListener('submit',saveProcedure);
+ $('planningResearchModality')?.addEventListener('change',displayResearchType);
+ $('planningResearchForm')?.addEventListener('submit',startResearch);
+ $('planningResearchCancel')?.addEventListener('click',()=>$('planningResearchDialog').close());
+ $('planningStartResearch')?.addEventListener('click',()=>{
+  if(activeBon())openResearchDialog(activeBon(),!state.setupReady);
+ });
+ $('planningNextShot')?.addEventListener('click',()=>{
+  notice('Volgende opname: eerdere instellingen blijven staan. Controleer gewijzigde parameters en klik Berekenen.');
+  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
+ });
+ $('planningFinish')?.addEventListener('click',()=>void markReady());
  $('planningActiveInfo')?.addEventListener('click',()=>{
-  const details=$('planningActiveDetails');details.hidden=!details.hidden;
+  const panel=$('planningActiveDetails');panel.hidden=!panel.hidden;
  });
- $('planningDetach')?.addEventListener('click',detach);
- for(const id of ['planningFinish','planningMailReport','planningRecordsMail'])
-  $(id)?.addEventListener('click',finishAndMail);
- // Capture is before the existing async sticky handler. It never modifies the saved result.
- $('ndtSaveToLog')?.addEventListener('click',captureLog,true);
+ $('planningDetach')?.addEventListener('click',()=>{
+  state.activeId=null;state.setupBonId=null;state.setupReady=false;render();
+  window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+ });
+ $('planningMailReport')?.addEventListener('click',()=>{
+  const candidate=state.bons.find(x=>x.status==='Gereed');
+  if(candidate)void finalizeBon(candidate);else notice('Selecteer eerst een gereedgemelde bon.',true);
+ });
+ $('planningRecordsMail')?.addEventListener('click',()=>{
+  const candidate=state.bons.find(x=>x.status==='Gereed');
+  if(candidate)void finalizeBon(candidate);else notice('Er is geen gereedgemelde bon.',true);
+ });
+ $('ndtSaveToLog')?.addEventListener('click',captureShot,true);
  window.addEventListener('ndt-auth-scope-changed',()=>{
-  state.scope=null;state.user=null;state.store=null;state.data=null;
-  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+  clearUserData();
  });
- window.addEventListener('offline',()=>{
-  if(state.scope?.startsWith('user:')){
-   state.scope=null;state.user=null;state.store=null;state.data=null;
-   render();msg('Planning opnieuw openen na een online sessiecontrole. Rekenen blijft beschikbaar.',true);
-  }
- });
- window.addEventListener('ndt-private-naslag-logout',()=>{
-  state.scope=null;state.user=null;state.store=null;state.data=null;
-  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
- });
- window.ndtWorkbonContext=workbonContext;
+ window.addEventListener('ndt-private-naslag-logout',()=>clearUserData());
+ window.addEventListener('offline',()=>{if(state.role==='researcher'||state.role==='planning'){
+  clearUserData();notice('Gedeelde Planning offline niet beschikbaar. De lokale onderzoekscalculator blijft werken.',true);
+ }});
  render();
 }
 if(typeof document!=='undefined'){
