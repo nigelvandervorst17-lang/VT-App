@@ -165,6 +165,9 @@ function initAuth(){
    'Vul je e-mailadres en wachtwoord in.');
  };
  registerLink.addEventListener('click',()=>setRegisterView(!registering));
+ window.addEventListener('ndt-auth-scope-changed',event=>{
+  if(event.detail?.mode==='signed-out')setRegisterView(false);
+ });
  // The project uses its existing lightweight Supabase Auth REST client rather
  // than loading another browser SDK. This is the same Auth /signup endpoint.
  const supabase={auth:{
