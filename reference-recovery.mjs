@@ -24,7 +24,7 @@ const recovery=async()=>{
   ]){
     const img=document.querySelector(selector);
     if(!img)continue;
-    const check=()=>{if(img.complete && img.naturalWidth===0)warn('Afbeeldingen niet gevonden: '+name+'. Upload ook de .webp-afbeeldingen uit het volledige herstelpakket in de hoofdmap.');};
+    const check=()=>{if(!img.hasAttribute('src'))return; if(img.complete && img.naturalWidth===0 && document.body.classList.contains('ndt-naslag-authorized'))warn('Privéafbeelding nog niet beschikbaar: '+name+'. Beheerder: controleer de private Supabase-opslag.');};
     img.addEventListener('error',check);
     if(img.complete)check();
     else img.addEventListener('load',check,{once:true});

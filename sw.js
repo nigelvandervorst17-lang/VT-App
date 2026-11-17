@@ -1,5 +1,6 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='ndt-radiography-pro-company-suite-20261116-v4';
+const CACHE='ndt-radiography-pro-private-naslag-20261117-v5';
+const BLOCKED_PRIVATE_IMAGES=new Set(['smart-225b.webp','smart-225-d7.webp','smart-200pc-d7.webp','smart-160-d7.webp','smart-200-d7.webp','smart-200pc-new-d7.webp','smart-225-yxlon-d7.webp','smart-300hp-d7.webp','smart-300pc-d7.webp','weld-details.webp']);
 const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css','./mobile-shell.css','./mobile-shell.mjs','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs','./rt-enhancements.mjs','./rt-enhancements.css','./locales/nl.json','./locales/en.json','./locales/de.json',
  './research/company-suite/index.html','./research/company-suite/styles.css','./research/company-suite/mobile-company.css',
  './research/company-suite/company-app.mjs','./research/company-suite/project-config.mjs',
@@ -12,14 +13,11 @@ const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css
  './research/xray-reference-points.json',
 './rt-material-ui.mjs','./research/live-material-preview.mjs','./research/material-factor-data.mjs',
 './ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./iqi-quick.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
-'./reference-tools.mjs','./reference-data.mjs','./rt-curves.mjs','./rt-curves.json',
+'./reference-tools.mjs','./reference-data.mjs','./private-naslag.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',
 './controle.html','./curveatlas.html','./curveatlas.pdf','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./brand-logo.png',
 './brand/ndt-square-192.webp','./brand/ndt-square-512.webp','./brand/ndt-apple-touch-180.png','./brand/ndt-banner-512.webp',
-'./smart-225b.webp','./smart-225-d7.webp','./smart-200pc-d7.webp',
-'./weld-details.webp','./smart-300pc-d7.webp','./smart-300hp-d7.webp',
-'./smart-225-yxlon-d7.webp','./smart-200pc-new-d7.webp',
-'./smart-200-d7.webp','./smart-160-d7.webp'];
+];
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
     const cache=await caches.open(CACHE);
@@ -41,6 +39,10 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
  const req=event.request;
  if(req.method!=='GET'||new URL(req.url).origin!==self.location.origin)return;
+ if(BLOCKED_PRIVATE_IMAGES.has(new URL(req.url).pathname.split('/').pop())){
+  event.respondWith(new Response('Dit Naslag-bestand is privé',{status:404,headers:{'Cache-Control':'no-store'}}));
+  return;
+ }
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
   try{

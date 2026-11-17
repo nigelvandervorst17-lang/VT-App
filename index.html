@@ -582,11 +582,26 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <div class="reference-table-wrap"><table class="reference-table" id="refFilmTable"><thead></thead><tbody></tbody></table></div>
   <p class="small-muted" data-ref-key="filmNote"></p>
  </div>
- <div class="panel ref-panel">
+ <div id="privateNaslagMessage" class="panel ref-panel ndt-naslag-private-message" role="status">
+  <strong>Afgeschermde bedrijfsnaslag</strong>
+  <p>Bedrijfsgebonden referentiegrafieken zijn alleen toegankelijk voor geautoriseerde beheerders.</p>
+ </div>
+ <div id="privateNaslagUpload" class="panel ref-panel" hidden>
+  <h2>Beheerder · privénaslag beheren</h2>
+  <p>Alleen jouw expliciet geactiveerde beheerder-account heeft toegang. De originele WEBP-bestanden worden rechtstreeks naar een private Supabase-bucket geüpload.</p>
+  <form id="privateNaslagUploadForm">
+   <label for="privateNaslagFiles">Oorspronkelijke grafiek- en schetsbestanden (.webp)</label>
+   <input type="file" id="privateNaslagFiles" accept="image/webp,.webp" multiple>
+   <button type="submit" id="privateNaslagUploadButton" class="outline-button">Bestanden privé uploaden</button>
+  </form>
+  <p id="privateNaslagStatus" class="small-muted" role="status" aria-live="polite"></p>
+  <p class="small-muted">Eenmaal geüploade bestanden blijven alleen met een persoonlijk account en serverrechten bereikbaar.</p>
+ </div>
+ <div class="panel ref-panel" id="ndtNaslagCharts" hidden>
   <h2 data-ref-key="diagrams">Originele belichtingsgrafieken</h2>
   <label for="refDiagram" class="ref-label" data-ref-key="diagramLabel">Kies grafiek</label><select class="ref-select" id="refDiagram"></select>
   <strong class="ref-image-name" id="refDiagramTitle">—</strong><p id="refDiagramConditions" class="ref-conditions"></p>
-  <a id="refDiagramOpen" href="./smart-225b.webp" target="_blank" rel="noopener noreferrer" class="ref-image-link"><img id="refDiagramImage" src="./smart-225b.webp" loading="lazy" alt="SMART 225 belichtingsdiagram"></a>
+  <a id="refDiagramOpen" target="_blank" rel="noopener noreferrer" class="ref-image-link"><img id="refDiagramImage" loading="lazy" alt="Beveiligd belichtingsdiagram"></a>
   <p class="small-muted ref-warning" data-ref-key="diagramNote"></p>
  </div>
 
@@ -603,8 +618,8 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
    <p class="comet-warning">Een fabrikantgrafiek is nog geen gevalideerde digitale belichtingscurve. Voor automatische belichtingstijden zijn gecontroleerde curvegegevens én een praktijktest/Level 3-vrijgave nodig. De app berekent voor deze Comet-modellen daarom geen tijd.</p>
   </div>
  </div>
- <div class="panel ref-panel">
-  <h2 data-ref-key="weld">Lasdetailschetsen</h2><img class="ref-illustration" src="./weld-details.webp" alt="Schemaprojectie van lasdetails met X Y Z richting" loading="lazy">
+ <div class="panel ref-panel" id="ndtNaslagWeld" hidden>
+  <h2 data-ref-key="weld">Lasdetailschetsen</h2><img id="ndtNaslagWeldImage" class="ref-illustration" alt="Beveiligde lasdetailschets" loading="lazy">
   <p class="small-muted" data-ref-key="weldNote"></p>
  </div>
  <div class="panel ref-panel">
@@ -929,6 +944,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <script type="module" src="./iqi-quick.mjs?v=408"></script>
 <script type="module" src="./workflow-shape.mjs?v=391"></script>
 <script type="module" src="./reference-recovery.mjs?v=391"></script>
+<script type="module" src="./private-naslag.mjs?v=1"></script>
 <script type="module" src="./rt-enhancements.mjs?v=1"></script>
 <script id="rt29-clean-calculator">
 (function(){

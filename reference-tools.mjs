@@ -34,9 +34,10 @@ function diagramUpdate(){
  const d=exposureDiagrams.find(x=>x.id===el('refDiagram').value)||exposureDiagrams[0];
  el('refDiagramTitle').textContent=d.name;
  el('refDiagramConditions').textContent=`${t('filmt')}: ${d.film} · ${d.screen} · FFD: ${d.distance} · D: ${d.density} · ${d.note}`;
- el('refDiagramImage').src=d.file;
+ // Never set public asset URLs or fetch private images from this public module.
+ el('refDiagramImage').removeAttribute('src');
  el('refDiagramImage').alt=`${d.name} — ${d.film}, ${d.screen}, ${d.distance}, density ${d.density}`;
- el('refDiagramOpen').href=d.file;
+ el('refDiagramOpen').removeAttribute('href');
 }
 function processUpdate(){
  const p=weldProcesses.find(x=>x.number===el('refProcess').value)||weldProcesses[0];
