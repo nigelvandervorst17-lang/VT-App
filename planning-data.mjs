@@ -19,7 +19,7 @@ export function proceduresForStore(raw){
    code:text(row.code,70),revision:text(row.revision,20),
    norm:text(row.norm,90),klasse:['A','B'].includes(row.klasse)?row.klasse:null,
    film:['D4','D5','D7'].includes(row.film)?row.film:null,
-   minDensity:Number.isFinite(Number(row.minDensity))&&Number(row.minDensity)>=0?Number(row.minDensity):null,
+   minDensity:row.minDensity!==null&&row.minDensity!==undefined&&String(row.minDensity).trim()!==''&&Number.isFinite(Number(row.minDensity))&&Number(row.minDensity)>=0?Number(row.minDensity):null,
    iqiSide:['source','film'].includes(row.iqiSide)?row.iqiSide:null
   };
   map.set(normalized.code+'|'+normalized.revision,normalized);
