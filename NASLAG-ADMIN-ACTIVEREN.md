@@ -5,7 +5,7 @@ De originele Andrex/Yxlon/SMART-afbeeldingen en lasdetailschetsen zijn uit de hu
 ## Eerste beheerder activeren
 
 1. Open https://supabase.com/dashboard/project/olugdgrlfyrdyxclphlu/auth/users
-2. Maak onder Authentication → Users een account met jouw eigen e-mailadres en sterk wachtwoord, als dat nog niet bestaat. Bevestig je e-mailadres.
+2. Maak onder Authentication → Users een account met je vooraf vastgelegde persoonlijke beheerder-e-mailadres en een sterk, uniek wachtwoord, als dat nog niet bestaat. Bevestig je e-mailadres. De server accepteert geen ander adres.
 3. Open https://supabase.com/dashboard/project/olugdgrlfyrdyxclphlu/sql/new
 4. Vervang hieronder uitsluitend JE_EIGEN_EMAIL@BEDRIJF.NL door jouw eigen e-mailadres en voer het SQL-statement uit:
 
@@ -31,12 +31,7 @@ join auth.users u on u.id=a.user_id;
 
 Open Naslag als beheerder. De optie Bestanden privé uploaden laat je de oorspronkelijke tien WEBP-bestanden selecteren. Deze worden met je persoonlijke Supabase-sessie rechtstreeks opgeslagen in de private bucket ndt-admin-naslag, map visuals/. De bestanden worden niet opnieuw in GitHub gepubliceerd.
 
-Als je ze niet meer lokaal hebt, kun je ze uit de oude openbare Git-commit 6794b4f2290e76ff85f558a832427d0829171f99 herstellen met git show, bijvoorbeeld:
-
-```bash
-git clone https://github.com/nigelvandervorst17-lang/VT-App.git
-git -C VT-App show 6794b4f2290e76ff85f558a832427d0829171f99:smart-225b.webp > smart-225b.webp
-```
+Bewaar de originele bestanden bij voorkeur vanuit je eigen offline back-up. Upload ze niet opnieuw naar een openbare GitHub-branch. Als je ze niet meer lokaal hebt, herstel ze uitsluitend via je eigen beveiligde archief, buiten de publieke website.
 
 Herhaal dit voor: smart-225-d7.webp, smart-200pc-d7.webp, smart-160-d7.webp, smart-200-d7.webp, smart-200pc-new-d7.webp, smart-225-yxlon-d7.webp, smart-300hp-d7.webp, smart-300pc-d7.webp en weld-details.webp.
 
@@ -51,4 +46,4 @@ delete from private.ndt_naslag_admins
 where user_id in (select id from auth.users where lower(email)=lower('ACCOUNT@BEDRIJF.NL'));
 ```
 
-Opnieuw laden of uitloggen sluit de privénaslag. De server kijkt uitsluitend naar persoonlijke admin-toekenning, niet naar het lokale proefvlaggetje of de bedrijfsrol.
+Opnieuw laden of uitloggen sluit de privénaslag. De server vereist tegelijk de expliciete persoonlijke admin-toekenning, een bevestigd e-mailadres en een exacte overeenkomst met de vooraf op de server vastgelegde beheerderidentiteit. Andere bedrijfsbeheerders, proefaccounts en lokale vlaggetjes kunnen dit niet omzeilen.
