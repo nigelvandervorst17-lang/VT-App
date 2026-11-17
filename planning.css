@@ -114,3 +114,5 @@ button:disabled{cursor:not-allowed}
 #planningActiveBar #planningFinish{max-width:none;background:#5a6745}
 #ndtSaveToLog{font-size:12px;white-space:normal}
 @media(max-width:420px){.plan-row{padding:10px 8px;gap:9px}.plan-heading h1{font-size:23px}}
+
+.plan-active-row #planningCalculate{background:#1275b4;border-color:#78c3f2}
