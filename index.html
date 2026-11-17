@@ -163,7 +163,7 @@
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
 <link rel="stylesheet" href="./mobile-shell.css?v=3">
-<link rel="stylesheet" href="./planning.css?v=2">
+<link rel="stylesheet" href="./planning.css?v=3">
 <script>
 try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
 catch{document.documentElement.classList.add('ndt-entry-loading')}
@@ -228,8 +228,8 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <!-- Compact research-calculator view. Real input elements remain in extended settings and
        are bridged by compact-layout.mjs; when JS is unavailable, the full form remains visible. -->
   <section class="rt-compact-calculator" id="rtCompactPanel" aria-label="Compact rekenoverzicht" hidden>
-    <div class="plan-calc-top"><button id="planningOpenTop" type="button">▦ Planning · Werkbonnen</button></div>
-    <div id="planningActiveBar" class="plan-active-bar" hidden><div class="plan-active-row"><strong id="planningActiveLabel">Actieve werkbon</strong><button id="planningActiveInfo" type="button" aria-label="Werkboninformatie">ⓘ</button><button id="planningFinish" type="button">Afronden &amp; Mail rapportage</button><button id="planningDetach" type="button" aria-label="Werkbon loskoppelen">×</button></div><p id="planningActiveWarning" class="plan-active-attention" hidden></p><div id="planningActiveDetails" hidden></div></div>
+    <div class="plan-calc-top"><button id="planningOpenTop" type="button">▦ Planning · Mijn werkbonnen</button></div>
+    <div id="planningActiveBar" class="plan-active-bar" hidden><div class="plan-active-row"><strong id="planningActiveLabel">Actieve werkbon</strong><button id="planningActiveInfo" type="button" aria-label="Werkboninformatie">ⓘ</button><button id="planningStartResearch" type="button">Start onderzoek</button><button id="planningNextShot" type="button" hidden>Volgende opname</button><button id="planningFinish" type="button">Meld gereed</button><button id="planningDetach" type="button" aria-label="Werkbon loskoppelen">×</button></div><p id="planningActiveWarning" class="plan-active-attention" hidden></p><div id="planningActiveDetails" hidden></div></div>
     <div class="rt-compact-toolbar">
       <strong id="rtCompactTitle">Snelle onderzoeksberekening</strong>
       <a class="ndt-se75-quicklink" id="ndtSe75ResearchShortcut" href="./se75.html" aria-label="Open het aparte mobiele Se-75 onderzoeksinvoerscherm">Se-75 snelinvoer</a>
@@ -468,14 +468,15 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 </section>
 </section>
 <section class="screen plan-screen" data-screen="planning" id="screen-planning" hidden>
- <div class="plan-heading"><div><p class="overline">WERKBONNEN · AGENDA</p><h1>Planning</h1><p class="small-muted">Opdracht- / Bonnummer · Universele NDO-werkbonnen · Onderzoek</p></div><button id="planningAdd" type="button" aria-label="Nieuwe werkbon toevoegen">+</button></div>
+ <div class="plan-heading"><div><p class="overline">GEDEELDE WERKBONNEN</p><h1>Planning</h1><p class="small-muted" id="planningRole">Opdrachten laden…</p></div><div class="plan-heading-actions"><button id="planningRefresh" type="button" title="Ververs gedeelde gegevens" aria-label="Ververs planning">↻</button><button id="planningAdd" type="button" aria-label="Nieuwe werkbon toevoegen" hidden>+</button></div></div>
  <div class="plan-tabs" role="group" aria-label="Planningsfilter">
   <button type="button" data-plan-filter="today" class="active" aria-pressed="true">Vandaag</button>
   <button type="button" data-plan-filter="upcoming" aria-pressed="false">Komende</button>
-  <button type="button" data-plan-filter="done" aria-pressed="false">Afgerond</button>
+  <button type="button" data-plan-filter="done" aria-pressed="false">Afgerond</button><button type="button" id="planningDraftFilter" data-plan-filter="draft" aria-pressed="false" hidden>Concepten</button>
  </div>
  <label class="plan-search">Zoek werkbon<input id="planningSearch" type="search" placeholder="Zoek op klant, bonnummer of order" autocomplete="off"></label>
  <p id="planningNotice" class="small-muted" role="status" aria-live="polite">Persoonlijke planning laden…</p>
+ <section id="planningTeam" class="plan-team" hidden><h2>Onderzoekers toewijzen</h2><p class="small-muted">Onderzoekers maken eerst zelf een account aan. Voeg hun bevestigde e-mailadres hier toe.</p><form id="planningAddResearcherForm"><input id="planningResearcherEmail" type="email" placeholder="onderzoeker@bedrijf.nl" autocomplete="email" required><button type="submit">Onderzoeker toevoegen</button></form><p id="planningTeamStatus" role="status"></p></section>
  <div id="planningDayList" class="plan-day-list"></div>
  <details class="plan-library"><summary>Procedure-bibliotheek · Bekijk en voeg procedures toe</summary>
   <p class="small-muted">Proceduregegevens vullen bestaande invoervelden alleen vooraf in; geen technische goedkeuring of RT-vrijgave.</p>
@@ -494,33 +495,46 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
  <section class="plan-day-logs" aria-labelledby="planningLogHeading"><h2 id="planningLogHeading">Werklogboek en rapportage</h2><p id="planningLogSummary" class="small-muted">Geen actieve werkbon.</p><div id="planningLoggedShots"></div><button type="button" id="planningMailReport">Afronden &amp; Mail rapportage</button></section>
 </section>
 <dialog id="planningImportDialog" class="plan-import-dialog" aria-labelledby="planningImportHeading">
- <h2 id="planningImportHeading">Nieuwe werkbon</h2>
- <p class="small-muted">PDF, foto of tekst wordt lokaal gelezen. Pas na je klik op AI uitlezen gaat herkende tekst naar je ingestelde Gemini Worker. Controleer ALLE ingevulde velden.</p>
+ <h2 id="planningImportHeading">Werkbon controleren en toewijzen</h2>
+ <p class="small-muted">Upload een PDF/foto: lokale tekstherkenning begint direct. De herkende tekst wordt na de beveiligingscontrole automatisch via je ingestelde Gemini Worker verwerkt. Controleer alle velden. Je kunt een onvolledige bon als concept bewaren.</p>
  <label>Upload werkbon (PDF / foto / TXT)<input type="file" id="planningFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,application/pdf,image/png,image/jpeg,image/webp,text/plain"></label>
  <label>Of plak de bontekst<textarea id="planningText" rows="5" placeholder="Plak hier de inhoud van een willekeurige werkbon…"></textarea></label>
- <div class="plan-import-actions"><button type="button" id="planningReadFile">Bestand lokaal uitlezen</button><button type="button" id="planningAIRead">AI uitlezen</button></div>
+ <p class="small-muted" id="planningAutoRecognize">Automatische herkenning na bestandskeuze. Geen losse leesknoppen.</p>
  <div id="planningTurnstile"></div>
- <p id="planningImportStatus" role="status" aria-live="polite">Vul handmatig in of lees een bestand uit.</p>
+ <p id="planningImportStatus" role="status" aria-live="polite">Kies een bestand of vul zelf de bon in.</p><div id="planningImportSummary" class="plan-import-summary"></div>
  <form id="planningBonForm" class="plan-bon-form">
-  <label>Opdracht- / Bonnummer<input name="bonnummer" maxlength="100" required></label>
-  <label>Klant<input name="klant" maxlength="260" required></label>
+  <label>Opdracht- / Bonnummer<input name="bonnummer" maxlength="100"></label>
+  <label>Klant<input name="klant" maxlength="260"></label>
   <label>Adres<input name="adres" maxlength="260"></label>
   <label>Ordernummer<input name="ordernummer" maxlength="100"></label>
-  <label>Datum<input type="date" name="datum" required></label>
+  <label>Datum<input type="date" name="datum"></label>
   <label>Starttijd<input type="time" name="starttijd"></label>
   <label>Eindtijd<input type="time" name="eindtijd"></label>
   <label>Bron/toestel<input name="bron_of_toestel" maxlength="260"></label>
-  <label>Geometrie<select name="geometrie"><option value="">Niet vermeld · zelf kiezen</option><option>Buis / Pijp</option><option>Plaat / Las</option></select></label>
-  <label>Techniek<select name="techniek"><option value="">Niet vermeld · zelf kiezen</option><option>SWSI</option><option>DWSI</option><option>DWDI</option></select></label>
   <label>Procedurecode<input name="procedure_code" maxlength="70"></label>
   <label>Revisie<input name="revisie" maxlength="20"></label>
-  <label>kV<input name="kv" inputmode="decimal"></label>
-  <label>mA<input name="ma" inputmode="decimal"></label>
-  <label>Activiteit (Ci)<input name="activiteit_ci" inputmode="decimal"></label>
-  <label>Wanddikte (mm)<input name="wanddikte_mm" inputmode="decimal"></label>
-  <label>SFD (mm)<input name="sfd_mm" inputmode="decimal"></label>
-  <label>Opmerkingen<textarea name="opmerkingen" rows="3" maxlength="2000"></textarea></label>
-  <div class="plan-import-actions"><button type="submit">Werkbon opslaan</button><button id="planningCancel" type="button">Annuleren</button></div>
+  <label>Overige gegevens / opmerkingen<textarea name="opmerkingen" rows="3" maxlength="2000"></textarea></label>
+  <label>Onderzoeker toewijzen<select name="assigned_to" id="planningAssignee"><option value="">Nog niet toegewezen · Concept</option></select></label>
+  <p class="small-muted plan-form-note">Planning voert geen geometrie, techniek, wanddikte, SFD of activiteit in. Die kiest de onderzoeker op het rekenscherm.</p>
+  <div class="plan-import-actions"><button type="submit" id="planningSaveBon">Werkbon / Concept opslaan</button><button id="planningCancel" type="button">Annuleren</button></div>
+ </form>
+</dialog>
+<dialog id="planningResearchDialog" class="plan-import-dialog plan-research-dialog" aria-labelledby="planningResearchHeading">
+ <h2 id="planningResearchHeading">Start onderzoek · Werkbon</h2>
+ <p id="planningResearchBonSummary" class="small-muted">Vul de vijf onderzoekersgegevens zelf in. Er wordt niets geraden.</p>
+ <form id="planningResearchForm" class="plan-bon-form">
+  <label>Bronsoort<select name="modality" id="planningResearchModality"><option value="gamma">Gamma</option><option value="xray">X-ray</option></select></label>
+  <label id="planningResearchIsotopeWrap">Isotoop<select name="isotope"><option value="">Zelf kiezen</option><option>Se-75</option><option>Ir-192</option></select></label>
+  <label>1. Geometrie<select name="geometry" required><option value="">Kies zelf</option><option value="plate">Plaat / Las</option><option value="pipe">Buis / Pijp</option></select></label>
+  <label>2. Techniek<select name="technique" required><option value="">Kies zelf</option><option value="sw">SWSI</option><option value="dwsi">DWSI</option><option value="dwdi">DWDI</option></select></label>
+  <label>3. Wanddikte (mm)<input name="wall" type="text" inputmode="decimal" required placeholder="Gemeten wanddikte"></label>
+  <label>4. SFD / FFD (mm)<input name="distance" type="text" inputmode="decimal" required placeholder="Bron-/focus-filmafstand"></label>
+  <label id="planningResearchCiWrap">5. Activiteit (Ci)<input name="ci" type="text" inputmode="decimal" placeholder="Actuele activiteit"></label>
+  <label id="planningResearchKvWrap" hidden>5. Spanning (kV)<input name="kv" type="text" inputmode="decimal" placeholder="kV"></label>
+  <label id="planningResearchMaWrap" hidden>5. Stroom (mA)<input name="ma" type="text" inputmode="decimal" placeholder="mA"></label>
+  <p class="small-muted plan-form-note">Bij X-ray moet je bovendien zelf een exact ondersteund toestelmodel kiezen in Rekenen. De bestaande IQI-, curve- en veiligheidsvalidaties blijven leidend.</p>
+  <p id="planningResearchError" role="alert" class="plan-research-error" hidden></p>
+  <div class="plan-import-actions"><button id="planningResearchConfirm" type="submit">Start onderzoek</button><button id="planningResearchCancel" type="button">Annuleren</button></div>
  </form>
 </dialog>
 <section class="screen" data-screen="sources" id="screen-sources" hidden><div class="section-heading"><p class="overline" data-i18n="tools">GEREEDSCHAP</p><h1 data-i18n="sources">Bronnen & verval</h1><p class="subtitle" data-i18n="sourcesSub">Controleer de activiteit van een gamma-bron aan de hand van het certificaat.</p></div><div class="panel"><div class="row-title"><span data-i18n="sourceCurrent">Gekozen isotoop</span><strong id="sourceIso">Se-75</strong></div><div class="row-title"><span data-i18n="halfLife">Halveringstijd</span><strong id="sourceHalfLife">119,78 d</strong></div><div class="row-title"><span data-i18n="sourceActivity">Huidige invoer</span><strong id="sourceActiveCi">36 Ci</strong></div><div class="divider"></div><p class="small-muted" data-i18n="sourcesNote">Het bronverval is een afzonderlijke wiskundige berekening; het bewijst geen juiste filmzwarting of beeldkwaliteit.</p><button class="outline-button" type="button" id="toCertificate" data-i18n="editCertificate">Certificaatgegevens invullen</button></div><div class="panel" id="decayPanel">
@@ -999,7 +1013,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <script type="module" src="./mobile-shell.mjs?v=2"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
-<script type="module" src="./planning-app.mjs?v=1"></script>
+<script type="module" src="./planning-app.mjs?v=2"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./compact-layout.mjs?v=418"></script>
 <script type="module" src="./rt-material-ui.mjs?v=419"></script>
