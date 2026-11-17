@@ -141,6 +141,8 @@ function renderCard(bon){
   actions.append(action(bon.status==='Gereed'?'Details bekijken':'Start onderzoek',
    ()=>openBon(bon),'plan-start'));
  }
+ const opnameCount=state.opnames.filter(x=>x.bon_id===bon.id).length;
+ actions.append(elem('small','plan-shot-count',opnameCount+' opname(s) gekoppeld'));
  content.append(actions);
  const status=elem('span','plan-status '+badgeClass(bon.status),bon.status||'Concept');
  row.append(times,content,status);
@@ -306,6 +308,16 @@ function startResearch(event){
  const bon=activeBon();if(!bon)return;
  try{
   const setup=currentSetup();
+  // Procedure metadata may prefill only explicitly registered film / IQI fields;
+  // the five researcher settings remain independent and mandatory.
+  const record=bonData(bon);
+  const proc=findProcedure(state.procedureList,record.procedure_code,record.revisie);
+  if(proc){
+   if(proc.film)changeInput('film',proc.film);
+   if(proc.minDensity!==null)changeInput('density',String(proc.minDensity));
+   if(proc.klasse)changeInput('iqiClass',proc.klasse);
+   if(proc.iqiSide)changeInput('iqiSide',proc.iqiSide);
+  }
   if(setup.modality==='xray')press('modeXray');
   else{
    press('modeGamma');
