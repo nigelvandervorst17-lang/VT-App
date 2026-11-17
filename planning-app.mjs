@@ -35,10 +35,10 @@ const bonTitle=bon=>{
 };
 const activeRole=role=>state.role===role;
 const localToday=()=>localISODate();
-function clearUserData(){
+function clearUserData({keepEncryptedCache=false}={}){
  state.client=null;state.role=null;state.user=null;state.bons=[];state.opnames=[];
  state.members=[];state.companyAdminOptions=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
- state.offlineCache?.close();state.offlineCache=null;
+ if(!keepEncryptedCache){state.offlineCache?.close();state.offlineCache=null;}
  window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:null,label:''}}));
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
 }
@@ -109,6 +109,10 @@ async function refreshPlanning(){
  try{
   const client=state.client||makePlanningAPI();
   const auth=await client.authenticate();
+  // An in-memory offline cache is never reused for a different authenticated ID.
+  if(state.offlineCache&&state.offlineCache.userId!==auth.user.id){
+   state.offlineCache.close();state.offlineCache=null;
+  }
   const snapshot=await client.list();
   if(oldId&&oldId!==auth.user.id){
    state.activeId=null;state.setupBonId=null;state.setupReady=false;
@@ -800,8 +804,11 @@ function init(){
  },true);
  $('ndtSaveToLog')?.addEventListener('click',captureShot,true);
  window.addEventListener('ndt-auth-scope-changed',event=>{
-  clearUserData();
-  if(event.detail?.mode==='signed-in')void refreshPlanning(); // Role is resolved from server, never a role selector.
+  // Keep AES-GCM key in memory only across the same device's offline -> online
+  // transition. It will be discarded if the online user ID differs.
+  const restored=event.detail?.mode==='signed-in';
+  clearUserData({keepEncryptedCache:restored&&Boolean(state.offlineCache)});
+  if(restored)void refreshPlanning(); // Server verifies role; no user role selector.
  });
  window.addEventListener('ndt-private-naslag-logout',()=>clearUserData());
  window.addEventListener('offline',()=>{
