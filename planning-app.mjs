@@ -58,7 +58,15 @@ async function showOfflineSnapshot(){
 async function flushOfflineOutbox(){
  if(!state.offlineCache||!state.client||!navigator.onLine||!activeRole('researcher')||!state.user?.id)return;
  try{
-  const result=await syncWorkbonOutbox({
+  // An offline-started assigned bon first transitions through the original status RPC.
+ const pendingRows=await state.offlineCache.draftLogs();
+ for(const bonId of new Set(pendingRows.map(x=>x.bon_id))){
+  const bon=state.bons.find(x=>x.id===bonId&&x.assigned_to===state.user.id);
+  if(bon?.status==='Ingepland'){
+   await state.client.changeResearchStatus(bon.id,'In behandeling');bon.status='In behandeling';
+  }
+ }
+ const result=await syncWorkbonOutbox({
    cache:state.offlineCache,client:state.client,bons:state.bons,userId:state.user.id,
    onProgress:msg=>$text('planningOfflineStatus',msg)
   });
@@ -156,7 +164,7 @@ function renderMembership(){
  $('planningTeam').hidden=!planning;$('planningAdd').hidden=!planning;
  $('planningDraftFilter').hidden=!planning;
  $('planningProcedureForm').hidden=!planning;
- $('planningOfflinePanel').hidden=!activeRole('researcher');
+ $('planningOfflinePanel').hidden=!(activeRole('researcher')||(!navigator.onLine&&Boolean(localStorage.getItem(WORKBON_OFFLINE_USER))));
  $text('planningRole',planning?'Planning · bonnen aanmaken/toewijzen':
   activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':'Voorbeeldplanning');
  const list=state.members.filter(m=>m.role==='researcher');
@@ -795,9 +803,16 @@ function init(){
   clearUserData();
  });
  window.addEventListener('ndt-private-naslag-logout',()=>clearUserData());
- window.addEventListener('offline',()=>{if(state.role==='researcher'||state.role==='planning'){
-  clearUserData();notice('Gedeelde Planning offline niet beschikbaar. De lokale onderzoekscalculator blijft werken.',true);
- }});
+ window.addEventListener('offline',()=>{
+  if(state.role==='researcher'&&state.offlineCache){
+   state.client=null;notice('Versleutelde offline modus actief. Opnames worden bewaard tot opnieuw online.');
+   $text('planningOfflineStatus','Offline: opnames worden versleuteld bewaard en later gesynchroniseerd.');
+  }else if(state.role==='researcher'||state.role==='planning'){
+   clearUserData();notice('Gedeelde Planning offline alleen beschikbaar na ontgrendelen van de versleutelde werkboncache.',true);
+  }
+ });
+ window.addEventListener('online',()=>{if(state.offlineCache||state.role==='researcher')void refreshPlanning();});
+ window.addEventListener('ndt-planning-invite-accepted',()=>void refreshPlanning());
  render();
 }
 if(typeof document!=='undefined'){
