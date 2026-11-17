@@ -75,3 +75,44 @@ button:disabled{cursor:not-allowed}
 
 .plan-active-attention{font-size:11px;color:#ffdea7;background:#563d1d;padding:8px 10px;border-radius:8px;line-height:1.45;margin:9px 0}
 .plan-active-attention[hidden]{display:none!important}
+
+/* Shared Planner / Researcher mobile-first workflow */
+.plan-heading-actions{display:flex;align-items:center;gap:7px;flex:none}
+.plan-heading-actions button{min-width:42px;min-height:44px;border:1px solid #5989aa;border-radius:11px;color:#e7f7ff;background:#174767;font-size:25px}
+.plan-heading-actions #planningAdd{width:48px;height:48px;font-size:30px;background:#127bc4}
+.plan-heading-actions button[hidden],.plan-tabs button[hidden],.plan-active-row button[hidden],
+.plan-research-dialog label[hidden],.plan-team[hidden]{display:none!important}
+.plan-tabs{display:flex;gap:4px;flex-wrap:nowrap}
+.plan-tabs button{flex:1 1 0;min-width:0;font-size:11px;padding:9px 3px}
+.plan-team{background:#133247;border-top:2px solid #4687a8;padding:12px 13px;margin:12px 0;border-radius:12px}
+.plan-team h2{font-size:14px;margin:0 0 7px}
+.plan-team form{display:flex;gap:8px;flex-wrap:wrap}
+.plan-team input{flex:2 1 190px;min-width:0;min-height:43px;color:#fff;border:1px solid #53748a;background:#1d3b51;border-radius:9px;padding:9px 12px}
+.plan-team button{flex:1 1 135px;min-height:43px;border:1px solid #78a4c4;background:#115e95;border-radius:9px;color:#fff;font-weight:800}
+#planningTeamStatus{font-size:11px;overflow-wrap:anywhere;line-height:1.5}
+.plan-card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:4px}
+.plan-card-actions button{background:#1c5777;color:#fff;border:1px solid #5490b4;border-radius:9px;min-height:37px;font-size:11px;font-weight:770;padding:7px 9px}
+.plan-card-actions .plan-start{background:#17679d}
+.plan-card-actions .plan-complete{background:#245d54}
+.plan-assignee{flex-basis:100%;color:#b9d8e9;font-size:11px;line-height:1.35}
+.plan-import-summary{display:grid;gap:4px;margin:12px 0;padding:11px 12px;background:#17394e;border:1px solid #335f7e;border-radius:11px}
+.plan-import-summary strong{font-size:14px}
+.plan-import-summary small{font-size:12px;color:#c3d9ea}
+.plan-form-note{grid-column:1/-1;line-height:1.6;background:#25435c;border-radius:9px;padding:9px}
+.plan-research-error{grid-column:1/-1;color:#ffdfd8;background:#642b30;border:1px solid #bc7470;border-radius:8px;padding:9px}
+.plan-research-error[hidden]{display:none!important}
+.plan-research-dialog .plan-import-actions button:first-child{background:#157cba}
+.plan-research-dialog label{min-width:0}
+.plan-library,.plan-day-logs,.plan-records-card{box-shadow:none;background:#102b3e;border-color:#2e526e}
+.plan-row{box-shadow:none}
+#planningResearchHeading{line-height:1.3}
+.plan-active-row #planningStartResearch{background:#127eb4}
+.plan-active-row #planningNextShot{background:#1e605b}
+#planningActiveBar .plan-active-row{gap:5px}
+#planningActiveBar .plan-active-row strong{flex-basis:100%;font-size:12px}
+#planningActiveBar .plan-active-row button{flex:0 0 auto}
+#planningActiveBar #planningFinish{max-width:none;background:#5a6745}
+#ndtSaveToLog{font-size:12px;white-space:normal}
+@media(max-width:420px){.plan-row{padding:10px 8px;gap:9px}.plan-heading h1{font-size:23px}}
+
+.plan-active-row #planningCalculate{background:#1275b4;border-color:#78c3f2}

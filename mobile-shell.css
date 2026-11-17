@@ -106,3 +106,10 @@ html,body{background-color:#061628}
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-statusbar-height,env(safe-area-inset-top,0px))!important;background:#061628!important;z-index:1100!important;pointer-events:none}
 .top-header{background:#061628!important;background-image:none!important}
 .top-header::before{content:"";position:absolute;bottom:100%;left:0;right:0;height:var(--rt-statusbar-height,env(safe-area-inset-top,0px));background:#061628;pointer-events:none}
+
+/* Compact mobile top bar. Keep opaque iOS safe area from previous fix. */
+.top-header{min-height:calc(56px + env(safe-area-inset-top))!important;padding:calc(6px + env(safe-area-inset-top)) 9px 6px!important;gap:6px!important}
+.top-header .ndt-brand-banner{height:35px!important}
+.top-header .lang-control select{min-height:37px!important}
+.ndt-account-button{width:39px;height:39px}
+@media(max-width:420px){.top-header .ndt-brand-banner{height:32px!important}.ndt-mobile-header-tools{gap:4px}}

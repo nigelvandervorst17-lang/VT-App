@@ -5,6 +5,8 @@ on:
       - 'index.html'
       - 'planning-app.mjs'
       - 'planning-data.mjs'
+      - 'planning-api.mjs'
+      - 'research/company-suite/supabase-rest.mjs'
       - 'workbon-reader.mjs'
       - 'planning.css'
       - 'planning.test.mjs'
@@ -29,6 +31,7 @@ jobs:
         run: |
           node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs
           node --check planning-data.mjs
+          node --check planning-api.mjs
           node --check planning-app.mjs
           node --check workbon-reader.mjs
           node --check ai-expert.mjs

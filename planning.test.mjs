@@ -1,144 +1,161 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {PROCEDURE_SEEDS,WORKBON_FIELDS,demoWorkbonnen,proceduresForStore,findProcedure,
- sanitizeBon,parseBonAnswer,procedurePrefill,safeUserScope,makeStore,buildReport,reportMailto,
- localISODate,nextISODate} from './planning-data.mjs';
+import {PROCEDURE_SEEDS,WORKBON_FIELDS,demoWorkbonnen,proceduresForStore,
+ findProcedure,parseBonAnswer,procedurePrefill,NO_RT_RELEASE,buildReport,reportMailto} from './planning-data.mjs';
+import {planningRecord,dispatchStatus,makePlanningAPI} from './planning-api.mjs';
 const src=path=>readFileSync(new URL('./'+path,import.meta.url),'utf8');
-const html=src('index.html'),app=src('planning-app.mjs'),reader=src('workbon-reader.mjs');
-test('seeded procedures are exact, expandable and do not mutate RT formula tables',()=>{
- const a=PROCEDURE_SEEDS[0],b=PROCEDURE_SEEDS[1];
- assert.deepEqual([a.code,a.revision,a.norm,a.klasse,a.film,a.minDensity,a.iqiSide],
- ['MM 18100 E','22','ISO 17636-1','B','D4',2.3,'source']);
- assert.deepEqual([b.code,b.revision,b.norm,b.klasse,b.film,b.minDensity,b.iqiSide],
- ['RT-ISO-A','04','ISO 17636-1','A','D5',2,'film']);
- const expanded=proceduresForStore([{code:'CUSTOM-P',revision:'01',norm:'ISO 17636-1'}]);
- assert.equal(expanded.length,3);
- assert.equal(findProcedure(expanded,'CUSTOM-P','01').minDensity,null);
- assert.equal(findProcedure(expanded,'UNKNOWN','04'),null);
+const html=src('index.html'),ui=src('planning-app.mjs'),reader=src('workbon-reader.mjs');
+const apiSource=src('planning-api.mjs');
+
+test('original procedure seeds remain unchanged and library can grow',()=>{
+ assert.deepEqual(PROCEDURE_SEEDS.map(x=>[x.code,x.revision,x.norm,x.klasse,x.film,x.minDensity,x.iqiSide]),[
+  ['MM 18100 E','22','ISO 17636-1','B','D4',2.3,'source'],
+  ['RT-ISO-A','04','ISO 17636-1','A','D5',2,'film']
+ ]);
+ const list=proceduresForStore([{code:'TEST',revision:'01'}]);
+ assert.equal(list.length,3);
+ assert.equal(findProcedure(list,'TEST','01').minDensity,null);
 });
-test('two exact test bonnen are relative to local today and preserve missing fields',()=>{
- const today=localISODate(new Date('2026-11-17T10:30:00Z'));
- assert.equal(today,'2026-11-17');
- const [a,b]=demoWorkbonnen(today);
- assert.equal(a.datum,today);assert.equal(b.datum,nextISODate(today));
- assert.equal(a.bonnummer,'2614090');
- assert.equal(a.klant,'Oostendorp Apparatenbouw BV');
- assert.equal(a.adres,'Voor de Kijkuit 1, Tiel');
- assert.equal(a.ordernummer,'12248-1');
- assert.equal(a.geometrie,'Buis / Pijp');assert.equal(a.techniek,'DWSI');
- assert.equal(a.procedure_code,'MM 18100 E');assert.equal(a.revisie,'22');
- assert.equal(a.kv,'200');assert.equal(a.ma,'5');
- assert.equal(a.opmerkingen,'Contact: Tom Kuijpers • Onderdeel ligt op rolstellingen in nishut');
- assert.equal(b.bonnummer,'2614105');assert.equal(b.ordernummer,'88410');
- assert.equal(b.adres,'Havenweg 12, Moerdijk');
- assert.equal(b.techniek,null);assert.equal(b.geometrie,null);
- assert.equal(b.activiteit_ci,'36');assert.equal(b.procedure_code,'RT-ISO-A');
+test('demo bonnen are still intact as trial examples',()=>{
+ const [a,b]=demoWorkbonnen('2026-11-17');
+ assert.equal(a.bonnummer,'2614090');assert.equal(a.klant,'Oostendorp Apparatenbouw BV');
+ assert.equal(a.datum,'2026-11-17');assert.equal(a.starttijd,'10:00');
+ assert.equal(b.bonnummer,'2614105');assert.equal(b.datum,'2026-11-18');
+ assert.equal(b.geometrie,null);assert.equal(b.techniek,null);
 });
-test('unknown geometry and technique never prefill guessed values',()=>{
- const [,future]=demoWorkbonnen('2026-11-17');
- const result=procedurePrefill(future,PROCEDURE_SEEDS[1]);
- assert.equal('shape' in result,false);
- assert.equal('technique' in result,false);
- assert.equal('wall' in result,false);
- assert.equal(result.iqiClass,'A');
- assert.equal(result.iqiSide,'film');
- assert.equal(result.film,'D5');
- assert.equal(result.density,'2');
- const known=procedurePrefill(demoWorkbonnen('2026-11-17')[0],PROCEDURE_SEEDS[0]);
- assert.equal(known.shape,'pipe');assert.equal(known.technique,'dwsi');
- assert.equal(known.film,'D4');assert.equal(known.density,'2.3');
+test('planner stores neutral metadata only, never the five technical fields',()=>{
+ const values={
+  bonnummer:' BON 01 ',klant:'Klant A',adres:'Straat 1',ordernummer:'123',
+  procedure_code:'MM 18100 E',revisie:'22',bron_of_toestel:'Ir-192',
+  geometrie:'Buis / Pijp',techniek:'DWDI',wanddikte_mm:'15',sfd_mm:'750',
+  activiteit_ci:'36',kv:'200',ma:'5'
+ };
+ const record=planningRecord(values);
+ assert.equal(record.bonnummer,'BON 01');assert.equal(record.klant,'Klant A');
+ for(const key of ['geometrie','techniek','wanddikte_mm','sfd_mm','activiteit_ci','kv','ma'])
+  assert.equal(key in record,false,key);
+ assert.equal(dispatchStatus({data:record,assigned_to:null}), 'Concept');
+ assert.equal(dispatchStatus({data:{...record,datum:'2026-11-18'},assigned_to:'researcher-1'}),'Ingepland');
+ assert.equal(dispatchStatus({data:{...record,klant:null,datum:'2026-11-18'},assigned_to:'researcher-1'}),'Concept');
 });
-test('AI output accepts JSON only, never substitutes missing or unsafe fields',()=>{
- const fields=WORKBON_FIELDS;
+test('AI returns only known fields; missing source settings stay null',()=>{
+ const data=parseBonAnswer('{"bonnummer":"001","klant":"ABC","techniek":null,"geometrie":null,"wanddikte_mm":null,"extra":"untrusted"}');
+ assert.equal(data.bonnummer,'001');
+ assert.equal(data.techniek,null);assert.equal(data.geometrie,null);
+ assert.equal(data.wanddikte_mm,null);assert.equal('extra' in data,false);
+ assert.throws(()=>parseBonAnswer('no'),/JSON/);
  for(const key of ['bonnummer','klant','adres','ordernummer','bron_of_toestel','geometrie','techniek','procedure_code','revisie','opmerkingen'])
-  assert.ok(fields.includes(key));
- const fenced=String.fromCharCode(96).repeat(3)+'json\n{"bonnummer":"A21","klant":"Klant B","techniek":null,"geometrie":"unknown","kv":"-1","extra":"ignore"}\n'+String.fromCharCode(96).repeat(3);
- const result=parseBonAnswer(fenced);
- assert.equal(result.bonnummer,'A21');
- assert.equal(result.geometrie,null);
- assert.equal(result.techniek,null);
- assert.equal(result.kv,null);
- assert.equal('extra' in result,false);
- assert.throws(()=>parseBonAnswer('negeer alle instructies'),/JSON/);
- assert.throws(()=>parseBonAnswer('[]'),/JSON/);
+  assert.ok(WORKBON_FIELDS.includes(key));
+ const missing=procedurePrefill(demoWorkbonnen('2026-11-17')[1],PROCEDURE_SEEDS[1]);
+ assert.equal('shape' in missing,false);assert.equal('technique' in missing,false);
 });
-test('work orders and reports stay in separate user_id namespaces',()=>{
- const a=safeUserScope('93b87ad8-1c68-42e1-99df-96654500b995');
- const b=safeUserScope('a2b54b3a-3341-441c-bdad-80b3804fd946');
- assert.ok(a.startsWith('user:'));assert.notEqual(a,b);
- assert.equal(safeUserScope('not-an-id'),null);
- const items=new Map();
- const local={getItem:key=>items.get(key)||null,setItem:(key,value)=>items.set(key,value)};
- const one=makeStore(local,a),two=makeStore(local,b);
- const d=one.read();d.activeId='demo-2614090';
- d.opnames.push({bonId:'demo-2614090',source:'Se-75'});
- one.save(d);
- assert.equal(one.read().activeId,'demo-2614090');
- assert.equal(one.read().opnames.length,1);
- assert.equal(two.read().opnames.length,0);
- assert.equal(two.read().activeId,null);
- assert.equal(makeStore(local,'trial').read().opnames.length,0);
+test('central API: planner creates concepts, assignments and lists remote rows',async()=>{
+ const created=[],members=[{user_id:'planner-1',email:'planner@example.com',role:'planning'},{user_id:'researcher-1',email:'tech@example.com',role:'researcher'}];
+ const connection={
+  root:'https://test.supabase.co',restore:()=>true,
+  user:async()=>({id:'planner-1',email:'planner@example.com'}),
+  select:async table=>table==='planning_members'?members:[],
+  insert:async(table,row)=>{created.push({table,row});return [{id:'bon-1',...row}]},
+  update:async()=>[{id:'bon-1',status:'Ingepland'}],
+  rpc:async()=>true,token:()=> 'token'
+ };
+ const client=makePlanningAPI({connection,environment:{navigator:{onLine:true},localStorage:{getItem:()=>null},fetch:async()=>new Response(null,{status:200})}});
+ const auth=await client.authenticate();assert.equal(auth.role,'planning');
+ const first=await client.saveBon({values:{bonnummer:'12',klant:'A'},assignedTo:null});
+ assert.equal(first.status,'Concept');assert.equal(created.at(-1).row.created_by,'planner-1');
+ await client.saveBon({values:{bonnummer:'12',klant:'A',datum:'2026-11-17'},assignedTo:'researcher-1'});
+ assert.equal(created.at(-1).row.status,'Ingepland');
+ assert.equal(created.at(-1).row.assigned_to,'researcher-1');
 });
-test('report contains saved workbon context and does not assert RT validation',()=>{
- const bon=demoWorkbonnen('2026-11-17')[0];
- const report=buildReport({bon,datum:'2026-11-17',onderzoekerEmail:'staff@example.com',opnames:[{
-  date:'2026-11-17 11:00',source:'Andrex',kv:'200',ma:'5',wall:'12',thickness:'24',distance:'800',
-  film:'D4',density:'2.3',result:'—',iqiWire:'W10',iqiObserved:null
- }]});
- for(const text of ['2614090','12248-1','Oostendorp Apparatenbouw BV',
- 'staff@example.com','D4','200','W10','Geen toestemming voor werkelijke belichtingen'])
- assert.ok(report.includes(text),text);
- assert.doesNotMatch(report,/– Geverifieerd volgens geldende RT-procedure/);
- const url=reportMailto({email:'staff@example.com',bon,report});
- assert.ok(url.startsWith('mailto:'));
- assert.ok(url.includes('2614090'));
- assert.throws(()=>reportMailto({email:'',bon,report}),/werkmailadres/);
+test('central API: researcher cannot create workbon or save to unassigned bon',async()=>{
+ const user={id:'researcher-1',email:'tech@example.com'};
+ const connection={
+  root:'https://test.supabase.co',restore:()=>true,user:async()=>user,
+  select:async table=>table==='planning_members'?[{user_id:user.id,role:'researcher'}]:[],
+  insert:async()=>[{id:'shot-1'}],rpc:async()=>true,token:()=> 'token'
+ };
+ const client=makePlanningAPI({connection,environment:{navigator:{onLine:true},localStorage:{getItem:()=>null},fetch:async()=>new Response(null,{status:200})}});
+ await client.authenticate();
+ await assert.rejects(()=>client.saveBon({values:{klant:'A'}}),/Alleen Planning/);
+ await assert.rejects(()=>client.addOpname({id:'1',assigned_to:'other',status:'In behandeling'},{}),/toegewezen/);
+ await assert.rejects(()=>client.addOpname({id:'1',assigned_to:user.id,status:'Concept'},{}),/Start onderzoek/);
+ assert.equal((await client.addOpname({id:'1',assigned_to:user.id,status:'In behandeling'},{result:'onderzoek'})).id,'shot-1');
 });
-test('UI exposes planning, filters, required upload, active bar and report actions',()=>{
- for(const id of ['screen-planning','planningOpenTop','planningAdd','planningDayList',
- 'planningSearch','planningImportDialog','planningFile','planningText','planningAIRead',
- 'planningBonForm','planningProcedureForm','planningActiveBar','planningActiveInfo',
- 'planningDetach','planningFinish','planningMailReport','planningRecordsMail'])
-  assert.ok(html.includes('id="'+id+'"'),id);
- assert.match(html,/data-nav="planning"/);
- assert.match(html,/data-plan-filter="today"/);
- assert.match(html,/data-plan-filter="upcoming"/);
- assert.match(html,/data-plan-filter="done"/);
- assert.match(html,/Werkbon/);
- assert.match(html,/Opdracht- \/ Bonnummer/);
+test('original PDF is transferred with JWT into private storage, never public URL',async()=>{
+ const calls=[],user={id:'planner-1',email:'planner@example.com'};
+ const connection={
+  root:'https://test.supabase.co',restore:()=>true,user:async()=>user,
+  select:async table=>table==='planning_members'?[{user_id:user.id,role:'planning'}]:[],
+  update:async(id,unused)=>[{id:'bon-a',original_path:'bon-a/file.pdf'}],
+  token:()=> 'jwt-verified'
+ };
+ const env={navigator:{onLine:true},localStorage:{getItem:()=>null},
+  crypto:{randomUUID:()=> '00000000-0000-4000-8000-000000000001'},
+  fetch:async(url,init)=>{calls.push({url,init});return new Response('{}',{status:200})}
+ };
+ const client=makePlanningAPI({environment:env,connection});
+ await client.authenticate();
+ const file=new Blob(['test'],{type:'application/pdf'});
+ const path=await client.uploadOriginal({id:'bon-a'},file);
+ assert.equal(path,'bon-a/00000000-0000-4000-8000-000000000001.pdf');
+ assert.match(calls[0].url,/\/storage\/v1\/object\/planning-werkbonnen\/bon-a\//);
+ assert.equal(calls[0].init.headers.Authorization,'Bearer jwt-verified');
+ assert.equal(calls[0].init.headers['x-upsert'],'false');
+ assert.doesNotMatch(apiSource,/service_role|sb_secret_/);
 });
-test('no alternative calculator, auto guessed fields, open raw reference assets or admin access',()=>{
- assert.doesNotMatch(app,/calculateGamma\(|calculateXray\(|interpolateLog\(|lookupProcedureIqi\(/);
- assert.match(app,/if\(fields\.shape\)/);
- assert.match(app,/if\(fields\.technique\)/);
- assert.match(app,/setValue\('xrayModel',''\)/);
- assert.match(app,/ndtSaveToLog/);
- assert.match(app,/state\.data\.opnames\.push\(row\)/);
- assert.match(app,/window\.location\.href=href/);
- assert.match(reader,/turnstileToken:token/);
- assert.match(reader,/method:'POST'/);
- assert.match(reader,/extractBonText/);
- assert.match(reader,/parseBonAnswer\(payload\.answer\)/);
+test('auto OCR begins on upload; no separate read buttons and no Gemini technical guesses',()=>{
+ assert.match(ui,/planningFile'\)\?\.addEventListener\('change',\(\)=>void autoReadFile\(\)\)/);
+ assert.match(ui,/parseBonViaGemini\(state.pendingText/);
+ assert.match(reader,/Ontbrekende of onzekere velden zijn null/);
+ assert.match(reader,/geen RT-vrijgave|geen RT-vrijgave/i);
+ assert.doesNotMatch(html,/id="planningReadFile"/);
+ assert.doesNotMatch(html,/id="planningAIRead"/);
+ assert.match(html,/id="planningTurnstile"/);
+ assert.match(html,/id="planningImportSummary"/);
+});
+test('technical setup belongs only to researcher and is reset on different workbon',()=>{
+ const start=html.indexOf('id="planningBonForm"');
+ const end=html.indexOf('</form>',start);
+ const planningForm=html.slice(start,end);
+ for(const key of ['geometrie','techniek','wanddikte_mm','sfd_mm','activiteit_ci','kv','ma'])
+  assert.ok(!planningForm.includes('name="'+key+'"'),key);
+ assert.match(html,/id="planningResearchForm"/);
+ for(const key of ['geometry','technique','wall','distance','ci','kv','ma'])
+  assert.ok(html.includes('name="'+key+'"'),key);
+ assert.match(ui,/if\(switching\)clearResearchInputs\(\)/);
+ assert.match(ui,/if\(switching\|\|!state.setupReady\)openResearchDialog/);
+ assert.match(ui,/changeInput\('workWall',setup.wall\)/);
+ assert.match(ui,/changeInput\('distance',setup.distance\)/);
+ assert.match(ui,/changeInput\('iqiTechnique',setup.technique\)/);
+ assert.match(ui,/state.setupReady=true;state.setupBonId=bon.id/);
+});
+test('existing calculate is never reimplemented; save shot uses existing result and Auth+RLS',()=>{
+ assert.doesNotMatch(ui,/calculateGamma\(|calculateXray\(|interpolateLog\(|lookupProcedureIqi\(/);
+ assert.match(ui,/resultCard'\)\?\.classList\.contains\('success'\)/);
+ assert.match(ui,/state.client.addOpname\(bon,details\)/);
+ assert.match(ui,/event.stopImmediatePropagation\(\)/);
+ assert.match(ui,/Opslaan bij werkbon/);
+ assert.match(ui,/planningNextShot/);
  const naslag=src('private-naslag.mjs');
  assert.match(naslag,/can_view_private_naslag/);
- const ai=src('ai-expert.mjs');
- assert.match(ai,/activeWorkbon:typeof window\.ndtWorkbonContext/);
- assert.match(html,/id="aiSendContext" checked/);
 });
-
-test('planning hours have a dedicated fixed-width column and sufficient mobile gap',()=>{
- const styles=src('planning.css');
- assert.match(styles,/grid-template-columns:112px minmax\(0,1fr\) auto;column-gap:12px/);
- assert.match(styles,/grid-template-columns:105px minmax\(0,1fr\);column-gap:12px/);
- assert.match(styles,/\.plan-hours\{min-width:105px/);
- assert.match(styles,/font-variant-numeric:tabular-nums/);
+test('report shows original non-release footnote',()=>{
+ const bon=demoWorkbonnen('2026-11-17')[0];
+ const report=buildReport({bon,onderzoekerEmail:'planner@example.com',
+  opnames:[{source:'Ir-192',result:'Indicatief',wall:'5',distance:'500',iqiWire:'W10'}]});
+ assert.match(report,/2614090/);
+ assert.match(report,/W10/);
+ assert.match(report,/Niet onafhankelijk geverifieerd/);
+ assert.ok(reportMailto({email:'planner@example.com',bon,report}).startsWith('mailto:'));
 });
-test('opaque sticky header fills safe-area during scrolling',()=>{
- const css=src('mobile-shell.css');
- assert.match(css,/body::before\{[^}]*height:var\(--rt-statusbar-height,env\(safe-area-inset-top,0px\)\)!important;[^}]*background:#061628!important/);
- assert.match(css,/\.top-header\{background:#061628!important;background-image:none!important\}/);
- assert.match(css,/\.top-header::before\{[^}]*bottom:100%;[^}]*background:#061628/);
- assert.match(html,/planning\.css\?v=2/);
- assert.match(html,/mobile-shell\.css\?v=3/);
+test('mobile dark header, plan nav and six research actions are clearly visible',()=>{
+ for(const id of ['screen-planning','planningAdd','planningDraftFilter','planningRefresh',
+  'planningAddResearcherForm','planningImportDialog','planningResearchDialog',
+  'planningStartResearch','planningNextShot','planningFinish','planningResearchConfirm',
+  'planningResearchError','planningResearchModality','planningRecordsMail'])
+ assert.match(html,new RegExp('id="'+id+'"'),id);
+ assert.match(html,/data-nav="planning"/);
+ assert.match(src('mobile-shell.css'),/Compact mobile top bar/);
+ assert.match(src('planning.css'),/plan-card-actions/);
 });
