@@ -1,7 +1,7 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='ndt-radiography-pro-shared-workbon-20261117-v9';
+const CACHE='ndt-radiography-pro-workspace-20261117-v10';
 const BLOCKED_PRIVATE_IMAGES=new Set(['smart-225b.webp','smart-225-d7.webp','smart-200pc-d7.webp','smart-160-d7.webp','smart-200-d7.webp','smart-200pc-new-d7.webp','smart-225-yxlon-d7.webp','smart-300hp-d7.webp','smart-300pc-d7.webp','weld-details.webp']);
-const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css','./mobile-shell.css','./mobile-shell.mjs','./planning.css','./planning-app.mjs','./planning-api.mjs','./planning-data.mjs','./workbon-reader.mjs','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs','./rt-enhancements.mjs','./rt-enhancements.css','./locales/nl.json','./locales/en.json','./locales/de.json',
+const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css','./mobile-shell.css','./mobile-shell.mjs','./planning.css','./planning-app.mjs','./planning-api.mjs','./usage-tracker.mjs','./company-charts.mjs','./desktop-workspace.mjs','./desktop-workspace.css','./planning-data.mjs','./workbon-reader.mjs','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs','./rt-enhancements.mjs','./rt-enhancements.css','./locales/nl.json','./locales/en.json','./locales/de.json',
  './research/company-suite/index.html','./research/company-suite/styles.css','./research/company-suite/mobile-company.css',
  './research/company-suite/company-app.mjs','./research/company-suite/project-config.mjs',
  './research/company-suite/supabase-rest.mjs','./research/company-suite/offline-cache.mjs',

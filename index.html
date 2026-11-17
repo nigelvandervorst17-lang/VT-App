@@ -163,7 +163,8 @@
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
 <link rel="stylesheet" href="./mobile-shell.css?v=4">
-<link rel="stylesheet" href="./planning.css?v=4">
+<link rel="stylesheet" href="./planning.css?v=5">
+<link rel="stylesheet" href="./desktop-workspace.css?v=1">
 <script>
 try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
 catch{document.documentElement.classList.add('ndt-entry-loading')}
@@ -191,6 +192,16 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
     <p>De offline cache blijft versleuteld totdat je die met je aparte wachtzin opent.</p>
   </div>
 </header>
+<nav id="ndtDesktopNav" class="ndt-desktop-nav" aria-label="Navigatie op laptop en pc">
+ <button type="button" data-desk-nav="calc">Rekenen</button>
+ <button type="button" data-desk-nav="planning">Planning</button>
+ <button type="button" data-desk-nav="curves">Grafieken</button>
+ <button type="button" data-desk-nav="refs">Naslag</button>
+ <button type="button" data-desk-nav="ai">AI Expert</button>
+ <button type="button" data-desk-nav="records">Logboek</button>
+ <button type="button" data-desk-nav="help">Handleiding</button>
+ <button type="button" data-desk-nav="settings">Instellingen</button>
+</nav>
 <div id="bootFailure" class="boot-failure" role="alert" hidden>
 <strong>De app is niet volledig gestart</strong>
 <p id="bootFailureDetail">De rekenmodule is niet geladen.</p>
@@ -262,6 +273,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
         <input id="rtMaterialCustomFactor" type="text" inputmode="decimal" placeholder="bijv. 0,85" autocomplete="off">
       </label>
       <p id="rtMaterialSummary" role="status" aria-live="polite">Staal: factor 1,00. Onderzoeksberekening op basis van staal.</p>
+      <p id="rtCopperFactorStatus" class="rt-copper-status" role="status" aria-live="polite" hidden></p>
     </section>
     <div class="rt-compact-pipe" id="rtCompactPipeFields" hidden>
       <div class="rt-compact-pipe-grid">
@@ -468,7 +480,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 </section>
 </section>
 <section class="screen plan-screen" data-screen="planning" id="screen-planning" hidden>
- <div class="plan-heading"><div><p class="overline">GEDEELDE WERKBONNEN</p><h1>Planning</h1><p class="small-muted" id="planningRole">Opdrachten laden…</p></div><div class="plan-heading-actions"><button id="planningRefresh" type="button" title="Ververs gedeelde gegevens" aria-label="Ververs planning">↻</button><button id="planningAdd" type="button" aria-label="Nieuwe werkbon toevoegen" hidden>+</button></div></div>
+ <div class="plan-heading"><div><p class="overline">GEDEELDE WERKBONNEN</p><h1>Planning</h1><p class="small-muted" id="planningRole">Opdrachten laden…</p></div><div class="plan-heading-actions"><button type="button" id="planningHelpButton" data-open-help title="Uitleg over Planning" aria-label="Open de handleiding">?</button><button id="planningRefresh" type="button" title="Ververs gedeelde gegevens" aria-label="Ververs planning">↻</button><button id="planningAdd" type="button" aria-label="Nieuwe werkbon toevoegen" hidden>+</button></div></div>
  <div class="plan-tabs" role="group" aria-label="Planningsfilter">
   <button type="button" data-plan-filter="today" class="active" aria-pressed="true">Vandaag</button>
   <button type="button" data-plan-filter="upcoming" aria-pressed="false">Komende</button>
@@ -476,7 +488,25 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
  </div>
  <label class="plan-search">Zoek werkbon<input id="planningSearch" type="search" placeholder="Zoek op klant, bonnummer of order" autocomplete="off"></label>
  <p id="planningNotice" class="small-muted" role="status" aria-live="polite">Persoonlijke planning laden…</p>
- <section id="planningTeam" class="plan-team" hidden><h2>Onderzoekers toewijzen</h2><p class="small-muted">Onderzoekers maken eerst zelf een account aan. Voeg hun bevestigde e-mailadres hier toe.</p><form id="planningAddResearcherForm"><input id="planningResearcherEmail" type="email" placeholder="onderzoeker@bedrijf.nl" autocomplete="email" required><button type="submit">Onderzoeker toevoegen</button></form><p id="planningTeamStatus" role="status"></p></section>
+ <section id="planningTeam" class="plan-team" hidden>
+ <h2>Onderzoekers kiezen en werkbonnen toewijzen</h2>
+ <p class="small-muted">Kies een bestaande onderzoeker in de keuzelijst. Staat iemand er niet bij? Laat die eerst een account maken en voeg daarna het bevestigde e-mailadres toe.</p>
+ <label for="planningMemberPicker">Kies onderzoeker / filter werkbonnen
+ <select id="planningMemberPicker"><option value="">Alle onderzoekers</option></select></label>
+ <p id="planningMemberHint" class="small-muted">Selecteer een naam om alleen diens werkbonnen te tonen. In elke werkbon staat ook een snelle toewijslijst.</p>
+ <form id="planningAddResearcherForm"><input id="planningResearcherEmail" type="email" placeholder="nieuw-onderzoeker@bedrijf.nl" autocomplete="email" required><button type="submit">Onderzoeker toevoegen</button></form>
+ <p id="planningTeamStatus" role="status"></p>
+</section>
+<section id="planningUsage" class="plan-usage" hidden aria-label="Appgebruik">
+ <div class="plan-usage-heading"><h2>Hoeveel mensen gebruiken de app?</h2><button type="button" id="planningUsageRefresh">Vernieuwen</button></div>
+ <div class="plan-usage-grid">
+  <div><strong id="usageRegistered">—</strong><span>Bevestigde accounts</span></div>
+  <div><strong id="usageToday">—</strong><span>Vandaag actief</span></div>
+  <div><strong id="usageWeek">—</strong><span>Laatste 7 dagen</span></div>
+  <div><strong id="usageMonth">—</strong><span>Laatste 30 dagen</span></div>
+ </div>
+ <p id="usageHelp" class="small-muted" role="status">Unieke ingelogde accounts per periode. Anonieme proefgebruikers worden niet gemeten; dit is geen totaal bezoekersaantal. Geen locatie of persoonlijk surfgedrag.</p>
+</section>
  <div id="planningDayList" class="plan-day-list"></div>
  <details class="plan-library"><summary>Procedure-bibliotheek · Bekijk en voeg procedures toe</summary>
   <p class="small-muted">Proceduregegevens vullen bestaande invoervelden alleen vooraf in; geen technische goedkeuring of RT-vrijgave.</p>
@@ -514,7 +544,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <label>Procedurecode<input name="procedure_code" maxlength="70"></label>
   <label>Revisie<input name="revisie" maxlength="20"></label>
   <label>Overige gegevens / opmerkingen<textarea name="opmerkingen" rows="3" maxlength="2000"></textarea></label>
-  <label>Onderzoeker toewijzen<select name="assigned_to" id="planningAssignee"><option value="">Nog niet toegewezen · Concept</option></select></label>
+  <label>Onderzoeker toewijzen (keuzelijst)<select name="assigned_to" id="planningAssignee"><option value="">Kies een onderzoeker · Concept zonder toewijzing</option></select></label>
   <p class="small-muted plan-form-note">Planning voert geen geometrie, techniek, wanddikte, SFD of activiteit in. Die kiest de onderzoeker op het rekenscherm.</p>
   <div class="plan-import-actions"><button type="submit" id="planningSaveBon">Werkbon / Concept opslaan</button><button id="planningCancel" type="button">Annuleren</button></div>
  </form>
@@ -560,7 +590,27 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <section class="screen" data-screen="curves" id="screen-curves" hidden><div class="section-heading"><p class="overline" data-i18n="traceable">HERLEIDBAAR</p><h1 data-i18n="curves">Grafieken & dekking</h1><p class="subtitle" data-i18n="curvesSub">Welke onderzoeksgegevens zijn beschikbaar — en waar blokkeren we?</p></div><div class="panel"><strong data-ui-i18n="interactiveCurves">Interactieve belichtingscurves</strong><p class="small-muted" data-ui-i18n="curvesIntro">D4, D5 en D7 voor Se-75 en Ir-192. Niet voor echte RT-belichtingen vrijgegeven.</p><a class="outline-button" style="display:block;text-align:center;text-decoration:none;min-height:48px" href="./curveatlas.html" data-ui-i18n="openCurveAtlas">Open interactieve curveatlas</a><a class="outline-button" style="display:block;text-align:center;text-decoration:none;min-height:48px" href="./curveatlas.pdf" data-ui-i18n="openPdfAtlas">Open curveatlas als PDF</a></div><div class="panel ft-curve-link"><h2>Werkelijk gemeten filmzwarting</h2>
   <p class="small-muted">Echte densitometerregistraties blijven gescheiden van niet-gevalideerde reken- en referentiecurves. <strong id="ftCurveCount">Nog geen fysieke filmtesten geregistreerd.</strong></p>
   <button type="button" class="outline-button" id="ftCurveOpen">Open Praktijkmetingen in Records</button>
-  <p class="small-muted">Praktijkpunten worden pas met curves vergeleken als werkelijke opnamecondities en de herkomst bekend zijn. Geen automatische kalibratie.</p></div><div class="panel" id="curveList"></div><div class="panel" id="curvePreviewPanel"><h2 data-i18n="curvePreview">Grafiekvoorbeeld</h2>
+  <p class="small-muted">Praktijkpunten worden pas met curves vergeleken als werkelijke opnamecondities en de herkomst bekend zijn. Geen automatische kalibratie.</p></div><section id="companyChartsPanel" class="company-charts-panel" aria-labelledby="companyChartsHeading">
+ <div class="company-charts-title"><div><h2 id="companyChartsHeading">Privé-bedrijfsgrafieken</h2>
+ <p class="small-muted">Planning of de bedrijfsbeheerder kan eigen grafiek-PDF's en afbeeldingen privé opslaan. Alleen geautoriseerde collega's kunnen ze lezen; ze worden <strong>nooit</strong> aan de rekenmachine gekoppeld.</p></div>
+ <button id="companyChartsRefresh" type="button">Vernieuwen</button></div>
+ <p id="companyChartsStatus" role="status" aria-live="polite">Log in om bedrijfsreferenties te laden.</p>
+ <div id="companyChartsList" class="company-charts-list"></div>
+ <details id="companyChartsUploadPanel" class="company-charts-upload" hidden>
+  <summary>+ Belichtingsgrafiek privé toevoegen</summary>
+  <form id="companyChartsUploadForm" class="company-charts-form">
+   <label>Bedrijfsmap<select id="companyChartScope"></select></label>
+   <label>Naam grafiek<input id="companyChartTitle" required maxlength="120" placeholder="Bijv. Toestel 300D - D4"></label>
+   <label>Bron of toestel<input id="companyChartDevice" maxlength="120" placeholder="Model / bron"></label>
+   <label>Revisie<input id="companyChartRevision" maxlength="40" placeholder="Rev. 01"></label>
+   <label>Document (PDF / JPG / PNG / WEBP)<input type="file" id="companyChartFile" accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp" required></label>
+   <label>Herkomst / opmerking<textarea id="companyChartNote" rows="3" maxlength="500" placeholder="Fabrikant, datum, scherm, film, condities"></textarea></label>
+   <p class="small-muted">Max. 12 MB. Upload alleen bestanden waarvoor je het gebruiksrecht hebt. Privé-Naslag van de eigenaar blijft apart.</p>
+   <button type="submit" id="companyChartUpload">Privégrafiek opslaan</button>
+  </form>
+ </details>
+</section>
+<div class="panel" id="curveList"></div><div class="panel" id="curvePreviewPanel"><h2 data-i18n="curvePreview">Grafiekvoorbeeld</h2>
 <label for="curveDevicePicker" class="ref-label" data-ui-i18n="pickDevice">Kies bron of toestel</label><select id="curveDevicePicker" class="ref-select"></select>
 <div class="rt-chart-options"><label for="curveFilmPicker" data-ui-i18n="chooseFilm">Film</label><select id="curveFilmPicker"><option>D4</option><option>D5</option><option>D7</option></select><label id="curveKvLabel" for="curveKvPicker" data-ui-i18n="chooseKv" hidden>Spanning (kV)</label><select id="curveKvPicker" hidden></select></div>
 <div id="curveSVG" class="curve-svg" tabindex="0" role="img" aria-label="Interactieve referentiegrafiek"></div><p id="curveReadout" class="ref-result" aria-live="polite" data-ui-i18n="tapCurve">Tik op de curve om mm en Ci·h of mA·min af te lezen.</p><button type="button" id="curveUseInCalc" class="outline-button" disabled>Gebruik geselecteerde dikte in Rekenen</button><p class="small-muted">Alleen invoer wordt overgenomen. Bereken zelf opnieuw en controleer de procedure; geen vrijgave.</p><p class="small-muted" data-i18n="curveDisclaimer">Gegenereerd uit gedigitaliseerde onderzoeksdata; geen onafhankelijke validatie.</p></div><div class="panel"><h2 data-i18n="licenseHeading">Herkomst & rechten</h2><p class="small-muted" data-i18n="licenseText">De data zijn afgeleid van fabrikantsdocumenten. Controleer toestemming voor publiek hergebruik; dit is geen OEM-goedkeuring.</p><a href="./PROVENANCE.md" target="_blank" rel="noopener" data-i18n="provenanceFile">Bekijk herkomstbestand</a></div></section>
@@ -932,8 +982,58 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
     </div>
   </details></div>
 </section>
+<section class="screen" data-screen="help" id="screen-help" hidden>
+ <div class="section-heading"><p class="overline">VOLLEDIGE HANDLEIDING</p><h1>Hoe werkt NDT Radiography Pro?</h1><p class="subtitle">Uitleg voor Planning, onderzoekers, laptop/pc en mobiel.</p></div>
+ <div class="help-jump">
+  <button type="button" data-help-target="helpStart">Start &amp; accounts</button>
+  <button type="button" data-help-target="helpPlanner">Planning</button>
+  <button type="button" data-help-target="helpResearch">Onderzoeker</button>
+  <button type="button" data-help-target="helpCopper">Koper &amp; materialen</button>
+  <button type="button" data-help-target="helpCharts">Bedrijfsgrafieken</button>
+  <button type="button" data-help-target="helpSafety">Veiligheid</button>
+ </div>
+ <section class="help-card" id="helpStart"><h2>1 · Starten op telefoon, laptop of pc</h2>
+  <p>Open dezelfde URL in Chrome, Edge, Firefox of Safari. Op laptop/pc verschijnt bovenaan een brede navigatiebalk; op telefoon gebruik je de onderste navigatie en <strong>Meer</strong>. De app is een website, dus installeren is niet verplicht. Voor mobiel offline rekenen kun je de website aan je beginscherm toevoegen.</p>
+  <p><strong>Account:</strong> kies Inloggen of Nieuw account aanmaken, bevestig je e-mail en meld je aan. De gratis proefversie biedt een lokale rekenomgeving. Gedeelde werkbonnen vereisen internet en een toegewezen rol.</p>
+  <button type="button" data-open-screen="planning">Open Planning</button>
+ </section>
+ <section class="help-card" id="helpPlanner"><h2>2 · Planning: werkbon invoeren en toewijzen</h2>
+  <p>Log in als Planning. Druk op <strong>+</strong>, kies een PDF of foto. De app leest de tekst lokaal en probeert de velden automatisch te herkennen via de ingestelde Gemini Worker na de beveiligingscontrole. Controleer bonnummer, klant, adres, datum, tijden, toestel, procedure en revisie. Onzekere velden mogen leeg blijven.</p>
+  <p>Vul het e-mailadres van een bestaande, bevestigde onderzoeker eenmalig in bij <strong>Onderzoeker toevoegen</strong>. Kies daarna diens naam in de keuzelijst bij de bon of rechtstreeks in de bonkaart. Onvolledige bonnen blijven <strong>Concept</strong>; compleet én toegewezen wordt <strong>Ingepland</strong>.</p>
+  <p>De originele PDF/foto wordt privé opgeslagen bij de werkbon. Via Originele bon kan een bevoegde gebruiker het bestand opnieuw openen. Planning kan de status en opnames volgen. Bij Gereed kan Planning administratief afronden en een mailconcept laten genereren.</p>
+  <p><strong>Gebruiksstatistieken:</strong> de vier tellers op Planning tellen unieke ingelogde accounts. Proefgebruik zonder login telt niet mee.</p>
+ </section>
+ <section class="help-card" id="helpResearch"><h2>3 · Onderzoeker: van werkbon naar opname</h2>
+  <p>Open Planning, kies je toegewezen werkbon en druk op <strong>Start onderzoek</strong>. Stel geometrie, techniek, wanddikte, SFD/FFD en broninstelling zelf in. Geen van deze waarden wordt door Planning of Gemini geraden. Controleer ook het juiste toestelmodel, filmtype, IQI-positie, kwaliteitseis en werkelijke doorstraalde dikte.</p>
+  <p>Klik <strong>Berekenen</strong> om de bestaande onderzoeksberekening uit te voeren. Lees foutmeldingen en veiligheidsblokkades. Alleen na een geldige berekening verschijnt <strong>Opslaan bij werkbon</strong>. Voor een volgende opname kun je binnen dezelfde bon instellingen behouden. Bij een andere bon moet je de technische gegevens opnieuw controleren en invoeren.</p>
+  <p>Na de laatste opgeslagen opname kies je <strong>Meld gereed</strong>. Planning ziet dan de voortgang en onderzoeksresultaten.</p>
+  <button type="button" data-open-screen="calc">Open Rekenen</button>
+ </section>
+ <section class="help-card" id="helpCopper"><h2>4 · Materiaalcorrectie: koper</h2>
+  <p>In Rekenen kies je onder <strong>Materiaal</strong> de tegel <strong>Koper</strong>. De bestaande voorgestelde onderzoeksfactoren zijn Gamma <strong>1,12</strong> en X-ray <strong>1,50</strong>. De app toont de equivalente staal-dikte en gebruikt uitsluitend de bestaande onderzoeksrekenmotor.</p>
+  <p>Voorbeeld: 10 mm koper wordt in de Gamma-onderzoeksvergelijking 11,2 mm Fe-equivalent; bij X-ray 15 mm. Dit zijn <strong>niet onafhankelijk gevalideerde, energie-afhankelijke onderzoeksfactoren</strong>. Wanneer het equivalente resultaat buiten het beschikbare curvebereik valt, blijft de veiligheidsblokkade actief. Geen automatische vrijgave voor echt werk.</p>
+ </section>
+ <section class="help-card" id="helpCharts"><h2>5 · Bedrijfsgrafieken privé uploaden</h2>
+  <p>Open <strong>Meer → Grafieken</strong>. In <strong>Privé-bedrijfsgrafieken</strong> kan Planning grafieken voor het Planning-team uploaden; de bedrijfsbeheerder met een actief bedrijfsaccount kan grafieken voor zijn bedrijf uploaden. Kies map, naam, toestel, revisie en bestand (PDF/JPG/PNG/WEBP).</p>
+  <p>Het document staat in een <strong>privé Supabase-bucket</strong>, niet in GitHub of de publieke Naslag. Alleen bevoegde leden van de map kunnen het zien. Privé-Naslag blijft uitsluitend toegankelijk voor het ingestelde eigenaarsaccount. Geüploade documenten zijn naslag en worden <strong>niet automatisch gebruikt voor belichtingsberekeningen</strong>.</p>
+  <button type="button" data-open-screen="curves">Open Grafieken</button>
+ </section>
+ <section class="help-card" id="helpSafety"><h2>6 · Veiligheid, privacy, data en hulp bij problemen</h2>
+  <p>Alle belichtingstijden, staal-equivalenten en IQI-resultaten zijn onderzoeksondersteuning. De app vervangt geen geldige RT-procedure, gekalibreerde brongegevens, afzettingsberekening, stralingsbescherming of deskundige vrijgave. Een broncurve wordt niet automatisch goedgekeurd na upload.</p>
+  <p>Werkbonnen en onderzoeksopnames worden per toegewezen account centraal opgeslagen. De originele bestanden blijven privé. PDF-fotoherkenning gebruikt lokale tekstextractie; de herkende tekst kan via Cloudflare naar Google Gemini gaan. Upload uitsluitend werkbonnen waarvan verwerking door derden is toegestaan.</p>
+  <p>Als een wijziging op mobiel niet zichtbaar is, sluit de app volledig en open opnieuw. Controleer internet, e-mailbevestiging en je rol als Planning of Onderzoeker. De app rekent offline met eerder geladen gegevens, maar gedeelde werkbonnen en privébedrijfsgrafieken werken alleen online.</p>
+  <p>De bestaande particuliere lokaal bewaarde records en de 50-rekenproef blijven gescheiden van de nieuwe gedeelde werkbongegevens.</p>
+ </section>
+</section>
 <section class="screen" data-screen="settings" id="screen-settings" hidden><div id="ndtSettingsLinks" class="panel"><strong>Meer hulpmiddelen</strong></div><div class="section-heading"><p class="overline" data-i18n="preferences">VOORKEUREN</p><h1 data-i18n="settings">Instellingen</h1><p class="subtitle" data-i18n="settingsSub">Taal, offline opslag en appversie.</p></div><div class="panel"><div class="row-title"><span data-i18n="appVersion">Versie</span><strong>3.8.6 BETA · AI Expert · Se-75 + Ir-192 D4/D5/D7</strong></div><div class="row-title"><span data-i18n="dataStatus">Data</span><strong data-i18n="notValidated">Niet gevalideerd</strong></div><div class="row-title"><span data-i18n="storageType">Opslag</span><strong data-i18n="localOnly">Alleen lokaal</strong></div><p class="small-muted" data-i18n="storageDesc">De standaardrekenmodule slaat gegevens lokaal op. Als je AI Expert gebruikt, worden je vraag en optioneel geselecteerde RT-invoer via jouw Worker naar Google Gemini verstuurd.</p><button type="button" class="outline-button danger-button" id="eraseAll" data-i18n="eraseAll">Wis alle appgegevens</button></div><div class="panel"><h2 data-i18n="offlineTitle">Offline op iPhone</h2><p class="small-muted" data-i18n="offlineInfo">Open de website eenmaal met internet in Safari en kies Deel → Zet op beginscherm. Voor offline gebruik moeten de bestanden eerder zijn geladen.</p><p class="small-muted" id="onlineStatus" role="status"></p></div><div class="panel"><h2 data-i18n="limitations">Belangrijke grenzen</h2><p data-i18n="limitsText">Deze versie vervangt geen RT-procedure, stralingsbeschermingsplan, certificaatcontrole of goedkeuring door een verantwoordelijke deskundige.</p></div></section>
 </main>
+<dialog id="companyChartPreview" class="company-chart-dialog" aria-labelledby="companyChartPreviewHeading">
+ <h2 id="companyChartPreviewHeading">Privégrafiek bekijken</h2>
+ <p id="companyChartPreviewStatus" role="status">Bestand laden…</p>
+ <img id="companyChartImage" alt="Privé grafiekafbeelding · alleen naslag" hidden>
+ <iframe id="companyChartPdf" title="Privé PDF-grafiek" hidden></iframe>
+ <div class="company-chart-dialog-actions"><a id="companyChartDownload" class="outline-button" download>Document opslaan</a><button type="button" id="companyChartClose">Sluiten</button></div>
+</dialog>
 <div id="stickyOutcome" class="sticky-outcome" role="status" aria-live="polite" hidden>
   <div class="sticky-meta"><strong id="stickyLabel">Berekening · onderzoek</strong><small id="stickyNote">Nog geen berekening</small></div>
   <strong id="stickyTime">—</strong>
@@ -946,7 +1046,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <div id="ndtAssetList"></div>
   <button id="ndtAssetClose" type="button" class="ndt-asset-close">Sluiten</button>
 </dialog>
-<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="planning" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h4"/></svg><span>Planning</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="ai" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5zM8 11h.01M16 11h.01M9 15h6"/></svg><span>AI Expert</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation"><button data-nav="sources" class="nav" type="button">Bronnen</button>
+<nav class="bottom-nav" aria-label="Main navigation"><button data-nav="calc" class="nav active" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 17h2m4 0h2"/></svg><span data-i18n="tabCalc">Rekenen</span></button><button data-nav="planning" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h4"/></svg><span>Planning</span></button><button data-nav="refs" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 10v10M14 10v10"/></svg><span data-i18n="tabRefs">Naslag</span></button><button data-nav="ai" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V9a5 5 0 0 1 5-5zM8 11h.01M16 11h.01M9 15h6"/></svg><span>AI Expert</span></button><button class="nav more-toggle" id="moreToggle" type="button" aria-controls="moreMenu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg><span data-i18n="tabMore">Meer</span></button></nav><div id="moreMenu" class="more-menu" hidden role="group" aria-label="More navigation"><button data-nav="help" class="nav" type="button">Handleiding</button><button data-nav="sources" class="nav" type="button">Bronnen</button>
   <button data-nav="curves" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l5-5 4 3 7-10"/></svg><span data-i18n="tabCurves">Grafieken</span></button>
   <button class="nav" data-nav="tools" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3h8l1 4 4 2v6l-4 2-1 4H8l-1-4-4-2V9l4-2z"></path><circle cx="12" cy="12" r="3"/></svg><span data-ui-i18n="toolsNav">Tools</span></button><button data-nav="records" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM9 10h6M9 14h6M9 18h4"/></svg><span data-i18n="tabRecords">Records</span></button><button data-nav="settings" class="nav" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span data-i18n="tabSettings">Instellingen</span></button></div>
 </div>
@@ -1013,7 +1113,10 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <script type="module" src="./mobile-shell.mjs?v=2"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
-<script type="module" src="./planning-app.mjs?v=2"></script>
+<script type="module" src="./planning-app.mjs?v=3"></script>
+<script type="module" src="./usage-tracker.mjs?v=1"></script>
+<script type="module" src="./company-charts.mjs?v=1"></script>
+<script type="module" src="./desktop-workspace.mjs?v=1"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./compact-layout.mjs?v=418"></script>
 <script type="module" src="./rt-material-ui.mjs?v=419"></script>

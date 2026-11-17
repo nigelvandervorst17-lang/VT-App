@@ -90,6 +90,18 @@ function render(){
   b.setAttribute('aria-pressed',String(active));
  }
  info();renderCard();
+ const copper=$('rtCopperFactorStatus');
+ if(copper){
+  copper.hidden=selectedMaterial!=='Cu';
+  if(selectedMaterial==='Cu'){
+   const cmp=current(),mode=gammaMode()?'Gamma':'X-ray';
+   copper.textContent=cmp.ok?
+    'Koper · '+mode+' · bestaande onderzoeksfactor '+local(cmp.proposedFactor)+
+    ' · '+local(cmp.wallMm)+' mm Cu ≈ '+local(cmp.equivalentSteelMm)+
+    ' mm Fe-equivalent. Niet gevalideerd; controleer energie, curvebereik en procedure.':
+    'Koper · '+mode+': staal-equivalent niet beschikbaar bij deze invoer of buiten het ondersteunde curvebereik. Geen belichtingsvrijgave.';
+  }
+ }
 }
 function choose(material){
  if(!allowed.has(material))return;
@@ -101,8 +113,10 @@ function choose(material){
   original.dispatchEvent(new Event('change',{bubbles:true}));
  }
  render();
- // Gamma has an existing debounced auto-update; trigger an immediate X-ray update.
- if(!gammaMode())$('calculate')?.click();
+ // Reuse the ORIGINAL guarded calculator on copper selection (gamma or X-ray).
+ // The existing steel-equivalence factors and safety validation stay authoritative.
+ if(material==='Cu'&&!$('screen-calc')?.hidden)$('calculate')?.click();
+ else if(!gammaMode())$('calculate')?.click();
 }
 function init(){
  const selector=$('material'),panel=$('rtMaterialChoices'),result=$('rtMaterialResult');

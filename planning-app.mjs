@@ -4,13 +4,14 @@
  * No new exposure calculations, IQI acceptance, material factors or safety shortcuts.
  */
 import {makePlanningAPI} from './planning-api.mjs';
+import {makeUsageClient} from './usage-tracker.mjs';
 import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
  localISODate,buildReport,reportMailto,NO_RT_RELEASE} from './planning-data.mjs';
 import {extractBonText,parseBonViaGemini,setupBonTurnstile} from './workbon-reader.mjs';
 
 const $=id=>document.getElementById(id);
 const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],
- filter:'today',search:'',activeId:null,setupBonId:null,setupReady:false,
+ filter:'today',search:'',assigneeFilter:'',activeId:null,setupBonId:null,setupReady:false,
  selectedId:null,editingId:null,pendingFile:null,pendingText:'',readGeneration:0,
  processing:false,loading:false,procedureList:proceduresForStore([])};
 const $text=(id,value)=>{if($(id))$(id).textContent=String(value??'');};
@@ -56,6 +57,7 @@ async function refreshPlanning(){
   notice(state.role==='planning'?
    'Planning · centraal opgeslagen. Wijs bestaande, bevestigde accounts aan een werkbon toe.':
    'Mijn toegewezen werkbonnen · gedeeld tussen computer en telefoon.');
+  if(state.role==='planning')void refreshUsageStats();
  }catch(e){
   clearUserData();
   // Trial users can inspect the two sample orders but cannot publish private data.
@@ -82,15 +84,37 @@ function renderProcedures(){
   box.append(card);
  }
 }
+async function refreshUsageStats(){
+ if(!activeRole('planning'))return;
+ try{
+  $text('usageHelp','Geverifieerde gebruikersaantallen laden…');
+  const result=await makeUsageClient().summary();
+  if(!activeRole('planning'))return;
+  const val=key=>Number.isFinite(Number(result?.[key]))?Number(result[key]).toLocaleString('nl-NL'):'—';
+  $text('usageRegistered',val('registered'));
+  $text('usageToday',val('today'));
+  $text('usageWeek',val('seven_days'));
+  $text('usageMonth',val('thirty_days'));
+  $text('usageHelp','Unieke bevestigde ingelogde accounts; vandaag, laatste 7 en 30 dagen. Anonieme proefgebruikers worden niet meegeteld. Geen IP-adressen of locaties.');
+ }catch(e){$text('usageHelp','Statistieken niet beschikbaar: '+errorText(e)+'. Alleen Planning mag deze bekijken.');}
+}
 function renderMembership(){
  const planning=activeRole('planning');
- $('planningTeam').hidden=!planning;$('planningAdd').hidden=!planning;
- $('planningDraftFilter').hidden=!planning;
+ $('planningTeam').hidden=!planning;$('planningUsage').hidden=!planning;
+ $('planningAdd').hidden=!planning;$('planningDraftFilter').hidden=!planning;
  $('planningProcedureForm').querySelector('button[type="submit"]').disabled=!planning;
  $text('planningRole',planning?'Planning · bonnen aanmaken/toewijzen':
   activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':'Voorbeeldplanning');
- const list=state.members.filter(m=>m.role==='researcher');
- $text('planningTeamStatus',list.length?list.map(m=>m.email).join(' · '):
+ const list=state.members.filter(m=>m.role==='researcher').sort((a,b)=>a.email.localeCompare(b.email,'nl'));
+ const picker=$('planningMemberPicker');
+ if(picker){
+  const selected=state.assigneeFilter;
+  picker.replaceChildren(new Option('Alle onderzoekers',''));
+  for(const member of list)picker.add(new Option(member.email,member.user_id));
+  picker.value=list.some(m=>m.user_id===selected)?selected:'';
+  if(picker.value!==selected)state.assigneeFilter='';
+ }
+ $text('planningTeamStatus',list.length?list.length+' onderzoeker(s) beschikbaar. Kies iemand in de dropdown of direct op een werkbon.':
   'Nog geen onderzoekers toegevoegd. Voeg een bevestigd account toe.');
 }
 function timeText(bon){const d=bonData(bon);return (d.starttijd||'--:--')+' – '+(d.eindtijd||'--:--');}
@@ -134,7 +158,29 @@ function renderCard(bon){
  if(activeRole('planning')){
   const assigned=state.members.find(m=>m.user_id===bon.assigned_to);
   actions.append(elem('small','plan-assignee',assigned?'Onderzoeker: '+assigned.email:'Nog niet toegewezen'));
-  actions.append(action('Controleer / wijs toe',()=>openBonDialog(bon),'plan-edit'));
+  const pickerWrap=elem('div','plan-quick-assign');
+  const label=elem('label','','Snel onderzoeker toewijzen');
+  const select=elem('select');select.setAttribute('aria-label','Kies onderzoeker voor bon '+idLabel(bon));
+  select.append(new Option('Niet toegewezen · Concept',''));
+  for(const member of state.members.filter(m=>m.role==='researcher').sort((a,b)=>a.email.localeCompare(b.email,'nl'))){
+   select.add(new Option(member.email,member.user_id));
+  }
+  select.value=bon.assigned_to||'';
+  if(!['Concept','Ingepland'].includes(bon.status)){
+   select.disabled=true;select.title='Wijzig geen onderzoeker tijdens of na uitvoering';
+  }
+  select.addEventListener('change',async()=>{
+   const previous=bon.assigned_to||'',next=select.value||null;
+   select.disabled=true;
+   try{
+    const saved=await state.client.saveBon({id:bon.id,values:bonData(bon),assignedTo:next,status:bon.status});
+    state.bons=state.bons.map(item=>item.id===saved.id?saved:item);
+    notice('Bon '+idLabel(saved)+' toegewezen: '+(state.members.find(m=>m.user_id===saved.assigned_to)?.email||'geen onderzoeker')+' · '+saved.status);
+   }catch(e){select.value=previous;notice('Toewijzen mislukt: '+errorText(e),true);}
+   finally{render();}
+  });
+  pickerWrap.append(label,select);actions.append(pickerWrap);
+  actions.append(action('Bon controleren / wijzigen',()=>openBonDialog(bon),'plan-edit'));
   if(bon.status==='Gereed')
    actions.append(action('Afronden & Mail rapportage',()=>finalizeBon(bon),'plan-complete'));
  }else if(activeRole('researcher')){
@@ -152,6 +198,7 @@ function renderAgenda(){
  const list=$('planningDayList');list.replaceChildren();
  const date=localToday();
  const matches=state.bons.filter(b=>{
+  if(state.assigneeFilter&&activeRole('planning')&&b.assigned_to!==state.assigneeFilter)return false;
   if(state.filter==='draft')return b.status==='Concept';
   if(state.filter==='done')return b.status==='Gereed'||b.status==='Afgerond';
   if(b.status==='Concept'||b.status==='Afgerond'||b.status==='Gereed')return false;
@@ -568,6 +615,13 @@ function init(){
  });
  $('planningOpenTop')?.addEventListener('click',()=>planningNav?.click());
  $('planningRefresh')?.addEventListener('click',()=>void refreshPlanning());
+ $('planningUsageRefresh')?.addEventListener('click',()=>void refreshUsageStats());
+ $('planningMemberPicker')?.addEventListener('change',event=>{
+  state.assigneeFilter=event.target.value||'';
+  renderAgenda();
+  $text('planningMemberHint',state.assigneeFilter?'Werkbonnen gefilterd op de geselecteerde onderzoeker. Kies Alle onderzoekers om het filter te wissen.':
+   'Je ziet alle onderzoekers. Via de dropdown op elke werkbon kun je direct toewijzen.');
+ });
  $('planningAdd')?.addEventListener('click',()=>openBonDialog());
  $('planningAddResearcherForm')?.addEventListener('submit',addResearcher);
  document.querySelectorAll('[data-plan-filter]').forEach(b=>b.addEventListener('click',()=>{

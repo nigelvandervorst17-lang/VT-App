@@ -1,0 +1,106 @@
+/* Desktop / tablet / mobile ergonomic workspace. No calculation logic. */
+.ndt-desktop-nav{display:none}
+.help-card{margin:14px 0;padding:16px;border-radius:13px;background:#122d42;border:1px solid #315a77;color:#eef7ff}
+.help-card h2{font-size:16px;line-height:1.45;margin:0 0 10px;color:#eaf6ff}
+.help-card p{font-size:13px;line-height:1.75;color:#c9dcea;margin:9px 0}
+.help-card strong{color:#fff}
+.help-card button{background:#16669b;color:white;border:1px solid #76b1d4;border-radius:10px;min-height:44px;padding:9px 12px;font-size:13px;font-weight:800}
+.help-card{scroll-margin-top:calc(110px + var(--rt-statusbar-height,0px))}
+.help-jump{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+.help-jump button{flex:1 1 122px;background:#174868;color:#f2f7ff;border:1px solid #5181a0;border-radius:10px;padding:10px 7px;font-size:12px;min-height:43px;font-weight:780}
+.plan-usage{background:#132f45;border:1px solid #385f7a;border-radius:14px;padding:14px;margin:13px 0}
+.plan-usage[hidden]{display:none!important}
+.plan-usage-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.plan-usage h2{font-size:15px;line-height:1.4;margin:0}
+.plan-usage-heading button{min-height:38px;background:#215777;border:1px solid #6fa2c0;border-radius:9px;color:white;padding:8px 10px}
+.plan-usage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:13px 0}
+.plan-usage-grid>div{border:1px solid #365970;background:#0e2638;border-radius:10px;padding:11px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.plan-usage-grid strong{font-size:25px;color:#d5f4ff;font-variant-numeric:tabular-nums}
+.plan-usage-grid span{font-size:11px;line-height:1.4;color:#b0ccdc}
+.plan-usage p{font-size:11px;line-height:1.55}
+.plan-team>label{display:block;margin:10px 0;font-size:12px;font-weight:800;color:#d1eaff}
+#planningMemberPicker{display:block;width:100%;min-height:49px;margin-top:7px;padding:9px 12px;border-radius:10px;background:#1b4862;color:#fff;border:1px solid #79a5bf;font-size:14px}
+.plan-quick-assign{display:grid;gap:5px;width:100%;max-width:440px}
+.plan-quick-assign label{font-size:11px;font-weight:740;color:#c9e1f0}
+.plan-quick-assign select{min-height:39px;max-width:100%;padding:8px;border:1px solid #5893b1;border-radius:9px;background:#20526b;color:#fff;font-size:12px}
+.plan-quick-assign small{font-size:11px;color:#adc8d7}
+.company-charts-panel{margin:16px 0;padding:15px;background:#123149;border-radius:15px;border:1px solid #3c7596}
+.company-charts-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.company-charts-title h2{font-size:17px;margin:0 0 8px;color:#f2f9ff}
+.company-charts-title p{font-size:12px;line-height:1.6;margin:0}
+.company-charts-title button,.company-charts-form button{min-height:41px;background:#126697;color:white;border:1px solid #6babc9;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:790}
+#companyChartsStatus{font-size:11px;margin:12px 0;padding:10px;background:#143e56;border-radius:9px;line-height:1.5}
+#companyChartsStatus[data-error="true"]{background:#5a282c;color:#ffe9e4}
+.company-charts-list{display:grid;gap:10px;margin-bottom:12px}
+.company-chart-row{padding:12px;background:#0d293c;border:1px solid #345a73;border-radius:12px;display:grid;gap:5px}
+.company-chart-row strong{font-size:13px;overflow-wrap:anywhere}
+.company-chart-row small{font-size:11px;line-height:1.4;color:#bbd5e6}
+.company-chart-row button{justify-self:start;min-height:43px;font-size:12px;padding:9px 12px}
+.company-charts-upload{border-top:1px solid #3f657c;margin-top:15px;padding-top:14px}
+.company-charts-upload[hidden]{display:none!important}
+.company-charts-upload summary{font-size:13px;font-weight:830;min-height:35px;cursor:pointer}
+.company-charts-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.company-charts-form label{font-size:12px;font-weight:750;min-width:0}
+.company-charts-form input,.company-charts-form select,.company-charts-form textarea{display:block;width:100%;min-width:0;box-sizing:border-box;min-height:42px;border-radius:9px;padding:9px;background:#1c415b;border:1px solid #5f87a2;color:white;font-size:13px;margin-top:6px;font-family:inherit}
+.company-charts-form .small-muted,.company-charts-form button{grid-column:1/-1}
+.company-charts-form p{line-height:1.5}
+.company-chart-dialog{width:min(750px,95vw);max-height:90dvh;overflow:auto;background:#092539;color:#f2f7ff;border:1px solid #5284a1;border-radius:15px;padding:15px}
+.company-chart-dialog::backdrop{background:#000c}
+.company-chart-dialog h2{font-size:17px}
+.company-chart-dialog p{font-size:12px;line-height:1.5}
+.company-chart-dialog img{max-width:100%;height:auto;display:block;margin:8px auto}
+.company-chart-dialog iframe{width:100%;height:min(65dvh,700px);border:0;background:white}
+.company-chart-dialog [hidden]{display:none!important}
+.company-chart-dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+.company-chart-dialog-actions a,.company-chart-dialog-actions button{display:inline-block;padding:10px 15px;min-height:42px;background:#216285;color:white;border:1px solid #6b9ab5;border-radius:9px;font-size:13px;text-decoration:none;cursor:pointer}
+@media(min-width:720px){
+ .app-shell{max-width:880px!important;width:calc(100% - 24px)!important;margin:0 auto}
+ .plan-usage-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .company-charts-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .help-card{padding:20px 23px}
+ .help-card p{font-size:14px}
+}
+@media(min-width:940px){
+ html,body{width:100%;background:#061628}
+ .app-shell{max-width:1200px!important;width:calc(100% - 40px)!important;margin:0 auto;box-shadow:0 0 36px #020c1a60}
+ .app-shell .top-header{position:sticky!important;top:var(--rt-statusbar-height,0px)!important;z-index:200!important;min-height:70px!important;padding:8px 19px!important;border-bottom:1px solid #315a73;background:#061628!important}
+ .app-shell .top-header .brand,.app-shell .top-header .ndt-brand-banner{max-width:250px!important}
+ .app-shell .top-header .ndt-brand-banner{height:50px!important}
+ .ndt-desktop-nav{display:flex;position:sticky;top:calc(var(--rt-statusbar-height,0px) + 70px);z-index:198;gap:6px;align-items:center;flex-wrap:wrap;padding:10px 18px;background:#0c2a40;border-bottom:1px solid #476b84;box-shadow:0 7px 19px #0016}
+ .ndt-desktop-nav button{flex:1 1 auto;min-height:45px;min-width:95px;padding:10px 13px;background:#183d57;border:1px solid #426d89;border-radius:9px;color:#e0f3ff;font-size:13px;font-weight:780;cursor:pointer;white-space:nowrap}
+ .ndt-desktop-nav button.active,.ndt-desktop-nav button[aria-current="page"]{background:#126ba1;border-color:#80b9df;color:white}
+ .bottom-nav{display:none!important}
+ .more-menu{display:none!important}
+ .app-shell main{padding-left:16px;padding-right:16px}
+ .plan-screen{width:100%;max-width:1140px;margin:0 auto;box-sizing:border-box;padding:19px 18px 65px}
+ .plan-heading h1{font-size:29px}
+ .plan-row{grid-template-columns:125px minmax(0,1fr) 95px;padding:16px;gap:16px}
+ .plan-hours{min-width:120px;font-size:12px}
+ .plan-open strong{font-size:16px}
+ .plan-open small{font-size:12px}
+ .plan-status{font-size:11px}
+ .plan-day-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .plan-date-header{grid-column:1/-1}
+ .plan-team,.plan-usage,.plan-library,.plan-day-logs{margin:18px 0}
+ .plan-bon-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .plan-import-dialog{width:min(730px,92vw);max-width:730px}
+ .help-jump{max-width:1140px;margin:16px auto}
+ #screen-help{max-width:1120px;margin:0 auto}
+ .help-card{margin:16px 0}
+ #stickyOutcome{bottom:16px!important;border-radius:12px;width:min(650px,85%)!important;left:50%}
+ .app-shell{padding-bottom:40px!important}
+ .company-charts-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .company-charts-panel{max-width:1140px;margin:18px auto}
+}
+@media(max-width:480px){
+ .company-charts-form{grid-template-columns:1fr}
+ .company-charts-title{flex-wrap:wrap}
+ .plan-usage-grid strong{font-size:21px}
+ .company-chart-dialog{padding:12px}
+}
+
+.rt-copper-status{border:1px solid #b88b44;background:#473a21;color:#fff4cd;border-radius:10px;padding:10px 12px;margin:9px 0;font-size:12px;line-height:1.6;font-weight:720}
+.rt-copper-status[hidden]{display:none!important}
+
+/* Keep the app-login gate in front of the desktop menu as on phones. */
+body.ndt-entry-active .ndt-desktop-nav,html.ndt-entry-loading .ndt-desktop-nav{display:none!important}
