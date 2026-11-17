@@ -100,3 +100,9 @@ body.ndt-naslag-authorized #privateNaslagMessage{display:none!important}
 #privateNaslagMessage p{font-size:13px;margin:7px 0 0}
 #privateNaslagUpload input[type=file]{min-height:48px;display:block;width:100%;padding:12px 9px;border:1px solid #456c84;border-radius:10px;margin:9px 0}
 #privateNaslagUpload button{min-height:46px}
+
+/* Opaque iOS status-bar and sticky header, including safe-area while scrolling. */
+html,body{background-color:#061628}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--rt-statusbar-height,env(safe-area-inset-top,0px))!important;background:#061628!important;z-index:1100!important;pointer-events:none}
+.top-header{background:#061628!important;background-image:none!important}
+.top-header::before{content:"";position:absolute;bottom:100%;left:0;right:0;height:var(--rt-statusbar-height,env(safe-area-inset-top,0px));background:#061628;pointer-events:none}
