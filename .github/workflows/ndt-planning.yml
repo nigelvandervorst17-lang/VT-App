@@ -6,6 +6,12 @@ on:
       - 'planning-app.mjs'
       - 'planning-data.mjs'
       - 'planning-api.mjs'
+      - 'planning-invite.mjs'
+      - 'planning-team-invite.mjs'
+      - 'workbon-offline-sync.mjs'
+      - 'role-workflow.test.mjs'
+      - 'mobile-shell.mjs'
+      - 'mobile-shell.css'
       - 'research/company-suite/supabase-rest.mjs'
       - 'workbon-reader.mjs'
       - 'planning.css'
@@ -29,9 +35,13 @@ jobs:
           node-version: '22'
       - name: Test planning, first-use login, owner-only Naslag and original research UI
         run: |
-          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs
+          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs role-workflow.test.mjs
           node --check planning-data.mjs
           node --check planning-api.mjs
+          node --check planning-invite.mjs
+          node --check planning-team-invite.mjs
+          node --check workbon-offline-sync.mjs
+          node --check mobile-shell.mjs
           node --check planning-app.mjs
           node --check workbon-reader.mjs
           node --check ai-expert.mjs
