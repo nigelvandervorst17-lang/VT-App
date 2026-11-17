@@ -42,6 +42,19 @@ test('Se-75 and Ir-192 use the same D4 film correction, not distinct isotope-spe
  assert.equal(FILM_RESPONSE.minDensity,1.5);
  assert.equal(FILM_RESPONSE.maxDensity,3.2);
 });
+test('D5 and D7: both gamma isotopes share each film response while their source curves remain separate',()=>{
+ for(const film of ['D5','D7']){
+  for(const d of DENSITIES){
+   const se=calculateGamma({...BASE,film,isotope:'Se-75',density:d,thicknessMm:12},curves);
+   const ir=calculateGamma({...BASE,film,isotope:'Ir-192',density:d,thicknessMm:30},curves);
+   assert.ok(se.ok,'Se-75 '+film+' D'+d);
+   assert.ok(ir.ok,'Ir-192 '+film+' D'+d);
+   assert.equal(se.densityFactor,ir.densityFactor,'shared AGFA '+film+' response at D '+d);
+   const expected=densityCorrectionFactor({film,density:d,baseDensity:2});
+   assert.ok(expected.ok);assert.equal(se.densityFactor,expected.factor);
+  }
+ }
+});
 test('The same penetrated thickness always yields the same gamma estimate, irrespective of geometry UI',()=>{
  for(const iso of ['Se-75','Ir-192'])for(const d of DENSITIES){
   const samePipe=run(iso,d,pipeSameThickness.w),samePlate=run(iso,d,plate.w);
@@ -101,6 +114,12 @@ test('Audit: print original calculation output matrix without changing RT source
   console.log('AUDIT_ROW: '+[
    d.toFixed(1),factors[i].toFixed(6),fmt(se),fmt(sePipe),fmt(ir),fmt(irPipe),hhss(wg),dif
   ].join(' | '));
+ }
+ for(const film of ['D5','D7']){
+  const se=calculateGamma({...BASE,film,isotope:'Se-75',density:3.0,thicknessMm:12},curves);
+  const ir=calculateGamma({...BASE,film,isotope:'Ir-192',density:3.0,thicknessMm:30},curves);
+  console.log('AUDIT_OTHER_FILM: '+film+' D=3.0 | Se-75 Fe12='+fmt(se)+' | Ir-192 Fe30='+fmt(ir)+
+    ' | same film factor='+se.densityFactor.toFixed(6));
  }
  console.log('AUDIT_THICKNESS_TEST: 6mm buiswand -> 12mm penetratie = exact dezelfde RT-uitkomst als 12mm plaat; handmatig w overriden wordt direct als penetratiedikte gebruikt.');
  console.log('AUDIT_RELATIVE_D4_FACTOR: Ir-192 D4 bij dezelfde D gebruikt exact dezelfde factor als Se-75 D4; Waygate Ir-192 referentie ontbreekt.');
