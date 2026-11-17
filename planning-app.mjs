@@ -42,6 +42,58 @@ function clearUserData(){
  window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:null,label:''}}));
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
 }
+async function showOfflineSnapshot(){
+ const cache=state.offlineCache;
+ if(!cache)return false;
+ const snapshot=await cache.snapshot();
+ if(!snapshot||snapshot.role!=='researcher')return false;
+ state.client=null;state.role='researcher';state.user={id:cache.userId,email:'Offline · identiteit niet opnieuw online gecontroleerd'};
+ state.bons=snapshot.bons;state.opnames=snapshot.opnames;state.members=[];
+ if(state.activeId&&!state.bons.some(x=>x.id===state.activeId))state.activeId=null;
+ notice('VERSLEUTELDE OFFLINE KOPIE · Toewijzing en brongegevens kunnen verouderd zijn. Opnames gaan pas na online controle naar Planning.');
+ window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:'researcher',label:'Offline werkbonnen · bunker ontgrendeld'}}));
+ render();
+ return true;
+}
+async function flushOfflineOutbox(){
+ if(!state.offlineCache||!state.client||!navigator.onLine||!activeRole('researcher')||!state.user?.id)return;
+ try{
+  const result=await syncWorkbonOutbox({
+   cache:state.offlineCache,client:state.client,bons:state.bons,userId:state.user.id,
+   onProgress:msg=>$text('planningOfflineStatus',msg)
+  });
+  if(result.success){
+   const snap=await state.client.list();
+   state.bons=snap.bons;state.opnames=snap.opnames;
+   await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
+   render();
+  }
+  $text('planningOfflineStatus',result.remaining?
+   result.remaining+' opname(s) nog versleuteld in wachtrij. Ververs bij verbinding.':
+   'Gereed: alle offline onderzoeksopnames centraal gesynchroniseerd.');
+ }catch(e){$text('planningOfflineStatus','Synchronisatie niet voltooid: '+errorText(e));}
+}
+async function unlockOffline(event){
+ event.preventDefault();
+ const passphrase=$('planningOfflinePassphrase').value;
+ $('planningOfflinePassphrase').value='';
+ const onlineVerified=navigator.onLine&&activeRole('researcher')&&Boolean(state.user?.id)&&Boolean(state.client);
+ const userId=onlineVerified?state.user.id:localStorage.getItem(WORKBON_OFFLINE_USER);
+ if(!userId){$text('planningOfflineStatus','Log eerst online in om deze offline cache voor uw account te maken.');return;}
+ try{
+  const cache=await unlockWorkbonCache({userId,passphrase,allowCreate:onlineVerified});
+  state.offlineCache?.close();state.offlineCache=cache;
+  if(onlineVerified){
+   await cache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
+   $text('planningOfflineStatus','Versleuteld offline werkbonnenoverzicht actief. De wachtzin blijft alleen in geheugen.');
+   await flushOfflineOutbox();
+  }else{
+   const ok=await showOfflineSnapshot();
+   if(!ok)throw Error('Nog geen opgeslagen werkbonnen voor dit account. Open online Planning na inloggen.');
+   $text('planningOfflineStatus','Versleutelde offline kopie ontgrendeld. Synchronisatie wacht op internet en accountcontrole.');
+  }
+ }catch(e){state.offlineCache?.close();state.offlineCache=null;$text('planningOfflineStatus','Offline ontgrendelen mislukt: '+errorText(e));}
+}
 async function refreshPlanning(){
  if(state.loading)return;
  state.loading=true;
@@ -59,8 +111,8 @@ async function refreshPlanning(){
   if(state.role==='researcher'){
    localStorage.setItem(WORKBON_OFFLINE_USER,state.user.id);
    if(state.offlineCache&&state.offlineCache.userId===state.user.id){
-    await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
     await flushOfflineOutbox();
+    await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
    }
   }
   window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{
@@ -73,6 +125,7 @@ async function refreshPlanning(){
    'Planning · centraal opgeslagen. Wijs bestaande, bevestigde accounts aan een werkbon toe.':
    'Mijn toegewezen werkbonnen · gedeeld tussen computer en telefoon.');
  }catch(e){
+  if(!navigator.onLine&&state.offlineCache&&await showOfflineSnapshot())return;
   clearUserData();
   // Trial users can inspect the two sample orders but cannot publish private data.
   if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial'){
@@ -651,6 +704,7 @@ function init(){
  $('planningRefresh')?.addEventListener('click',()=>void refreshPlanning());
  $('planningAdd')?.addEventListener('click',()=>openBonDialog());
  $('planningAddResearcherForm')?.addEventListener('submit',addResearcher);
+ $('planningOfflineUnlockForm')?.addEventListener('submit',unlockOffline);
  document.querySelectorAll('[data-plan-filter]').forEach(b=>b.addEventListener('click',()=>{
   state.filter=b.dataset.planFilter;renderAgenda();
  }));
