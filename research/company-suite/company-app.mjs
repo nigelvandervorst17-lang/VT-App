@@ -38,6 +38,15 @@ function updateRole(){
  const admin=state.member?.role==='admin'&&atOnline();
  show('adminTab',admin);show('companySetupPanel',!state.member);
  show('membershipPanel',Boolean(state.member));
+ const filmToggle=$('filmReadOnSite');
+ if(filmToggle){
+  $('filmReadOnSiteSettings').hidden=!state.member;
+  filmToggle.checked=state.company?.film_read_on_site!==false;
+  filmToggle.disabled=!(admin&&typeof state.company?.film_read_on_site==='boolean');
+  $('filmReadOnSiteStatus').textContent=typeof state.company?.film_read_on_site==='boolean'?
+   'Deze instelling is bedrijfsbreed. Alleen de beheerder kan wijzigen.':
+   'Instelling niet beschikbaar totdat de database is bijgewerkt.';
+ }
  show('signOutBtn',Boolean(state.api?.token()));
  if($('tab-admin').hidden===false&&!admin)setTab('field');
  output('membershipSummary',state.member
@@ -141,8 +150,9 @@ async function selectCompany(id){
  state.member=m;state.mode='online';
  output('adminCompanyCode','Bedrijfscode alleen na gecontroleerde aanvraag ophalen.');
  $('staffList').replaceChildren();$('logsList').replaceChildren();
- const companies=await state.api.select('companies',{filters:{id},
-  columns:'id,name,created_at'});
+ let companies;
+ try{companies=await state.api.select('companies',{filters:{id},columns:'id,name,created_at,film_read_on_site'});}
+ catch{companies=await state.api.select('companies',{filters:{id},columns:'id,name,created_at'});}
  state.company=companies[0]??null;
  localStorage.setItem('ndt-last-company-id',id);
  localStorage.setItem('ndt-last-user-id',state.user.id);
@@ -154,6 +164,18 @@ async function selectCompany(id){
   $('loadStaffBtn').click();
  }
 }
+$('filmReadOnSite').addEventListener('change',async e=>{
+ if(!state.member||state.member.role!=='admin'||!atOnline())return;
+ e.target.disabled=true;
+ try{
+  const enabled=e.target.checked;
+  const ok=await state.api.rpc('set_company_film_read_on_site',{p_company_id:state.member.company_id,p_enabled:enabled});
+  if(ok!==true)throw Error('Instelling niet bevestigd.');
+  state.company.film_read_on_site=enabled;
+  notice('Film lezen op locatie: '+(enabled?'Aan':'Uit')+' · bewaard voor dit bedrijf.');
+ }catch(err){e.target.checked=state.company?.film_read_on_site!==false;fail(err);}
+ finally{updateRole();}
+});
 $('companySelect').addEventListener('change',async e=>{
  try{state.cache?.close();state.cache=null;await selectCompany(e.target.value)}
  catch(err){fail(err)}
