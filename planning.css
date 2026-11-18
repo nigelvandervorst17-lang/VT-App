@@ -152,3 +152,16 @@ button:disabled{cursor:not-allowed}
 .plan-route-choice{font-size:12px;font-weight:750;min-height:38px;padding:10px;background:#194966;border:1px solid #558daf;border-radius:9px;color:#f2fbff;text-decoration:none}
 .plan-route-choices .plan-arrival{background:#1b715d}
 .plan-travel-status,.plan-travel-footnote{display:block;width:100%;line-height:1.45;font-size:11px;color:#d4e6ef}
+
+/* Service Record: blank template + on-device signature, no secret files cached. */
+.plan-service-dialog{border:1px solid #507c9a;background:#102d43;color:#f0f8ff;max-width:780px;width:calc(100vw - 18px);max-height:92dvh;overflow:auto;border-radius:16px;padding:16px}
+.plan-service-dialog::backdrop{background:#031222cc}
+.plan-service-dialog h2{margin:0 0 9px;font-size:20px}
+.plan-service-dialog p{line-height:1.45;font-size:12px}
+.plan-service-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.plan-service-dialog label{font-size:12px;font-weight:700;display:block;margin:8px 0}
+.plan-service-dialog input{margin-top:4px;min-height:42px;display:block;width:100%;min-width:0;border:1px solid #5985a0;background:#17394f;color:#fff;border-radius:8px;padding:9px;box-sizing:border-box}
+#serviceRecordSignature{display:block;width:100%;height:150px;touch-action:none;border:1px solid #8caaaf;background:#fff;border-radius:8px}
+.plan-service-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.plan-service-actions button{padding:11px;border-radius:9px;background:#1a638b;color:#fff;border:1px solid #6ea8c7;min-height:42px}
+@media(max-width:640px){.plan-service-fields{grid-template-columns:minmax(0,1fr)}.plan-service-dialog{padding:10px}}

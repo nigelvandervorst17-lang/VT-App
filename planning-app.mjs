@@ -5,6 +5,8 @@
  */
 import {makePlanningAPI} from './planning-api.mjs';
 import {navigationLinks,getTravel,markDeparture,markArrival,travelMinutes} from './planning-travel.mjs';
+import {makeServiceRecord} from './service-record-data.mjs';
+import {generateServiceRecordPdf} from './service-record-pdf.mjs';
 import {buildPlanningTeamInvite} from './planning-team-invite.mjs';
 import {unlockWorkbonCache,WORKBON_OFFLINE_USER,syncWorkbonOutbox} from './workbon-offline-sync.mjs';
 import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
@@ -241,6 +243,75 @@ function routeAction(bon){
  holder.append(inner);return holder;
 }
 
+
+let serviceBonId=null,serviceSigned=false;
+function openServiceRecord(bon){
+ if(!state.user?.id||!['researcher','planning'].includes(state.role))return notice('Meld je aan om een Service Record te maken.',true);
+ serviceBonId=bon.id;serviceSigned=false;
+ const dlg=$('planningServiceRecordDialog'),form=$('planningServiceRecordForm');
+ form.reset();$('serviceRecordContext').textContent='Service Record: '+bonTitle(bon)+' · kies het lege rev.26-7 PDF-sjabloon.';
+ const n=state.opnames.filter(x=>x.bon_id===bon.id).length;
+ $('serviceRecordShots').textContent=n+' gekoppelde RT-opnames. Werkelijk aantal verbruikte films apart invullen.';
+ const canvas=$('serviceRecordSignature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+ $('serviceRecordStatus').textContent='Controleer uren, filmaantallen en klantgegevens vóór ondertekening.';
+ dlg.showModal();
+}
+function initServiceRecord(){
+ const dlg=$('planningServiceRecordDialog'),form=$('planningServiceRecordForm'),canvas=$('serviceRecordSignature');
+ if(!dlg||!canvas||!form)return;
+ const ctx=canvas.getContext('2d');ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#081c2d';
+ let active=false;
+ const xy=event=>{
+  const rect=canvas.getBoundingClientRect();
+  return [(event.clientX-rect.left)*canvas.width/rect.width,(event.clientY-rect.top)*canvas.height/rect.height];
+ };
+ canvas.addEventListener('pointerdown',e=>{
+  if(e.button!==0&&e.pointerType==='mouse')return;
+  e.preventDefault();active=true;serviceSigned=true;
+  const [x,y]=xy(e);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+0.1,y+0.1);ctx.stroke();
+  canvas.setPointerCapture?.(e.pointerId);
+ });
+ canvas.addEventListener('pointermove',e=>{
+  if(!active)return;e.preventDefault();
+  const [x,y]=xy(e);ctx.lineTo(x,y);ctx.stroke();
+ });
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])
+  canvas.addEventListener(type,()=>{active=false;});
+ $('serviceRecordClearSignature').addEventListener('click',()=>{
+  ctx.clearRect(0,0,canvas.width,canvas.height);serviceSigned=false;
+ });
+ $('serviceRecordClose').addEventListener('click',()=>dlg.close());
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const submit=$('serviceRecordGenerate');if(submit.disabled)return;
+  try{
+   if(!['researcher','planning'].includes(state.role)||!state.user?.id)throw Error('Online rol vereist.');
+   const bon=state.bons.find(x=>x.id===serviceBonId);if(!bon)throw Error('Werkbon is niet meer beschikbaar.');
+   if(!serviceSigned)throw Error('Laat de klant tekenen voordat je de PDF maakt.');
+   const template=$('serviceRecordTemplate').files?.[0];if(!template)throw Error('Kies het lege Service Record-sjabloon.');
+   const fields=Object.fromEntries(new FormData(form).entries());
+   for(const name of ['stdHours','ovtLHours','ovtHHours','breakHours','km']){
+    const s=String(fields[name]||'').trim();
+    if(s&&(!/^(?:\d+)(?:[.,]\d+)?$/.test(s)||Number(s.replace(',','.'))<0))
+     throw Error('Vul een geldige niet-negatieve hoeveelheid in bij '+name+'.');
+   }
+   const count=String(fields.filmCount||'').trim();
+   if(count&&!/^(?:0|[1-9]\d*)$/.test(count))throw Error('Filmverbruik moet een geheel getal zijn.');
+   const travel=getTravel(sessionStorage,state.user.id,bon.id);
+   const record=makeServiceRecord({bon,opnames:state.opnames,travel,fields});
+   submit.disabled=true;$('serviceRecordStatus').textContent='Service Record lokaal samenstellen…';
+   const bytes=await generateServiceRecordPdf(template,record,canvas.toDataURL('image/png'));
+   const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+   const a=elem('a');a.href=url;
+   a.download='Service_Record_'+idLabel(bon).replace(/[^A-Za-z0-9_-]/g,'_')+'.pdf';
+   document.body.append(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),30000);
+   $('serviceRecordStatus').textContent='PDF gedownload. Controleer het document en verzend het via de goedgekeurde bedrijfsprocedure.';
+  }catch(error){$('serviceRecordStatus').textContent='PDF niet gemaakt: '+errorText(error);}
+  finally{submit.disabled=false;}
+ });
+}
+
 function renderCard(bon){
  const data=bonData(bon),row=elem('article','plan-row');
  const times=elem('div','plan-hours',timeText(bon));
@@ -255,6 +326,7 @@ function renderCard(bon){
  const actions=elem('div','plan-card-actions');
  if(data.adres)actions.append(routeAction(bon));
  if(bon.original_path)actions.append(originalAction(bon));
+ if(['researcher','planning'].includes(state.role))actions.append(action('Service Record',()=>openServiceRecord(bon),'plan-service'));
  if(activeRole('planning')){
   const assigned=state.members.find(m=>m.user_id===bon.assigned_to);
   actions.append(elem('small','plan-assignee',assigned?'Onderzoeker: '+assigned.email:'Nog niet toegewezen'));
@@ -807,6 +879,7 @@ function context(){
 function init(){
  if(!$('screen-planning'))return;
  window.ndtWorkbonContext=context;
+ initServiceRecord();
  const planningNav=document.querySelector('.bottom-nav [data-nav="planning"]');
  planningNav?.addEventListener('click',()=>{
   state.filter='today';state.search='';$('planningSearch').value='';void refreshPlanning();
