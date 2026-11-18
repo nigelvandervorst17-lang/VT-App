@@ -227,7 +227,7 @@ function initAuth(){
   lockEntry(true,registerButton);status('Accountregistratie verwerken...','busy');
   try{
    const response=await supabase.auth.signUp({email:values.email,password:values.password});
-   if(!response||response.error)throw Error(response?.error?.message||'De registratie werd niet bevestigd door Supabase.');
+   if(!response||response.error)throw Error(response?.error?.message||'De registratie werd niet bevestigd door de registratieserver.');
    status('Account aangemaakt! Controleer je e-mail om te bevestigen.','success');
   }catch(err){status('Registratie mislukt: '+String(err?.message||err),'error');}
   finally{lockEntry(false,registerButton);passwordInput.value='';}

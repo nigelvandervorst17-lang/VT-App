@@ -15,6 +15,16 @@ on:
       - 'research/company-suite/supabase-rest.mjs'
       - 'workbon-reader.mjs'
       - 'planning.css'
+      - 'planning-travel.mjs'
+      - 'planning-travel.test.mjs'
+      - 'service-record-data.mjs'
+      - 'service-record-data.test.mjs'
+      - 'service-record-pdf.mjs'
+      - 'service-record-pdf-loader.mjs'
+      - 'company-domain.mjs'
+      - 'company-domain.test.mjs'
+      - 'rt-field-extras.mjs'
+      - 'rt-field-extras.test.mjs'
       - 'planning.test.mjs'
       - 'ai-expert.mjs'
       - 'sw.js'
@@ -35,7 +45,7 @@ jobs:
           node-version: '22'
       - name: Test planning, first-use login, owner-only Naslag and original research UI
         run: |
-          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs role-workflow.test.mjs
+          node --test planning.test.mjs mobile-shell.test.mjs private-naslag.test.mjs role-workflow.test.mjs planning-travel.test.mjs service-record-data.test.mjs company-domain.test.mjs rt-field-extras.test.mjs
           node --check planning-data.mjs
           node --check planning-api.mjs
           node --check planning-invite.mjs
@@ -43,6 +53,12 @@ jobs:
           node --check workbon-offline-sync.mjs
           node --check mobile-shell.mjs
           node --check planning-app.mjs
+          node --check planning-travel.mjs
+          node --check service-record-data.mjs
+          node --check service-record-pdf.mjs
+          node --check service-record-pdf-loader.mjs
+          node --check company-domain.mjs
+          node --check rt-field-extras.mjs
           node --check workbon-reader.mjs
           node --check ai-expert.mjs
           node --check sw.js

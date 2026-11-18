@@ -38,6 +38,7 @@ function updateRole(){
  const admin=state.member?.role==='admin'&&atOnline();
  show('adminTab',admin);show('companySetupPanel',!state.member);
  show('membershipPanel',Boolean(state.member));
+ show('connectionPanel',!atOnline());
  const filmToggle=$('filmReadOnSite');
  if(filmToggle){
   $('filmReadOnSiteSettings').hidden=!state.member;
