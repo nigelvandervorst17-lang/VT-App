@@ -4,6 +4,7 @@
  */
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY} from './supabase-rest.mjs';
 import {DEFAULT_SUPABASE_PROJECT} from './project-config.mjs';
+import {businessEmailDomain} from '../../company-domain.mjs';
 import {openOfflineCache} from './offline-cache.mjs';
 import {MATERIAL_RESEARCH_FACTORS,equivalentSteelPreview,gammaDecayPreview,isoFMinResearch} from './research-physics-preview.mjs';
 import {mountResearchWorkbench} from './workbench-ui.mjs';
@@ -37,6 +38,16 @@ function updateRole(){
  const admin=state.member?.role==='admin'&&atOnline();
  show('adminTab',admin);show('companySetupPanel',!state.member);
  show('membershipPanel',Boolean(state.member));
+ show('connectionPanel',!atOnline());
+ const filmToggle=$('filmReadOnSite');
+ if(filmToggle){
+  $('filmReadOnSiteSettings').hidden=!state.member;
+  filmToggle.checked=state.company?.film_read_on_site!==false;
+  filmToggle.disabled=!(admin&&typeof state.company?.film_read_on_site==='boolean');
+  $('filmReadOnSiteStatus').textContent=typeof state.company?.film_read_on_site==='boolean'?
+   'Deze instelling is bedrijfsbreed. Alleen de beheerder kan wijzigen.':
+   'Instelling niet beschikbaar totdat de database is bijgewerkt.';
+ }
  show('signOutBtn',Boolean(state.api?.token()));
  if($('tab-admin').hidden===false&&!admin)setTab('field');
  output('membershipSummary',state.member
@@ -94,6 +105,7 @@ $('authForm').addEventListener('submit',async e=>{
 $('signUpBtn').addEventListener('click',async()=>{
  try{
   const email=selected('email'),password=selected('password');
+  if(!businessEmailDomain(email))throw Error('Registratie vereist een zakelijk e-mailadres.');
   if(password.length<8)throw Error('Gebruik een wachtwoord van minimaal 8 tekens');
   await authorize(()=>state.api.signUp(email,password));
   output('authMessage','Controleer je e-mail. Na bevestiging kun je inloggen. Accountrollen worden uitsluitend in de database toegekend.');
@@ -139,8 +151,9 @@ async function selectCompany(id){
  state.member=m;state.mode='online';
  output('adminCompanyCode','Bedrijfscode alleen na gecontroleerde aanvraag ophalen.');
  $('staffList').replaceChildren();$('logsList').replaceChildren();
- const companies=await state.api.select('companies',{filters:{id},
-  columns:'id,name,created_at'});
+ let companies;
+ try{companies=await state.api.select('companies',{filters:{id},columns:'id,name,created_at,film_read_on_site'});}
+ catch{companies=await state.api.select('companies',{filters:{id},columns:'id,name,created_at'});}
  state.company=companies[0]??null;
  localStorage.setItem('ndt-last-company-id',id);
  localStorage.setItem('ndt-last-user-id',state.user.id);
@@ -152,6 +165,18 @@ async function selectCompany(id){
   $('loadStaffBtn').click();
  }
 }
+$('filmReadOnSite').addEventListener('change',async e=>{
+ if(!state.member||state.member.role!=='admin'||!atOnline())return;
+ e.target.disabled=true;
+ try{
+  const enabled=e.target.checked;
+  const ok=await state.api.rpc('set_company_film_read_on_site',{p_company_id:state.member.company_id,p_enabled:enabled});
+  if(ok!==true)throw Error('Instelling niet bevestigd.');
+  state.company.film_read_on_site=enabled;
+  notice('Film lezen op locatie: '+(enabled?'Aan':'Uit')+' · bewaard voor dit bedrijf.');
+ }catch(err){e.target.checked=state.company?.film_read_on_site!==false;fail(err);}
+ finally{updateRole();}
+});
 $('companySelect').addEventListener('change',async e=>{
  try{state.cache?.close();state.cache=null;await selectCompany(e.target.value)}
  catch(err){fail(err)}
@@ -159,6 +184,7 @@ $('companySelect').addEventListener('change',async e=>{
 $('registerCompanyForm').addEventListener('submit',async e=>{
  e.preventDefault();try{
   if(!atOnline())throw Error('Log eerst online in');
+  if(!businessEmailDomain(state.user?.email))throw Error('Een nieuwe bedrijfsomgeving vereist een bevestigd zakelijk e-mailadres.');
   const result=await state.api.rpc('register_company',{
    p_name:selected('companyName'),p_admin_name:selected('adminName')});
   const company=Array.isArray(result)?result[0]:result;

@@ -6,6 +6,8 @@ const STORAGE = 'basic-rt-pro-ai-public-config-v1';
 const HISTORY_LIMIT = 6;
 let history = [], waiting = false, widgetId = null, widgetSiteKey = '';
 let apiLoad = null;
+// Signed-in users get interaction-only background verification. The existing
+// Worker still verifies each Turnstile token; never bypass server anti-abuse.
 const config = (()=>{try{return {...JSON.parse(localStorage.getItem(STORAGE) || '{}')};}catch{return {};}})();
 
 function getField(id) {return $(id)?.value?.trim() || '';}
@@ -140,13 +142,14 @@ async function installTurnstile(){
   el.hidden=false;
   el.replaceChildren();
   const heading=document.querySelector('#screen-ai .ai-turnstile-label');
-  if(heading)heading.textContent='Beveiligingscontrole wordt uitgevoerd…';
+  const signedIn=document.body.classList.contains('ndt-verified-session');
+  if(heading)heading.textContent=signedIn?'Achtergrondcontrole voor bedrijfsaccount':'Beveiligingscontrole wordt uitgevoerd…';
   if(!siteKey){status('Open AI-instellingen om de publieke Worker-URL en Turnstile-sitekey in te vullen.',true);return;}
   status('Beveiligingscontrole wordt uitgevoerd…');
   try {
     await loadTurnstileApi();
     if(siteKey !== publicConfig().siteKey.trim())return;
-    widgetId = window.turnstile.render(el,{sitekey:siteKey,theme:'dark',
+    widgetId = window.turnstile.render(el,{sitekey:siteKey,theme:'dark',appearance:signedIn?'interaction-only':'always',
       callback:()=>{el.hidden=true;if(heading)heading.textContent='✓ Beveiliging gereed';status('Beveiligingscontrole gereed. Stel je vraag.');},
       'expired-callback':()=>{el.hidden=false;if(heading)heading.textContent='Beveiligingscontrole verlopen';status('Controle verlopen; voer deze opnieuw uit.',true);},
       'error-callback':()=>{el.hidden=false;if(heading)heading.textContent='Beveiligingscontrole';status('Beveiligingscontrole mislukt; probeer opnieuw.',true);}});
@@ -234,6 +237,9 @@ function init(){
   document.querySelector('[data-nav="ai"]')?.addEventListener('click',()=>{
     if(widgetId===null) installTurnstile(); preview();
   });
+  // Login may happen after first AI visit; switch to the background-mode
+  // Turnstile widget without ever removing the server's required validation.
+  window.addEventListener('ndt-auth-scope-changed',()=>{if(widgetId!==null)void installTurnstile();});
   if(!publicConfig().endpoint || !publicConfig().siteKey)status('Open Meer → Instellingen om de AI-verbinding eenmalig in te stellen.');
   else status('Beveiligingscontrole wordt uitgevoerd…');
 }

@@ -58,6 +58,7 @@
  <article class="panel" id="membershipPanel" hidden>
  <h2>Mijn bedrijf</h2><div id="membershipSummary" class="readout">Nog geen goedgekeurd lidmaatschap.</div>
  <label>Bedrijf voor deze sessie<select id="companySelect"></select></label>
+ <div id="filmReadOnSiteSettings" hidden><label class="checktile"><input id="filmReadOnSite" type="checkbox"> Film lezen op locatie: Aan/Uit</label><p class="help" id="filmReadOnSiteStatus" role="status"></p></div>
  <p id="joinCodeOutput" class="help"></p>
  </article>
  <article class="panel" id="offlinePanel">
@@ -79,7 +80,7 @@
  <h3>Bedrijfscode — alleen Hoofdgebruiker</h3>
  <p class="help">De code mag alleen aan geautoriseerde medewerkers worden gedeeld. Personeel krijgt de code niet via de bedrijfsgegevens.</p>
  <button type="button" id="showCompanyCodeBtn" class="alt">Mijn Bedrijfscode tonen</button>
- <div id="adminCompanyCode" class="readout">Alleen zichtbaar na admincontrole via Supabase.</div>
+ <div id="adminCompanyCode" class="readout">Alleen zichtbaar na beveiligde beheercontrole.</div>
  <hr>
  <h3>Actieve en geblokkeerde medewerkers</h3>
  <button type="button" id="loadStaffBtn" class="alt">Medewerkers ophalen</button>
@@ -273,7 +274,7 @@
  <p class="help">De aanvullende onderzoeksfactoren zijn niet toegepast op de bestaande onderzoeksrekenmotor.</p>
  </article>
 </section>
-<footer class="footer">ONDERZOEKSVERSIE · Niet gevalideerd voor industriële RT-opnamen · Geen kalibratievrijgave · Offline data kunnen verouderd zijn.</footer>
+<footer class="footer">Veiligheidsinformatie · Niet gevalideerd voor industriële RT-opnamen · Geen kalibratievrijgave · Offline gegevens kunnen verouderd zijn.</footer>
 </main>
 <script type="module" src="./company-app.mjs"></script>
 </body></html>

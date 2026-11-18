@@ -5,6 +5,8 @@
  */
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY,SESSION_KEY} from './research/company-suite/supabase-rest.mjs';
 import {DEFAULT_SUPABASE_PROJECT} from './research/company-suite/project-config.mjs';
+import {businessEmailDomain} from './company-domain.mjs';
+import {installRtFieldExtras} from './rt-field-extras.mjs';
 import {trialCounter,TRIAL_MAX} from './research/company-suite/trial-50.mjs';
 
 const $=id=>document.getElementById(id);
@@ -49,6 +51,10 @@ function connection(){
 }
 function showMain(mode){
  state.mode=mode;
+ document.body.classList.toggle('ndt-verified-session',mode==='signed-in');
+ document.body.classList.toggle('ndt-demo-session',mode==='trial');
+ const safety=$('ndtResearchCompactDisclaimer');
+ if(safety)safety.textContent=mode==='signed-in'?'Veiligheidsinformatie · Niet vrijgegeven voor werkelijke RT-belichtingen. Controleer procedure, actuele brongegevens, IQI en veiligheidsmaatregelen.':'ONDERZOEKSVERSIE · Niet vrijgegeven voor werkelijke RT-belichtingen. Controleer procedure, actuele brongegevens, IQI en veiligheidsmaatregelen.';
  $('ndtEntryGate').hidden=true;
  document.documentElement.classList.remove('ndt-entry-loading');
  document.body.classList.remove('ndt-entry-active');
@@ -56,7 +62,8 @@ function showMain(mode){
  connection();
  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
  renderSticky();
- window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode}}));
+ window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode,email:state.user?.email||null}}));
+ updateHeaderContext();
 }
 async function hasEncryptedOfflineCache(){
  if(get(localStorage,OFFLINE_READY))return true;
@@ -82,6 +89,8 @@ async function hasEncryptedOfflineCache(){
 
 function showGate(reason=''){
  state.mode='signed-out';state.user=null;
+ document.body.classList.remove('ndt-verified-session','ndt-demo-session');
+ updateHeaderContext();
  window.dispatchEvent(new CustomEvent('ndt-auth-scope-changed',{detail:{mode:'signed-out'}}));
  document.documentElement.classList.add('ndt-entry-loading');
  document.body.classList.add('ndt-entry-active');
@@ -127,11 +136,42 @@ async function bootAuth(){
   else showGate('Aanmelden is tijdelijk niet beschikbaar. Proefversie blijft mogelijk.');
  }
 }
+let currentRoleLabel='';
+function updateHeaderContext(){
+ const field=$('ndtActiveAccountContext');if(!field)return;
+ const bon=typeof window.ndtWorkbonContext==='function'?window.ndtWorkbonContext():null;
+ const loggedIn=state.mode==='signed-in';
+ field.hidden=!loggedIn;
+ field.textContent=!loggedIn?'':bon?.bonnummer?
+  'Bon '+bon.bonnummer+' · '+(bon.klant||'Onderzoeker'):
+  currentRoleLabel||'Bedrijfsaccount · '+(state.user?.email||'aangemeld');
+}
+window.addEventListener('ndt-planning-role-ready',event=>{
+ currentRoleLabel=event.detail?.label||'';updateHeaderContext();
+});
+window.addEventListener('ndt-active-workbon-changed',updateHeaderContext);
 function closeMenu(){$('ndtAccountMenu').hidden=true;$('ndtAccountButton').setAttribute('aria-expanded','false');}
 function initAuth(){
  const entryForm=$('ndtEntryForm');
  const emailInput=$('ndtEntryEmail'),passwordInput=$('ndtEntryPassword');
  const loginButton=$('ndtEntrySubmit'),registerButton=$('ndtEntryRegister');
+ const registerLink=$('ndtEntryRegisterLink'),demoButton=$('ndtEntryTrial');
+ let registering=false;
+ const setRegisterView=next=>{
+  registering=Boolean(next);
+  registerButton.hidden=!registering;
+  loginButton.hidden=registering;
+  demoButton.hidden=registering;
+  registerLink.textContent=registering?'Al een account? Terug naar Inloggen':
+   'Nog geen account? Nieuw account registreren (klaar binnen 1 minuut)';
+  registerLink.setAttribute('aria-expanded',String(registering));
+  status(registering?'Vul je bedrijfs-e-mailadres en een wachtwoord van minimaal 6 tekens in.':
+   'Vul je e-mailadres en wachtwoord in.');
+ };
+ registerLink.addEventListener('click',()=>setRegisterView(!registering));
+ window.addEventListener('ndt-auth-scope-changed',event=>{
+  if(event.detail?.mode==='signed-out')setRegisterView(false);
+ });
  // The project uses its existing lightweight Supabase Auth REST client rather
  // than loading another browser SDK. This is the same Auth /signup endpoint.
  const supabase={auth:{
@@ -149,11 +189,12 @@ function initAuth(){
   passwordInput.setAttribute('aria-invalid',String(!password||password.length<6));
   if(missing)return 'Vul een e-mailadres en wachtwoord van minimaal 6 tekens in.';
   if(malformed)return 'Vul een geldig e-mailadres in.';
+  if(registering&&!businessEmailDomain(email))return 'Gebruik een zakelijk e-mailadres (geen Gmail, Hotmail of vergelijkbaar).';
   return '';
  };
  const lockEntry=(busy,button)=>{
   loginButton.disabled=busy;registerButton.disabled=busy;
-  if(button)button.textContent=busy?'Bezig...':button===loginButton?'Inloggen':'Nieuw account aanmaken';
+  if(button)button.textContent=busy?'Bezig...':button===loginButton?'Inloggen':'Account registreren';
  };
  const entryValues=()=>{
   const email=normalizedEmail(),password=passwordInput.value;
@@ -186,7 +227,7 @@ function initAuth(){
   lockEntry(true,registerButton);status('Accountregistratie verwerken...','busy');
   try{
    const response=await supabase.auth.signUp({email:values.email,password:values.password});
-   if(!response||response.error)throw Error(response?.error?.message||'De registratie werd niet bevestigd door Supabase.');
+   if(!response||response.error)throw Error(response?.error?.message||'De registratie werd niet bevestigd door de registratieserver.');
    status('Account aangemaakt! Controleer je e-mail om te bevestigen.','success');
   }catch(err){status('Registratie mislukt: '+String(err?.message||err),'error');}
   finally{lockEntry(false,registerButton);passwordInput.value='';}
@@ -218,7 +259,7 @@ function initAuth(){
   remove(sessionStorage,'ndt-offline-workspace-v1');
   window.dispatchEvent(new Event('ndt-private-naslag-logout'));
   state.user=null;state.api=null;state.signature=null;state.lastCounted=null;
-  showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
+  currentRoleLabel='';showGate('Uitgelogd. De versleutelde offline cache is behouden; deze blijft afgesloten.');
  });
  $('ndtEraseOffline').addEventListener('click',async()=>{
   if(!confirm('Alle versleutelde bedrijfsgegevens op dit toestel verwijderen? Dit verwijdert ook nog niet gesynchroniseerde conceptlogs.'))return;
@@ -386,7 +427,7 @@ function initCalc(){
  },true);
  // Place the selector beside the relevant top input, not below all fields.
  $('rtCompactActivity')?.closest('.rt-compact-field')?.after($('ndtChooseAsset'));
- makeIqiCompact();compactLongWarnings();moveAiConfig();
+ makeIqiCompact();compactLongWarnings();moveAiConfig();installRtFieldExtras();
  $('ndtSaveToLog').addEventListener('click',async()=>{
   const save=$('ndtSaveToLog');
   if($('saveResult')?.disabled)return;

@@ -17,14 +17,16 @@ export function connectionConfig(storage=globalThis.localStorage){
 }
 export function dispatchStatus({status,assigned_to,data}){
  const required=Boolean(data?.bonnummer?.trim()&&data?.klant?.trim()&&data?.datum);
- if(!required)return 'Concept';
+ // A known, assigned workbon can be released for completion of missing fields in the field.
  if(!assigned_to)return 'Concept';
+ // Missing order/customer/date fields remain visible as Nog in te vullen; no guessed values.
+
  return ['In behandeling','Gereed','Afgerond'].includes(status)?status:'Ingepland';
 }
 export function planningRecord(values){
  const data=sanitizeBon(values);
  // Only planning metadata is stored. Researcher setup always lives in the opnames.
- const administrative=['bonnummer','klant','adres','ordernummer','bron_of_toestel','procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd'];
+ const administrative=['bonnummer','klant','adres','ordernummer','bron_of_toestel','procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd','materiaal','materiaal_omschrijving','wanddikte_mm','sfd_mm','film','doelzwarting','activiteit_ci','kv','ma'];
  return Object.fromEntries(administrative.map(key=>[key,data[key]??null]));
 }
 export function makePlanningAPI(options={}){
@@ -54,20 +56,38 @@ export function makePlanningAPI(options={}){
  const requireResearcher=async()=>{await requireAuth();if(role!=='researcher')throw Error('Alleen toegewezen onderzoekers kunnen opnames opslaan.');};
  async function list(){
   await requireAuth();
-  const [bons,opnames,members]=await Promise.all([
+  const [bons,opnames,members,ownCompanyMemberships,companies]=await Promise.all([
    api.select('planning_workbonnen',{order:'created_at.desc'}),
    api.select('planning_opnames',{order:'created_at.desc'}),
-   role==='planning'?api.select('planning_members'):[]
+   role==='planning'?api.select('planning_members'):[],
+   role==='planning'?api.select('company_members',{filters:{user_id:sessionUser.id}}):[],
+   role==='planning'?api.select('companies'):[]
   ]);
-  return {user:sessionUser,role,bons:bons||[],opnames:opnames||[],members:members||[]};
+  const admins=(ownCompanyMemberships||[]).filter(m=>m.user_id===sessionUser.id&&m.active&&m.role==='admin');
+  return {user:sessionUser,role,bons:bons||[],opnames:opnames||[],members:members||[],
+   companyAdminOptions:admins.map(m=>({id:m.company_id,
+    name:companies?.find(c=>c.id===m.company_id)?.name||'Bedrijf'}))};
  }
  async function addResearcher(email){
   await requirePlanner();
   const normalized=String(email||'').trim().replace(/\.+$/,'').toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error('Vul een geldig bestaand onderzoeker-e-mailadres in.');
-  const result=await api.rpc('planning_add_researcher',{p_email:normalized});
+ const result=await api.rpc('planning_add_researcher',{p_email:normalized});
   if(result!==true)throw Error('Dit account heeft al een andere rol. Neem contact op met de beheerder.');
   return result;
+ }
+  async function createInvite(email,companyId=null){
+  await requirePlanner();
+  const normalized=String(email||'').trim().replace(/\.+$/,'').toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error('Geef een geldig e-mailadres op.');
+  return api.rpc('planning_create_invitation',{p_email:normalized,p_company_id:companyId||null});
+ }
+ async function acceptInvite(token){
+  // Can be called immediately after login, even before membership exists.
+  if(!online()||!api.restore())throw Error('Meld je eerst aan met je bevestigde e-mailadres.');
+  const valid=String(token||'').trim();
+  if(!/^[0-9a-f]{64}$/.test(valid))throw Error('Geen geldige uitnodigingslink.');
+  return api.rpc('planning_accept_invitation',{p_token:valid});
  }
  async function saveBon({id=null,values,assignedTo=null,status=null}){
   await requirePlanner();
@@ -103,9 +123,12 @@ export function makePlanningAPI(options={}){
   await requireResearcher();
   if(!bon?.id||bon.assigned_to!==sessionUser.id||bon.status!=='In behandeling')
    throw Error('Open eerst je toegewezen werkbon en kies Start onderzoek.');
-  const rows=await api.insert('planning_opnames',{bon_id:bon.id,created_by:sessionUser.id,details});
-  if(!rows?.length)throw Error('Opname is niet opgeslagen bij de werkbon.');
-  return rows[0];
+  const clientId=details?.client_id||env.crypto.randomUUID();
+  const rowData={...details};delete rowData.client_id;
+  const savedId=await api.rpc('planning_save_opname',{p_bon_id:bon.id,p_client_id:clientId,p_details:rowData});
+  if(savedId!==clientId)throw Error('De server bevestigde de opname niet.');
+  return {id:clientId,bon_id:bon.id,created_by:sessionUser.id,details:rowData,created_at:new Date().toISOString()};
+
  }
  async function attachmentRequest(path,{method='GET',file=null}={}){
   await requireAuth();
@@ -148,7 +171,29 @@ export function makePlanningAPI(options={}){
   const ext=bon.original_path.split('.').at(-1)||'bin';
   return {blob,filename:'Werkbon-'+(bon.data?.bonnummer||bon.id).replace(/[^a-z0-9-]/gi,'_')+'.'+ext};
  }
- return {authenticate,list,addResearcher,saveBon,setPlannerStatus,
-  changeResearchStatus,addOpname,uploadOriginal,downloadOriginal,
+
+ async function sendServiceRecord(bon,pdfBytes){
+  await requireAuth();
+  if(!bon?.id||!(pdfBytes instanceof Uint8Array)||pdfBytes.length<100||pdfBytes.length>4200000)
+   throw Error('Geen geldige Service Record-PDF (maximaal 4,2 MB).');
+  if(role==='researcher'&&bon.assigned_to!==sessionUser.id)
+   throw Error('Deze werkbon is niet aan jou toegewezen.');
+  await api.user();const jwt=api.token();
+  if(!jwt)throw Error('Online aanmelden is vereist om de PDF te versturen.');
+  // Base64 chunking; PDF remains in memory and recipient is configured server-side.
+  const slices=[];for(let i=0;i<pdfBytes.length;i+=0x8000)
+   slices.push(String.fromCharCode(...pdfBytes.subarray(i,i+0x8000)));
+  const base64=btoa(slices.join(''));
+  const response=await fetcher(root+'/functions/v1/send-service-record',{
+   method:'POST',headers:{apikey:key,Authorization:'Bearer '+jwt,'Content-Type':'application/json'},
+   body:JSON.stringify({bon_id:bon.id,pdf_base64:base64})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result.sent!==true)
+   throw Error(result.error||'Werkmail niet verstuurd. Controleer de serverconfiguratie.');
+  return result;
+ }
+ return {authenticate,list,addResearcher,createInvite,acceptInvite,saveBon,setPlannerStatus,
+  changeResearchStatus,addOpname,uploadOriginal,downloadOriginal,sendServiceRecord,
   get user(){return sessionUser},get role(){return role},clear(){sessionUser=null;role=null}};
 }

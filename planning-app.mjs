@@ -4,12 +4,17 @@
  * No new exposure calculations, IQI acceptance, material factors or safety shortcuts.
  */
 import {makePlanningAPI} from './planning-api.mjs';
+import {navigationLinks,getTravel,markDeparture,markArrival,travelMinutes} from './planning-travel.mjs';
+import {makeServiceRecord} from './service-record-data.mjs';
+import {generateServiceRecordPdf} from './service-record-pdf.mjs';
+import {buildPlanningTeamInvite} from './planning-team-invite.mjs';
+import {unlockWorkbonCache,WORKBON_OFFLINE_USER,syncWorkbonOutbox} from './workbon-offline-sync.mjs';
 import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
- localISODate,buildReport,reportMailto,NO_RT_RELEASE} from './planning-data.mjs';
+ localISODate,NO_RT_RELEASE} from './planning-data.mjs';
 import {extractBonText,parseBonViaGemini,setupBonTurnstile} from './workbon-reader.mjs';
 
 const $=id=>document.getElementById(id);
-const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],
+const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],companyAdminOptions:[],offlineCache:null,offlineUserId:null,
  filter:'today',search:'',activeId:null,setupBonId:null,setupReady:false,
  selectedId:null,editingId:null,pendingFile:null,pendingText:'',readGeneration:0,
  processing:false,loading:false,procedureList:proceduresForStore([])};
@@ -33,10 +38,72 @@ const bonTitle=bon=>{
 };
 const activeRole=role=>state.role===role;
 const localToday=()=>localISODate();
-function clearUserData(){
+function clearUserData({keepEncryptedCache=false}={}){
  state.client=null;state.role=null;state.user=null;state.bons=[];state.opnames=[];
- state.members=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
+ state.members=[];state.companyAdminOptions=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
+ if(!keepEncryptedCache){state.offlineCache?.close();state.offlineCache=null;}
+ window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:null,label:''}}));
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+}
+async function showOfflineSnapshot(){
+ const cache=state.offlineCache;
+ if(!cache)return false;
+ const snapshot=await cache.snapshot();
+ if(!snapshot||snapshot.role!=='researcher')return false;
+ state.client=null;state.role='researcher';state.user={id:cache.userId,email:'Offline · identiteit niet opnieuw online gecontroleerd'};
+ state.bons=snapshot.bons;state.opnames=snapshot.opnames;state.members=[];
+ if(state.activeId&&!state.bons.some(x=>x.id===state.activeId))state.activeId=null;
+ notice('VERSLEUTELDE OFFLINE KOPIE · Toewijzing en brongegevens kunnen verouderd zijn. Opnames gaan pas na online controle naar Planning.');
+ window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:'researcher',label:'Offline werkbonnen · bunker ontgrendeld'}}));
+ render();
+ return true;
+}
+async function flushOfflineOutbox(){
+ if(!state.offlineCache||!state.client||!navigator.onLine||!activeRole('researcher')||!state.user?.id)return;
+ try{
+  // An offline-started assigned bon first transitions through the original status RPC.
+ const pendingRows=await state.offlineCache.draftLogs();
+ for(const bonId of new Set(pendingRows.map(x=>x.bon_id))){
+  const bon=state.bons.find(x=>x.id===bonId&&x.assigned_to===state.user.id);
+  if(bon?.status==='Ingepland'){
+   await state.client.changeResearchStatus(bon.id,'In behandeling');bon.status='In behandeling';
+  }
+ }
+ const result=await syncWorkbonOutbox({
+   cache:state.offlineCache,client:state.client,bons:state.bons,userId:state.user.id,
+   onProgress:msg=>$text('planningOfflineStatus',msg)
+  });
+  if(result.success){
+   const snap=await state.client.list();
+   state.bons=snap.bons;state.opnames=snap.opnames;
+   await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
+   render();
+  }
+  $text('planningOfflineStatus',result.remaining?
+   result.remaining+' opname(s) nog versleuteld in wachtrij. Ververs bij verbinding.':
+   'Gereed: alle offline onderzoeksopnames centraal gesynchroniseerd.');
+ }catch(e){$text('planningOfflineStatus','Synchronisatie niet voltooid: '+errorText(e));}
+}
+async function unlockOffline(event){
+ event.preventDefault();
+ const passphrase=$('planningOfflinePassphrase').value;
+ $('planningOfflinePassphrase').value='';
+ const onlineVerified=navigator.onLine&&activeRole('researcher')&&Boolean(state.user?.id)&&Boolean(state.client);
+ const userId=onlineVerified?state.user.id:localStorage.getItem(WORKBON_OFFLINE_USER);
+ if(!userId){$text('planningOfflineStatus','Log eerst online in om deze offline cache voor uw account te maken.');return;}
+ try{
+  const cache=await unlockWorkbonCache({userId,passphrase,allowCreate:onlineVerified});
+  state.offlineCache?.close();state.offlineCache=cache;
+  if(onlineVerified){
+   await cache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
+   $text('planningOfflineStatus','Versleuteld offline werkbonnenoverzicht actief. De wachtzin blijft alleen in geheugen.');
+   await flushOfflineOutbox();
+  }else{
+   const ok=await showOfflineSnapshot();
+   if(!ok)throw Error('Nog geen opgeslagen werkbonnen voor dit account. Open online Planning na inloggen.');
+   $text('planningOfflineStatus','Versleutelde offline kopie ontgrendeld. Synchronisatie wacht op internet en accountcontrole.');
+  }
+ }catch(e){state.offlineCache?.close();state.offlineCache=null;$text('planningOfflineStatus','Offline ontgrendelen mislukt: '+errorText(e));}
 }
 async function refreshPlanning(){
  if(state.loading)return;
@@ -45,18 +112,36 @@ async function refreshPlanning(){
  try{
   const client=state.client||makePlanningAPI();
   const auth=await client.authenticate();
+  // An in-memory offline cache is never reused for a different authenticated ID.
+  if(state.offlineCache&&state.offlineCache.userId!==auth.user.id){
+   state.offlineCache.close();state.offlineCache=null;
+  }
   const snapshot=await client.list();
   if(oldId&&oldId!==auth.user.id){
    state.activeId=null;state.setupBonId=null;state.setupReady=false;
   }
   state.client=client;state.role=snapshot.role;state.user=snapshot.user;
   state.bons=snapshot.bons;state.opnames=snapshot.opnames;state.members=snapshot.members;
+  state.companyAdminOptions=snapshot.companyAdminOptions||[];
+  if(state.role==='researcher'){
+   localStorage.setItem(WORKBON_OFFLINE_USER,state.user.id);
+   if(state.offlineCache&&state.offlineCache.userId===state.user.id){
+    await flushOfflineOutbox();
+    await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
+   }
+  }
+  window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{
+   detail:{role:state.role,label:state.role==='planning'?'Planning · '+(state.user.email||'beheer'):
+    state.role==='researcher'?'Onderzoeker · '+(state.user.email||'aangemeld'):state.user.email||''}
+  }));
   if(state.activeId&&!state.bons.some(b=>b.id===state.activeId))state.activeId=null;
   state.procedureList=readProcedures();
   notice(state.role==='planning'?
    'Planning · centraal opgeslagen. Wijs bestaande, bevestigde accounts aan een werkbon toe.':
    'Mijn toegewezen werkbonnen · gedeeld tussen computer en telefoon.');
  }catch(e){
+  const connectionFailure=!navigator.onLine||/network|netwerk|fetch|verbinding|timeout|load failed/i.test(errorText(e));
+  if(connectionFailure&&state.offlineCache&&await showOfflineSnapshot())return;
   clearUserData();
   // Trial users can inspect the two sample orders but cannot publish private data.
   if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial'){
@@ -86,10 +171,18 @@ function renderMembership(){
  const planning=activeRole('planning');
  $('planningTeam').hidden=!planning;$('planningAdd').hidden=!planning;
  $('planningDraftFilter').hidden=!planning;
- $('planningProcedureForm').querySelector('button[type="submit"]').disabled=!planning;
+ $('planningProcedureForm').hidden=!planning;
+ $('planningOfflinePanel').hidden=!(activeRole('researcher')||(!navigator.onLine&&Boolean(localStorage.getItem(WORKBON_OFFLINE_USER))));
  $text('planningRole',planning?'Planning · bonnen aanmaken/toewijzen':
   activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':'Voorbeeldplanning');
  const list=state.members.filter(m=>m.role==='researcher');
+ const companies=$('planningInviteCompany');
+ if(companies&&planning){
+  const selected=companies.value;
+  companies.replaceChildren(new Option('Planning-werkruimte',''));
+  for(const item of state.companyAdminOptions)companies.add(new Option(item.name,item.id));
+  companies.value=state.companyAdminOptions.some(x=>x.id===selected)?selected:'';
+ }
  $text('planningTeamStatus',list.length?list.map(m=>m.email).join(' · '):
   'Nog geen onderzoekers toegevoegd. Voeg een bevestigd account toe.');
 }
@@ -113,6 +206,126 @@ function originalAction(bon){
   }catch(e){notice('Originele bon: '+errorText(e),true);}
  },'plan-original');
 }
+
+function routeAction(bon){
+ const data=bonData(bon),urls=navigationLinks(data.adres);
+ const holder=elem('details','plan-route-options');holder.append(elem('summary','','📍 Route naar klant'));
+ const inner=elem('div','plan-route-choices'),userId=state.user?.id,store=sessionStorage;
+ const current=()=>getTravel(store,userId,bon.id),recap=elem('small','plan-travel-status','');
+ function refresh(){
+  const t=current(),minutes=travelMinutes(t);
+  recap.textContent=t?.arrived_at?'Reistijd: '+minutes+' minuten (aankomst bevestigd)':
+   t?.departed_at?'Vertrek genoteerd · aankomst nog bevestigen':
+   'Vertrek wordt vastgelegd bij het openen van een route';
+ }
+ for(const [name,url] of [['Google Maps',urls.googleMaps],['Waze',urls.waze],['Flitsmeister',urls.flitsmeister]]){
+  const link=elem('a','plan-route-choice',name);link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+  link.addEventListener('click',()=>{
+   if(activeRole('researcher')&&userId){
+    try{markDeparture(store,userId,bon.id);refresh();}catch(e){notice('Vertrek niet genoteerd: '+errorText(e),true);}
+   }
+   if(name==='Flitsmeister'){
+    if(navigator.clipboard?.writeText)void navigator.clipboard.writeText(data.adres)
+     .then(()=>notice('Klantadres gekopieerd; plak het in Flitsmeister.'))
+     .catch(()=>notice('Voer het klantadres handmatig in Flitsmeister in.'));
+    else notice('Voer het klantadres handmatig in Flitsmeister in.');
+   }
+  });inner.append(link);
+ }
+ if(activeRole('researcher')&&userId){
+  inner.append(action('Aankomst bevestigen',()=>{
+   try{markArrival(store,userId,bon.id);refresh();notice('Aankomst op dit toestel vastgelegd.');}
+   catch(e){notice(errorText(e),true);}
+  },'plan-arrival'));
+  refresh();inner.append(recap);
+  inner.append(elem('small','plan-travel-footnote','Reistijd staat voorlopig alleen op dit toestel; de navigatie-app bevestigt aankomst niet automatisch.'));
+ }
+ holder.append(inner);return holder;
+}
+
+
+let serviceBonId=null,serviceSigned=false,lastGeneratedServicePdf=null;
+function openServiceRecord(bon){
+ if(!state.user?.id||!['researcher','planning'].includes(state.role))return notice('Meld je aan om een Service Record te maken.',true);
+ serviceBonId=bon.id;serviceSigned=false;lastGeneratedServicePdf=null;
+ $('serviceRecordSend').disabled=true;
+ const dlg=$('planningServiceRecordDialog'),form=$('planningServiceRecordForm');
+ form.reset();$('serviceRecordContext').textContent='Service Record: '+bonTitle(bon)+' · kies het lege rev.26-7 PDF-sjabloon.';
+ const n=state.opnames.filter(x=>x.bon_id===bon.id).length;
+ $('serviceRecordShots').textContent=n+' gekoppelde RT-opnames. Werkelijk aantal verbruikte films apart invullen.';
+ const canvas=$('serviceRecordSignature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+ $('serviceRecordStatus').textContent='Controleer uren, filmaantallen en klantgegevens vóór ondertekening.';
+ dlg.showModal();
+}
+function initServiceRecord(){
+ const dlg=$('planningServiceRecordDialog'),form=$('planningServiceRecordForm'),canvas=$('serviceRecordSignature');
+ if(!dlg||!canvas||!form)return;
+ const ctx=canvas.getContext('2d');ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#081c2d';
+ let active=false;
+ const xy=event=>{
+  const rect=canvas.getBoundingClientRect();
+  return [(event.clientX-rect.left)*canvas.width/rect.width,(event.clientY-rect.top)*canvas.height/rect.height];
+ };
+ canvas.addEventListener('pointerdown',e=>{
+  if(e.button!==0&&e.pointerType==='mouse')return;
+  e.preventDefault();active=true;serviceSigned=true;
+  const [x,y]=xy(e);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+0.1,y+0.1);ctx.stroke();
+  canvas.setPointerCapture?.(e.pointerId);
+ });
+ canvas.addEventListener('pointermove',e=>{
+  if(!active)return;e.preventDefault();
+  const [x,y]=xy(e);ctx.lineTo(x,y);ctx.stroke();
+ });
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])
+  canvas.addEventListener(type,()=>{active=false;});
+ $('serviceRecordClearSignature').addEventListener('click',()=>{
+  ctx.clearRect(0,0,canvas.width,canvas.height);serviceSigned=false;
+ });
+ $('serviceRecordClose').addEventListener('click',()=>dlg.close());
+ $('serviceRecordSend').addEventListener('click',async()=>{
+  const send=$('serviceRecordSend');if(send.disabled)return;
+  send.disabled=true;
+  try{
+   const bon=state.bons.find(x=>x.id===serviceBonId);
+   if(!bon||!lastGeneratedServicePdf||!state.client)throw Error('Maak eerst een PDF bij de geldige werkbon.');
+   const receipt=await state.client.sendServiceRecord(bon,lastGeneratedServicePdf);
+   $('serviceRecordStatus').textContent='Service Record verzonden via de server naar de ingestelde werkmail. Referentie: '+(receipt.message_id||'bevestigd');
+  }catch(error){$('serviceRecordStatus').textContent='Werkmail niet verstuurd: '+errorText(error);}
+  finally{send.disabled=false;}
+ });
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const submit=$('serviceRecordGenerate');if(submit.disabled)return;
+  try{
+   if(!['researcher','planning'].includes(state.role)||!state.user?.id)throw Error('Online rol vereist.');
+   const bon=state.bons.find(x=>x.id===serviceBonId);if(!bon)throw Error('Werkbon is niet meer beschikbaar.');
+   if(!serviceSigned)throw Error('Laat de klant tekenen voordat je de PDF maakt.');
+   const template=$('serviceRecordTemplate').files?.[0];if(!template)throw Error('Kies het lege Service Record-sjabloon.');
+   const fields=Object.fromEntries(new FormData(form).entries());
+   for(const name of ['stdHours','ovtLHours','ovtHHours','breakHours','km']){
+    const s=String(fields[name]||'').trim();
+    if(s&&(!/^(?:\d+)(?:[.,]\d+)?$/.test(s)||Number(s.replace(',','.'))<0))
+     throw Error('Vul een geldige niet-negatieve hoeveelheid in bij '+name+'.');
+   }
+   const count=String(fields.filmCount||'').trim();
+   if(count&&!/^(?:0|[1-9]\d*)$/.test(count))throw Error('Filmverbruik moet een geheel getal zijn.');
+   const travel=getTravel(sessionStorage,state.user.id,bon.id);
+   const record=makeServiceRecord({bon,opnames:state.opnames,travel,fields});
+   submit.disabled=true;$('serviceRecordStatus').textContent='Service Record lokaal samenstellen…';
+   const bytes=await generateServiceRecordPdf(template,record,canvas.toDataURL('image/png'));
+   lastGeneratedServicePdf=bytes;
+   $('serviceRecordSend').disabled=!state.client||!navigator.onLine;
+   const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+   const a=elem('a');a.href=url;
+   a.download='Service_Record_'+idLabel(bon).replace(/[^A-Za-z0-9_-]/g,'_')+'.pdf';
+   document.body.append(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),30000);
+   $('serviceRecordStatus').textContent='PDF gedownload. Controleer het document en verzend het via de goedgekeurde bedrijfsprocedure.';
+  }catch(error){$('serviceRecordStatus').textContent='PDF niet gemaakt: '+errorText(error);}
+  finally{submit.disabled=false;}
+ });
+}
+
 function renderCard(bon){
  const data=bonData(bon),row=elem('article','plan-row');
  const times=elem('div','plan-hours',timeText(bon));
@@ -125,20 +338,20 @@ function renderCard(bon){
   elem('small','','Opdracht- / Bonnummer: '+idLabel(bon)+' · Order: '+(data.ordernummer||'—')));
  content.append(open);
  const actions=elem('div','plan-card-actions');
- if(data.adres){
-  const link=elem('a','plan-map','📍 Route');
-  link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(data.adres);
-  link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
- }
+ if(data.adres)actions.append(routeAction(bon));
  if(bon.original_path)actions.append(originalAction(bon));
+ if(['researcher','planning'].includes(state.role))actions.append(action('Service Record',()=>openServiceRecord(bon),'plan-service'));
  if(activeRole('planning')){
   const assigned=state.members.find(m=>m.user_id===bon.assigned_to);
   actions.append(elem('small','plan-assignee',assigned?'Onderzoeker: '+assigned.email:'Nog niet toegewezen'));
   actions.append(action('Controleer / wijs toe',()=>openBonDialog(bon),'plan-edit'));
-  if(bon.status==='Gereed')
-   actions.append(action('Afronden & Mail rapportage',()=>finalizeBon(bon),'plan-complete'));
+  actions.append(action('Bekijk meetdata',()=>{
+   state.activeId=bon.id;render();
+   $('planningLoggedShots')?.scrollIntoView({behavior:'smooth',block:'center'});
+  },'plan-measurements'));
+  if(bon.status==='Gereed')actions.append(elem('small','plan-status-pending','Onderzoeker gereed · metingen beschikbaar voor kantoor'));
  }else if(activeRole('researcher')){
-  actions.append(action(bon.status==='Gereed'?'Details bekijken':'Start onderzoek',
+  actions.append(action(['Gereed','Afgerond'].includes(bon.status)?'Details bekijken':'Start onderzoek',
    ()=>openBon(bon),'plan-start'));
  }
  const opnameCount=state.opnames.filter(x=>x.bon_id===bon.id).length;
@@ -156,7 +369,7 @@ function renderAgenda(){
   if(state.filter==='done')return b.status==='Gereed'||b.status==='Afgerond';
   if(b.status==='Concept'||b.status==='Afgerond'||b.status==='Gereed')return false;
   const day=bonData(b).datum;
-  return state.filter==='today'?day===date:day>date;
+  return state.filter==='today'?(!day||day===date):day>date;
  }).filter(b=>!state.search||[
   bonData(b).bonnummer,bonData(b).klant,bonData(b).ordernummer
  ].some(v=>String(v||'').toLocaleLowerCase('nl-NL').includes(state.search)));
@@ -185,9 +398,9 @@ function renderActive(){
  const bon=activeBon(),bar=$('planningActiveBar'),researcher=activeRole('researcher');
  bar.hidden=!researcher||!bon;
  $('planningNextShot').hidden=!(researcher&&state.setupReady&&state.setupBonId===bon?.id);
- $('planningCalculate').hidden=!(researcher&&bon);
- $('planningStartResearch').hidden=!researcher||!bon||bon.status==='Gereed';
- $('planningFinish').hidden=!researcher||!bon||bon.status==='Gereed';
+ $('planningCalculate').hidden=!(researcher&&bon&&!['Gereed','Afgerond'].includes(bon.status));
+ $('planningStartResearch').hidden=!researcher||!bon||['Gereed','Afgerond'].includes(bon.status);
+ $('planningFinish').hidden=!researcher||!bon||['Gereed','Afgerond'].includes(bon.status);
  if(researcher&&bon){
   $text('planningActiveLabel','Actief: '+bonTitle(bon));
   const missing=state.setupReady&&state.setupBonId===bon.id?[]:[
@@ -208,8 +421,7 @@ function renderActive(){
   'Kies een toegewezen werkbon via Planning.');
  $text('planningLogSummary',bon?bonTitle(bon)+' · '+count+' opnames':
   'Selecteer een werkbon voor het werklogboek.');
- $('planningRecordsMail').hidden=!activeRole('planning');
- $('planningMailReport').hidden=!activeRole('planning');
+
 }
 function renderShots(){
  const box=$('planningLoggedShots');box.replaceChildren();
@@ -217,12 +429,31 @@ function renderShots(){
  const shots=bon?state.opnames.filter(x=>x.bon_id===bon.id):
   activeRole('planning')?state.opnames:[];
  if(!shots.length){box.append(elem('p','small-muted','Nog geen opgeslagen onderzoeksopnames.'));return;}
- for(const row of shots.slice(0,80)){
-  const d=row.details||{};
-  box.append(elem('div','plan-shot',
-   (row.created_at||'').slice(0,16).replace('T',' ')+' · '+
-   (d.source||'Bron onbekend')+' · '+(d.result||'Geen indicatieve tijd')+
-   ' · IQI '+(d.iqiWire||'onbekend')+' · '+NO_RT_RELEASE));
+ const fields=[
+  ['Bron / toestel','source'],['Spanning kV','kv'],['Stroom mA','ma'],
+  ['Activiteit Ci','activityCi'],['Materiaal','material'],['Wanddikte mm','wall'],
+  ['Doorstraalde dikte mm','thickness'],['Bron-filmafstand mm','distance'],
+  ['Film','film'],['Doelzwarting','density'],['Geometrie','geometry'],
+  ['Opnametechniek','technique'],['Indicatieve tijd','result'],
+  ['IQI rekenkundige eis','iqiWire'],['Waargenomen IQI draad','iqiObserved']
+ ];
+ for(const row of shots.slice(0,120)){
+  const d=row.details||{},card=elem('details','plan-shot-detail');
+  const summary=elem('summary','',
+   (row.created_at||'').slice(0,16).replace('T',' ')+' · Bon '+(d.workbonnummer||'—')+
+   ' · '+(d.source||'Bron onbekend')+
+   (row.pending_sync?' · WACHT OP SYNCHRONISATIE':''));
+  card.append(summary);
+  const user=state.members.find(x=>x.user_id===row.created_by);
+  const header=elem('p','plan-shot-researcher','Onderzoeker: '+(user?.email||
+   (row.created_by===state.user?.id?state.user?.email:'Gekoppeld account')));
+  card.append(header);
+  for(const [name,key] of fields){
+   card.append(elem('p','plan-shot-field',name+': '+(d[key]===undefined||d[key]===null||
+    String(d[key]).trim()===''?'Nog in te vullen / niet vastgelegd':String(d[key]))));
+  }
+  card.append(elem('p','plan-shot-not-approved',NO_RT_RELEASE));
+  box.append(card);
  }
 }
 function render(){
@@ -255,22 +486,68 @@ function clearResearchInputs(){
   model.value='';model.dispatchEvent(new Event('change',{bubbles:true}));
  }
  state.setupReady=false;state.setupBonId=null;
+ clearMissingCalculatorMarkers();
 }
 function displayResearchType(){
  const xray=$('planningResearchModality').value==='xray';
- $('planningResearchCiWrap').hidden=xray;$('planningResearchIsotopeWrap').hidden=xray;
+ const gamma=$('planningResearchModality').value==='gamma';
+ $('planningResearchCiWrap').hidden=!gamma;$('planningResearchIsotopeWrap').hidden=!gamma;
  $('planningResearchKvWrap').hidden=!xray;$('planningResearchMaWrap').hidden=!xray;
+}
+const SUGGESTED_FIELDS=Object.freeze([
+ ['material','materiaal'],['film','film'],['density','doelzwarting'],
+ ['wall','wanddikte_mm'],['distance','sfd_mm'],['ci','activiteit_ci'],
+ ['kv','kv'],['ma','ma']
+]);
+function showResearchSuggestions(bon){
+ const form=$('planningResearchForm'),data=bonData(bon);
+ for(const [inputName,bonName] of SUGGESTED_FIELDS){
+  const input=form.elements.namedItem(inputName),value=data[bonName];
+  if(!input)continue;
+  const present=value!==undefined&&value!==null&&String(value).trim()!=='';
+  const supported=input.tagName!=='SELECT'||[...input.options].some(o=>o.value===String(value));
+  if(present&&supported)input.value=String(value);
+  input.classList.toggle('plan-proposed',present&&supported);
+  input.classList.toggle('plan-missing',!present||!supported);
+  input.title=present&&supported?'Voorstel van de werkbon: zelf controleren':
+   'Nog in te vullen op locatie. Geen waarde geraden.';
+ }
+ for(const key of ['geometry','technique']){
+  const input=form.elements.namedItem(key);if(input)input.classList.add('plan-missing');
+ }
+ const count=SUGGESTED_FIELDS.filter(([_,field])=>data[field]!=null&&String(data[field]).trim()).length;
+ $text('planningResearchBonSummary',bonTitle(bon)+' · '+(data.procedure_code||'Procedure ontbreekt')+
+  ' · '+count+' technisch(e) bonvoorstel(len). Alles blijft handmatig aanpasbaar.');
+}
+function markMissingCalculatorInputs(bon){
+ const d=bonData(bon);
+ const pairs=[['workWall','wanddikte_mm'],['distance','sfd_mm'],
+  ['material','materiaal'],['film','film'],['density','doelzwarting'],
+  ['manualCi','activiteit_ci'],['kv','kv'],['ma','ma']];
+ for(const [id,field] of pairs){
+  const input=$(id);if(!input)continue;
+  input.classList.toggle('plan-missing',d[field]==null||String(d[field]).trim()==='');
+  input.title=d[field]==null?'Nog in te vullen: niet vermeld op bon. Controleer op locatie.':
+   'Bonvoorstel: controleer de actuele waarde.';
+ }
+ $('iqiTechnique')?.classList.add('plan-missing');
+}
+function clearMissingCalculatorMarkers(){
+ for(const input of document.querySelectorAll('.plan-missing,.plan-proposed')){
+  input.classList.remove('plan-missing','plan-proposed');input.removeAttribute('title');
+ }
 }
 function openResearchDialog(bon,fresh=true){
  const form=$('planningResearchForm');
  if(fresh)form.reset();
- $text('planningResearchBonSummary',bonTitle(bon)+' · '+(bonData(bon).procedure_code||'Geen procedure')+
-  '. Kies alle onderzoeksgegevens zelf; geen enkele waarde wordt automatisch geraden.');
  if(fresh){
-  const s=String(bonData(bon).bron_of_toestel||'');
-  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(s)?'xray':'gamma';
-  // Do not automatically select geometry, thickness, SFD, activity or technique.
+  const source=String(bonData(bon).bron_of_toestel||'');
+  form.elements.namedItem('modality').value=/x[\s-]?ray|r[oö]ntgen/i.test(source)?'xray':
+   /\b(?:Se-75|Ir-192)\b/i.test(source)?'gamma':'';
+  const iso=source.match(/\bSe-75\b|\bIr-192\b/i)?.[0];
+  if(iso)form.elements.namedItem('isotope').value=iso.toLowerCase()==='ir-192'?'Ir-192':'Se-75';
  }
+ showResearchSuggestions(bon);
  displayResearchType();$('planningResearchError').hidden=true;
  $('planningResearchDialog').showModal();
 }
@@ -280,11 +557,19 @@ async function openBon(bon){
   else notice('Log in als toegewezen onderzoeker om te starten.',true);
   return;
  }
- if(bon.status==='Gereed'){notice(bonTitle(bon)+' is als gereed gemeld en kan niet worden bewerkt.');return;}
+ if(['Gereed','Afgerond'].includes(bon.status)){
+  state.activeId=bon.id;state.setupReady=false;state.setupBonId=null;
+  clearMissingCalculatorMarkers();
+  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
+  notice(bonTitle(bon)+' is gereed. Gekoppelde opnames zijn hieronder in te zien; bewerken is niet toegestaan.');
+  return;
+ }
  if(bon.status==='Ingepland'){
   try{
-   await state.client.changeResearchStatus(bon.id,'In behandeling');
+   if(navigator.onLine&&state.client)await state.client.changeResearchStatus(bon.id,'In behandeling');
+   else if(!state.offlineCache)throw Error('Ontgrendel eerst de versleutelde offline werkbonnen.');
    bon.status='In behandeling';
+   if(!navigator.onLine&&state.offlineCache)await state.offlineCache.saveSnapshot({bons:state.bons,opnames:state.opnames,role:'researcher'});
   }catch(e){notice('Start onderzoek: '+errorText(e),true);return;}
  }
  if(bon.status!=='In behandeling'){
@@ -293,6 +578,7 @@ async function openBon(bon){
  const switching=state.activeId!==bon.id;
  state.activeId=bon.id;
  if(switching)clearResearchInputs();
+ markMissingCalculatorInputs(bon);
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
  document.querySelector('.bottom-nav [data-nav="calc"]')?.click();
  if(switching||!state.setupReady)openResearchDialog(bon,true);
@@ -302,8 +588,11 @@ function currentSetup(){
  const form=$('planningResearchForm'),raw=Object.fromEntries(new FormData(form).entries());
  const num=value=>{const str=String(value??'').trim().replace(',','.');return /^\d+(?:\.\d+)?$/.test(str)&&Number(str)>0?str:null;};
  if(!['plate','pipe'].includes(raw.geometry)||!['sw','dwsi','dwdi'].includes(raw.technique)||
+   !['Fe','RVS300','Al','Cu','Ti'].includes(raw.material)||
+   !['D4','D5','D7'].includes(raw.film)||!num(raw.density)||
    !num(raw.wall)||!num(raw.distance))
-  throw Error('Kies geometrie en techniek, en vul een positieve wanddikte en SFD in.');
+  throw Error('Kies en controleer materiaal, film, zwarting, geometrie, techniek, wanddikte en SFD.');
+ if(!['gamma','xray'].includes(raw.modality))throw Error('Kies de bronsoort; deze is niet op de bon vermeld.');
  if(raw.modality==='xray'){
   if(!num(raw.kv)||!num(raw.ma))throw Error('Vul kV én mA zelf in.');
   return {...raw,wall:num(raw.wall),distance:num(raw.distance),kv:num(raw.kv),ma:num(raw.ma)};
@@ -327,6 +616,10 @@ function startResearch(event){
    if(proc.klasse)changeInput('iqiClass',proc.klasse);
    if(proc.iqiSide)changeInput('iqiSide',proc.iqiSide);
   }
+  // The researcher must confirm all values, even those explicitly stated in the workbon.
+  changeInput('material',setup.material);
+  changeInput('film',setup.film);
+  changeInput('density',setup.density);
   if(setup.modality==='xray')press('modeXray');
   else{
    press('modeGamma');
@@ -355,6 +648,7 @@ function startResearch(event){
    changeInput('manualCi',setup.ci);
   }
   state.setupReady=true;state.setupBonId=bon.id;
+  clearMissingCalculatorMarkers();
   $('planningResearchDialog').close();render();
   notice('Onderzoeksgegevens ingevuld voor bon '+idLabel(bon)+'. Controleer het toestelmodel, de doorstraalde dikte, IQI en de originele veiligheidscontroles. Klik daarna Berekenen.');
  }catch(e){
@@ -383,17 +677,35 @@ function readCurrentShot(){
 }
 async function captureShot(event){
  if(!activeBon()||!activeRole('researcher'))return;
- // Suppress the old generic-save event only for active assigned workbonnen.
  event.preventDefault();event.stopImmediatePropagation();
  const button=$('ndtSaveToLog');if(button.disabled)return;
  button.disabled=true;
  try{
-  const details=readCurrentShot(),bon=activeBon();
-  const row=await state.client.addOpname(bon,details);
+  const details=readCurrentShot(),bon=activeBon(),client_id=crypto.randomUUID();
+  let row=null,queued=false;
+  if(navigator.onLine&&state.client){
+   try{row=await state.client.addOpname(bon,{...details,client_id});}
+   catch(error){
+    // Never queue authorization failures: only recoverable connection errors.
+    if(!/network|fetch|netwerk|verbinding|timeout|offline/i.test(errorText(error))||
+      !state.offlineCache)throw error;
+   }
+  }
+  if(!row){
+   if(!state.offlineCache)throw Error('Offline opslag niet ontgrendeld: de opname is niet bewaard.');
+   await state.offlineCache.queueShot({client_id,bon_id:bon.id,details});
+   row={id:client_id,bon_id:bon.id,created_by:state.user.id,created_at:new Date().toISOString(),
+    details,pending_sync:true};
+   queued=true;
+  }
   state.opnames.unshift(row);
-  $('saveResult')?.click(); // Reuse existing local logbook without changing its formulas.
-  $text('ndtStickyReason','Opname centraal opgeslagen bij bon '+idLabel(bon)+'. '+NO_RT_RELEASE);
-  notice('Opname veilig opgeslagen bij '+bonTitle(bon)+'. Kies Volgende opname om instellingen te hergebruiken.');
+  if(state.offlineCache)await state.offlineCache.saveSnapshot({
+   bons:state.bons,opnames:state.opnames,role:'researcher'});
+  // Do not write a second, unencrypted copy into the legacy localStorage logbook.
+  const message=queued?'Opname versleuteld in wachtrij; synchroniseert na verbinding.':
+   'Opname centraal opgeslagen bij bon '+idLabel(bon)+'.';
+  $text('ndtStickyReason',message+' '+NO_RT_RELEASE);
+  notice(message+' Volgende opname behoudt de eerder gekozen instellingen.');
   render();
  }catch(e){
   $text('ndtStickyReason','Opslaan bij werkbon mislukt: '+errorText(e));
@@ -405,27 +717,25 @@ async function markReady(){
  if(!state.opnames.some(s=>s.bon_id===bon.id)){
   notice('Sla eerst minimaal één opname bij deze werkbon op.',true);return;
  }
+ if(!navigator.onLine||!state.client){
+  notice('Er is geen verbinding. Bewaar metingen versleuteld en meld pas Gereed na synchronisatie.',true);
+  return;
+ }
  try{
+  if(state.offlineCache){
+   await flushOfflineOutbox();
+   const pending=await state.offlineCache.draftLogs();
+   if(pending.some(x=>x.bon_id===bon.id)){
+    notice('Er staan nog niet-verstuurde opnames in de wachtrij. Eerst synchroniseren.',true);
+    return;
+   }
+  }
   await state.client.changeResearchStatus(bon.id,'Gereed');
   bon.status='Gereed';state.activeId=null;state.setupReady=false;state.setupBonId=null;
   render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
-  notice('Werkbon '+idLabel(bon)+' als Gereed gemeld. Planning ziet de voortgang en resultaten.');
+  notice('Werkbon '+idLabel(bon)+' als Gereed gemeld. Planning ontvangt de opgeslagen metingen.');
   document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
  }catch(e){notice('Gereedmelden mislukt: '+errorText(e),true);}
-}
-async function finalizeBon(bon){
- if(!bon||!activeRole('planning'))return;
- try{
-  const shots=state.opnames.filter(s=>s.bon_id===bon.id);
-  const report=buildReport({bon:bonData(bon),opnames:shots.map(s=>({...s.details,date:s.created_at})),
-   onderzoekerEmail:state.user.email,
-   onderzoekerNaam:state.user.user_metadata?.full_name||state.user.user_metadata?.name||null});
-  const href=reportMailto({email:state.user.email,bon:bonData(bon),report});
-  await state.client.setPlannerStatus(bon.id,'Afgerond');
-  bon.status='Afgerond';render();
-  notice('Werkbon afgerond. Mailconcept geopend; controleer en verstuur het zelf.');
-  window.location.href=href;
- }catch(e){notice('Afronden mislukt: '+errorText(e),true);}
 }
 function populateForm(bon){
  const form=$('planningBonForm'),data=bonData(bon);
@@ -438,13 +748,20 @@ function populateForm(bon){
  renderImportSummary();
 }
 function renderImportSummary(){
- const form=$('planningBonForm');
- const raw=Object.fromEntries(new FormData(form).entries());
+ const form=$('planningBonForm'),raw=Object.fromEntries(new FormData(form).entries());
  const summary=$('planningImportSummary');summary.replaceChildren();
- summary.append(elem('strong','',raw.klant||'Klant nog onbekend'),
-  elem('small','','Bon '+(raw.bonnummer||'—')+' · Order '+(raw.ordernummer||'—')+
-   ' · '+(raw.datum||'Datum ontbreekt')),
-  elem('small','',raw.adres||'Adres ontbreekt'));
+ const fields=[
+  ['Opdracht- / Bonnummer','bonnummer'],['Klant','klant'],['Adres','adres'],['Order','ordernummer'],
+  ['Datum','datum'],['Start','starttijd'],['Einde','eindtijd'],['Bron / toestel','bron_of_toestel'],
+  ['Materiaal','materiaal'],['Wanddikte','wanddikte_mm'],['SFD','sfd_mm'],
+  ['Film','film'],['Doelzwarting','doelzwarting'],['Procedure','procedure_code'],['Revisie','revisie']
+ ];
+ summary.append(elem('strong','','Controleer gegevens van de werkbon'));
+ for(const [name,key] of fields){
+  const value=String(raw[key]||'').trim();
+  summary.append(elem('small',value?'plan-field-ready':'plan-status-pending',
+   name+': '+(value||'Nog in te vullen')));
+ }
 }
 function openBonDialog(bon=null){
  if(!activeRole('planning')){notice('Alleen Planning kan werkbonnen maken.',true);return;}
@@ -473,7 +790,8 @@ async function autoAnalyze(generation){
   // Only planning values are populated, never the researcher-specific measurements.
   const form=$('planningBonForm');
   for(const field of ['bonnummer','klant','adres','ordernummer','bron_of_toestel',
-   'procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd']){
+   'procedure_code','revisie','opmerkingen','datum','starttijd','eindtijd',
+   'materiaal','materiaal_omschrijving','wanddikte_mm','sfd_mm','film','doelzwarting','activiteit_ci','kv','ma']){
    const input=form.elements.namedItem(field);
    if(input)input.value=values[field]??'';
   }
@@ -529,14 +847,27 @@ async function saveBon(event){
  finally{button.disabled=false;$text('planningSaveBon','Werkbon / Concept opslaan');}
 }
 async function addResearcher(event){
- event.preventDefault();
+ event.preventDefault();if(!activeRole('planning')||!state.client)return;
  const button=event.currentTarget.querySelector('button');button.disabled=true;
  try{
-  await state.client.addResearcher($('planningResearcherEmail').value);
-  const snapshot=await state.client.list();state.members=snapshot.members;
+  const invite=await state.client.createInvite(
+   $('planningResearcherEmail').value,$('planningInviteCompany').value||null);
+  const company=state.companyAdminOptions.find(x=>x.id===invite.company_id);
+  const compose=buildPlanningTeamInvite({
+   email:invite.email,token:invite.token,origin:location.origin,path:location.pathname,
+   companyName:company?.name||'de NDT Planning-werkruimte'
+  });
   $('planningResearcherEmail').value='';
-  renderMembership();$text('planningTeamStatus','Onderzoeker toegevoegd. Je kunt nu bonnen toewijzen.');
- }catch(e){$text('planningTeamStatus','Toevoegen mislukt: '+errorText(e));}
+  const panel=$('planningTeamStatus');panel.replaceChildren();
+  panel.append(elem('span','','Uitnodiging aangemaakt (7 dagen, eenmalig). Er is nog geen e-mail verzonden. '));
+  const link=elem('a','plan-invite-send','Open uitnodigingsmail en klik op Verzenden');
+  link.href=compose.mailto;panel.append(link);
+  const copy=action('Kopieer uitnodigingslink',async()=>{
+   try{await navigator.clipboard.writeText(compose.link);notice('Uitnodigingslink gekopieerd. Deel deze uitsluitend met '+invite.email+'.');}
+   catch{notice('Kopiëren niet toegestaan. Gebruik de uitnodigingsmail.',true);}
+  },'plan-invite-copy');
+  panel.append(copy);
+ }catch(e){$text('planningTeamStatus','Uitnodiging mislukt: '+errorText(e));}
  finally{button.disabled=false;}
 }
 function saveProcedure(event){
@@ -562,6 +893,7 @@ function context(){
 function init(){
  if(!$('screen-planning'))return;
  window.ndtWorkbonContext=context;
+ initServiceRecord();
  const planningNav=document.querySelector('.bottom-nav [data-nav="planning"]');
  planningNav?.addEventListener('click',()=>{
   state.filter='today';state.search='';$('planningSearch').value='';void refreshPlanning();
@@ -570,6 +902,7 @@ function init(){
  $('planningRefresh')?.addEventListener('click',()=>void refreshPlanning());
  $('planningAdd')?.addEventListener('click',()=>openBonDialog());
  $('planningAddResearcherForm')?.addEventListener('submit',addResearcher);
+ $('planningOfflineUnlockForm')?.addEventListener('submit',unlockOffline);
  document.querySelectorAll('[data-plan-filter]').forEach(b=>b.addEventListener('click',()=>{
   state.filter=b.dataset.planFilter;renderAgenda();
  }));
@@ -615,14 +948,6 @@ function init(){
   state.activeId=null;state.setupBonId=null;state.setupReady=false;render();
   window.dispatchEvent(new Event('ndt-active-workbon-changed'));
  });
- $('planningMailReport')?.addEventListener('click',()=>{
-  const candidate=state.bons.find(x=>x.status==='Gereed');
-  if(candidate)void finalizeBon(candidate);else notice('Selecteer eerst een gereedgemelde bon.',true);
- });
- $('planningRecordsMail')?.addEventListener('click',()=>{
-  const candidate=state.bons.find(x=>x.status==='Gereed');
-  if(candidate)void finalizeBon(candidate);else notice('Er is geen gereedgemelde bon.',true);
- });
  // The original calculator is untouched; only prevent a new assigned bon
  // being calculated with stale values before its five researcher inputs are set.
  $('calculate')?.addEventListener('click',event=>{
@@ -632,13 +957,32 @@ function init(){
   if(!$('planningResearchDialog').open)openResearchDialog(activeBon(),true);
  },true);
  $('ndtSaveToLog')?.addEventListener('click',captureShot,true);
- window.addEventListener('ndt-auth-scope-changed',()=>{
-  clearUserData();
+ window.addEventListener('ndt-auth-scope-changed',event=>{
+  // Keep AES-GCM key in memory only across the same device's offline -> online
+  // transition. It will be discarded if the online user ID differs.
+  const restored=event.detail?.mode==='signed-in';
+  clearUserData({keepEncryptedCache:restored&&Boolean(state.offlineCache)});
+  if(restored){
+   void refreshPlanning().then(()=>{
+    // Open the authorized workboard on first sign-in (without a role picker).
+    if(['planning','researcher'].includes(state.role)&&
+       !document.querySelector('#screen-planning')?.hidden)return;
+    if(['planning','researcher'].includes(state.role))
+      document.querySelector('.bottom-nav [data-nav="planning"]')?.click();
+   });
+  }
  });
  window.addEventListener('ndt-private-naslag-logout',()=>clearUserData());
- window.addEventListener('offline',()=>{if(state.role==='researcher'||state.role==='planning'){
-  clearUserData();notice('Gedeelde Planning offline niet beschikbaar. De lokale onderzoekscalculator blijft werken.',true);
- }});
+ window.addEventListener('offline',()=>{
+  if(state.role==='researcher'&&state.offlineCache){
+   state.client=null;notice('Versleutelde offline modus actief. Opnames worden bewaard tot opnieuw online.');
+   $text('planningOfflineStatus','Offline: opnames worden versleuteld bewaard en later gesynchroniseerd.');
+  }else if(state.role==='researcher'||state.role==='planning'){
+   clearUserData();notice('Gedeelde Planning offline alleen beschikbaar na ontgrendelen van de versleutelde werkboncache.',true);
+  }
+ });
+ window.addEventListener('online',()=>{if(state.offlineCache||state.role==='researcher')void refreshPlanning();});
+ window.addEventListener('ndt-planning-invite-accepted',()=>void refreshPlanning());
  render();
 }
 if(typeof document!=='undefined'){

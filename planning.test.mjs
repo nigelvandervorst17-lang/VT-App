@@ -24,7 +24,7 @@ test('demo bonnen are still intact as trial examples',()=>{
  assert.equal(b.bonnummer,'2614105');assert.equal(b.datum,'2026-11-18');
  assert.equal(b.geometrie,null);assert.equal(b.techniek,null);
 });
-test('planner stores neutral metadata only, never the five technical fields',()=>{
+test('planner stores explicitly stated technical proposals but never infers geometry or technique',()=>{
  const values={
   bonnummer:' BON 01 ',klant:'Klant A',adres:'Straat 1',ordernummer:'123',
   procedure_code:'MM 18100 E',revisie:'22',bron_of_toestel:'Ir-192',
@@ -33,11 +33,11 @@ test('planner stores neutral metadata only, never the five technical fields',()=
  };
  const record=planningRecord(values);
  assert.equal(record.bonnummer,'BON 01');assert.equal(record.klant,'Klant A');
- for(const key of ['geometrie','techniek','wanddikte_mm','sfd_mm','activiteit_ci','kv','ma'])
-  assert.equal(key in record,false,key);
+ for(const key of ['geometrie','techniek'])assert.equal(key in record,false,key);
+ for(const key of ['wanddikte_mm','sfd_mm','activiteit_ci','kv','ma'])assert.ok(key in record,key);
  assert.equal(dispatchStatus({data:record,assigned_to:null}), 'Concept');
  assert.equal(dispatchStatus({data:{...record,datum:'2026-11-18'},assigned_to:'researcher-1'}),'Ingepland');
- assert.equal(dispatchStatus({data:{...record,klant:null,datum:'2026-11-18'},assigned_to:'researcher-1'}),'Concept');
+ assert.equal(dispatchStatus({data:{...record,klant:null,datum:'2026-11-18'},assigned_to:'researcher-1'}),'Ingepland');
 });
 test('AI returns only known fields; missing source settings stay null',()=>{
  const data=parseBonAnswer('{"bonnummer":"001","klant":"ABC","techniek":null,"geometrie":null,"wanddikte_mm":null,"extra":"untrusted"}');
@@ -73,9 +73,9 @@ test('central API: researcher cannot create workbon or save to unassigned bon',a
  const connection={
   root:'https://test.supabase.co',restore:()=>true,user:async()=>user,
   select:async table=>table==='planning_members'?[{user_id:user.id,role:'researcher'}]:[],
-  insert:async()=>[{id:'shot-1'}],rpc:async()=>true,token:()=> 'token'
+  insert:async()=>[{id:'shot-1'}],rpc:async (name,args)=>name==='planning_save_opname'?args.p_client_id:true,token:()=> 'token'
  };
- const client=makePlanningAPI({connection,environment:{navigator:{onLine:true},localStorage:{getItem:()=>null},fetch:async()=>new Response(null,{status:200})}});
+ const client=makePlanningAPI({connection,environment:{navigator:{onLine:true},localStorage:{getItem:()=>null},crypto:{randomUUID:()=> 'shot-1'},fetch:async()=>new Response(null,{status:200})}});
  await client.authenticate();
  await assert.rejects(()=>client.saveBon({values:{klant:'A'}}),/Alleen Planning/);
  await assert.rejects(()=>client.addOpname({id:'1',assigned_to:'other',status:'In behandeling'},{}),/toegewezen/);
@@ -104,10 +104,10 @@ test('original PDF is transferred with JWT into private storage, never public UR
  assert.equal(calls[0].init.headers['x-upsert'],'false');
  assert.doesNotMatch(apiSource,/service_role|sb_secret_/);
 });
-test('auto OCR begins on upload; no separate read buttons and no Gemini technical guesses',()=>{
+test('auto OCR starts on upload; unknowns stay null and explicit on-bon proposals are review-only',()=>{
  assert.match(ui,/planningFile'\)\?\.addEventListener\('change',\(\)=>void autoReadFile\(\)\)/);
  assert.match(ui,/parseBonViaGemini\(state.pendingText/);
- assert.match(reader,/Ontbrekende of onzekere velden zijn null/);
+ assert.match(reader,/Ontbrekende of onzekere velden MOETEN null zijn/);
  assert.match(reader,/geen RT-vrijgave|geen RT-vrijgave/i);
  assert.doesNotMatch(html,/id="planningReadFile"/);
  assert.doesNotMatch(html,/id="planningAIRead"/);
@@ -118,8 +118,10 @@ test('technical setup belongs only to researcher and is reset on different workb
  const start=html.indexOf('id="planningBonForm"');
  const end=html.indexOf('</form>',start);
  const planningForm=html.slice(start,end);
- for(const key of ['geometrie','techniek','wanddikte_mm','sfd_mm','activiteit_ci','kv','ma'])
+ for(const key of ['geometrie','techniek'])
   assert.ok(!planningForm.includes('name="'+key+'"'),key);
+ for(const key of ['wanddikte_mm','sfd_mm','activiteit_ci','kv','ma','materiaal','film','doelzwarting'])
+  assert.ok(planningForm.includes('name="'+key+'"'),key);
  assert.match(html,/id="planningResearchForm"/);
  for(const key of ['geometry','technique','wall','distance','ci','kv','ma'])
   assert.ok(html.includes('name="'+key+'"'),key);
@@ -133,14 +135,14 @@ test('technical setup belongs only to researcher and is reset on different workb
 test('existing calculate is never reimplemented; save shot uses existing result and Auth+RLS',()=>{
  assert.doesNotMatch(ui,/calculateGamma\(|calculateXray\(|interpolateLog\(|lookupProcedureIqi\(/);
  assert.match(ui,/resultCard'\)\?\.classList\.contains\('success'\)/);
- assert.match(ui,/state.client.addOpname\(bon,details\)/);
+ assert.match(ui,/state.client.addOpname\(bon,\{\.\.\.details,client_id\}\)/);
  assert.match(ui,/event.stopImmediatePropagation\(\)/);
  assert.match(ui,/Opslaan bij werkbon/);
  assert.match(ui,/planningNextShot/);
  const naslag=src('private-naslag.mjs');
  assert.match(naslag,/can_view_private_naslag/);
 });
-test('report shows original non-release footnote',()=>{
+test('legacy report helper remains non-releasing but workmail button is absent',()=>{
  const bon=demoWorkbonnen('2026-11-17')[0];
  const report=buildReport({bon,onderzoekerEmail:'planner@example.com',
   opnames:[{source:'Ir-192',result:'Indicatief',wall:'5',distance:'500',iqiWire:'W10'}]});
@@ -153,9 +155,16 @@ test('mobile dark header, plan nav and six research actions are clearly visible'
  for(const id of ['screen-planning','planningAdd','planningDraftFilter','planningRefresh',
   'planningAddResearcherForm','planningImportDialog','planningResearchDialog',
   'planningStartResearch','planningNextShot','planningFinish','planningResearchConfirm',
-  'planningResearchError','planningResearchModality','planningRecordsMail'])
+  'planningResearchError','planningResearchModality','planningOfflinePanel'])
  assert.match(html,new RegExp('id="'+id+'"'),id);
  assert.match(html,/data-nav="planning"/);
  assert.match(src('mobile-shell.css'),/Compact mobile top bar/);
  assert.match(src('planning.css'),/plan-card-actions/);
+});
+
+test('no in-app workmail buttons remain and assigned missing bon can be started',()=>{
+ assert.doesNotMatch(html,/id="planningMailReport"|id="planningRecordsMail"/);
+ assert.match(html,/Metingen afronden &amp; terugsturen/);
+ assert.match(ui,/clearMissingCalculatorMarkers/);
+ assert.match(ui,/markMissingCalculatorInputs/);
 });

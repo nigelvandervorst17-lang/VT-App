@@ -162,8 +162,8 @@
 <link rel="stylesheet" href="./ndt-pro-theme.css?v=ui1">
 <link rel="stylesheet" href="./ndt-procedures-button.css?v=1">
 <link rel="stylesheet" href="./rt-enhancements.css?v=1">
-<link rel="stylesheet" href="./mobile-shell.css?v=4">
-<link rel="stylesheet" href="./planning.css?v=4">
+<link rel="stylesheet" href="./mobile-shell.css?v=6">
+<link rel="stylesheet" href="./planning.css?v=5">
 <script>
 try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
 catch{document.documentElement.classList.add('ndt-entry-loading')}
@@ -174,6 +174,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <header class="top-header">
   <div class="brand"><img class="ndt-brand-banner" src="./brand/ndt-banner-512.webp" alt="NDT Radiography Pro" width="512" height="171" fetchpriority="high" decoding="async"></div>
   <label class="lang-control"><span class="sr-only" data-i18n="language">Taal</span><select id="language" aria-label="Taal / Language / Sprache"><option value="nl">🇳🇱 NL</option><option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option></select></label>
+  <span id="ndtActiveAccountContext" class="ndt-active-account-context" role="status" aria-live="polite" hidden></span>
   <div class="ndt-mobile-header-tools">
     <span id="ndtConnStatus" class="ndt-connection" role="status" aria-live="polite">Online</span>
     <button id="ndtAccountButton" class="ndt-account-button" type="button" aria-haspopup="true" aria-controls="ndtAccountMenu" aria-expanded="false" title="Account en offline gegevens" aria-label="Account openen">
@@ -198,21 +199,25 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 <a href="./controle.html?v=385">Open technische controle</a>
 </div>
 <main>
-<div class="safety-strip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
+<div class="safety-strip" id="ndtResearchSafetyStrip"><span class="safety-dot" aria-hidden="true"></span><div><strong data-i18n="researchOnly">ONDERZOEKSVERSIE</strong><span data-i18n="safetyLine">Niet vrijgegeven voor werkelijke RT-belichtingen.</span></div></div>
 <section id="ndtEntryGate" hidden aria-label="Inloggen of proefversie starten">
  <div class="ndt-entry-card">
   <h1>Welkom bij NDT Radiography Pro</h1>
-  <p>Log eenmalig in. Daarna herkent dit toestel je sessie, ook wanneer de verbinding wegvalt. Bedrijfsgegevens blijven offline versleuteld en vragen een aparte wachtzin.</p>
+  <p>Log in om je werkbonnen en berekeningen te openen.</p>
   <form id="ndtEntryForm" novalidate>
    <label for="ndtEntryEmail">E-mailadres<input id="ndtEntryEmail" type="email" autocomplete="email" required placeholder="naam@bedrijf.nl"></label>
    <label for="ndtEntryPassword">Wachtwoord<input id="ndtEntryPassword" type="password" autocomplete="current-password" required placeholder="Wachtwoord"></label>
    <p id="ndtEntryStatus" class="ndt-entry-feedback" role="status" aria-live="polite" data-kind="info">Vul je e-mailadres en wachtwoord in.</p>
    <button id="ndtEntrySubmit" type="submit">Inloggen</button>
-   <button id="ndtEntryRegister" class="secondary" type="button">Nieuw account aanmaken</button>
+   <button id="ndtEntryRegister" class="secondary" type="button" hidden>Account registreren</button>
   </form>
-  <button id="ndtEntryTrial" class="secondary" type="button">Start gratis proefversie (50 berekeningen)</button>
-  <button id="ndtEntryOffline" class="secondary" type="button" hidden>Doorgaan in Offline Bunker-modus</button>
-  <p>Een nieuw account moet eerst per e-mail worden bevestigd. De proefversie is een lokale onderzoeksdemo, geen licentie- of veiligheidsvrijgave.</p>
+  <button id="ndtEntryTrial" class="secondary" type="button">Start demomodus (50 berekeningen)</button>
+  <button id="ndtEntryRegisterLink" class="ndt-entry-link" type="button" aria-expanded="false">Nog geen account? Nieuw account registreren (klaar binnen 1 minuut)</button>
+  <details class="ndt-offline-login"><summary>Versleutelde offline gegevens openen</summary>
+    <p>Alleen na een eerder ingerichte Offline Bunker en met uw aparte wachtzin.</p>
+    <button id="ndtEntryOffline" class="secondary" type="button" hidden>Offline Bunker openen</button>
+  </details>
+  <p class="ndt-entry-footer">Registreer met je zakelijke e-mailadres en bevestig je account via e-mail. De demo is alleen voor evaluatie.</p>
  </div>
 </section>
 <a href="./research/company-suite/index.html" id="ndtCompanyLaunch" class="ndt-company-launch" aria-label="Bedrijfsmodus openen: proefberekeningen en bedrijfsaccounts">
@@ -229,7 +234,8 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
        are bridged by compact-layout.mjs; when JS is unavailable, the full form remains visible. -->
   <section class="rt-compact-calculator" id="rtCompactPanel" aria-label="Compact rekenoverzicht" hidden>
     <div class="plan-calc-top"><button id="planningOpenTop" type="button">▦ Planning · Mijn werkbonnen</button></div>
-    <div id="planningActiveBar" class="plan-active-bar" hidden><div class="plan-active-row"><strong id="planningActiveLabel">Actieve werkbon</strong><button id="planningActiveInfo" type="button" aria-label="Werkboninformatie">ⓘ</button><button id="planningStartResearch" type="button">Start onderzoek</button><button id="planningCalculate" type="button">Berekenen</button><button id="planningNextShot" type="button" hidden>Volgende opname</button><button id="planningFinish" type="button">Meld gereed</button><button id="planningDetach" type="button" aria-label="Werkbon loskoppelen">×</button></div><p id="planningActiveWarning" class="plan-active-attention" hidden></p><div id="planningActiveDetails" hidden></div></div>
+    <p id="ndtResearchCompactDisclaimer" class="ndt-research-disclaimer">ONDERZOEKSVERSIE · Niet vrijgegeven voor werkelijke RT-belichtingen. Controleer procedure, actuele brongegevens, IQI en veiligheidsmaatregelen.</p>
+    <div id="planningActiveBar" class="plan-active-bar" hidden><div class="plan-active-row"><strong id="planningActiveLabel">Actieve werkbon</strong><button id="planningActiveInfo" type="button" aria-label="Werkboninformatie">ⓘ</button><button id="planningStartResearch" type="button">Start onderzoek</button><button id="planningCalculate" type="button">Berekenen</button><button id="planningNextShot" type="button" hidden>Volgende opname</button><button id="planningFinish" type="button">Metingen afronden &amp; terugsturen</button><button id="planningDetach" type="button" aria-label="Werkbon loskoppelen">×</button></div><p id="planningActiveWarning" class="plan-active-attention" hidden></p><div id="planningActiveDetails" hidden></div></div>
     <div class="rt-compact-toolbar">
       <strong id="rtCompactTitle">Snelle onderzoeksberekening</strong>
       <a class="ndt-se75-quicklink" id="ndtSe75ResearchShortcut" href="./se75.html" aria-label="Open het aparte mobiele Se-75 onderzoeksinvoerscherm">Se-75 snelinvoer</a>
@@ -476,7 +482,19 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
  </div>
  <label class="plan-search">Zoek werkbon<input id="planningSearch" type="search" placeholder="Zoek op klant, bonnummer of order" autocomplete="off"></label>
  <p id="planningNotice" class="small-muted" role="status" aria-live="polite">Persoonlijke planning laden…</p>
- <section id="planningTeam" class="plan-team" hidden><h2>Onderzoekers toewijzen</h2><p class="small-muted">Onderzoekers maken eerst zelf een account aan. Voeg hun bevestigde e-mailadres hier toe.</p><form id="planningAddResearcherForm"><input id="planningResearcherEmail" type="email" placeholder="onderzoeker@bedrijf.nl" autocomplete="email" required><button type="submit">Onderzoeker toevoegen</button></form><p id="planningTeamStatus" role="status"></p></section>
+ <section id="planningTeam" class="plan-team" hidden><h2>Collega uitnodigen en werkbon toewijzen</h2>
+ <p class="small-muted">Maak een eenmalige uitnodigingslink voor een collega. Alleen het bevestigde e-mailadres kan de uitnodiging accepteren. De link verloopt na 7 dagen.</p>
+ <form id="planningAddResearcherForm">
+  <input id="planningResearcherEmail" type="email" placeholder="onderzoeker@bedrijf.nl" autocomplete="email" required>
+  <select id="planningInviteCompany" aria-label="Koppel uitnodiging aan werkruimte"><option value="">Planning-werkruimte</option></select>
+  <button type="submit">Uitnodigingslink maken</button>
+ </form><p id="planningTeamStatus" role="status" aria-live="polite"></p>
+</section>
+<section id="planningOfflinePanel" class="plan-offline-panel" hidden>
+ <h2>Versleuteld offline werken</h2><p class="small-muted">Bescherm een kopie van uw toegewezen werkbonnen en niet-verstuurde opnames met een aparte wachtzin. Synchronisatie start automatisch zodra de app weer online is.</p>
+ <form id="planningOfflineUnlockForm"><input id="planningOfflinePassphrase" type="password" autocomplete="off" minlength="8" placeholder="Aparte offline wachtzin (minimaal 8 tekens)" required><button type="submit">Offline werkbonnen ontgrendelen</button></form>
+ <p id="planningOfflineStatus" role="status" aria-live="polite">Niet ontgrendeld. Offline werkbonnen worden niet onversleuteld bewaard.</p>
+</section>
  <div id="planningDayList" class="plan-day-list"></div>
  <details class="plan-library"><summary>Procedure-bibliotheek · Bekijk en voeg procedures toe</summary>
   <p class="small-muted">Proceduregegevens vullen bestaande invoervelden alleen vooraf in; geen technische goedkeuring of RT-vrijgave.</p>
@@ -492,7 +510,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
    <button type="submit">Procedure opslaan</button>
   </form>
  </details>
- <section class="plan-day-logs" aria-labelledby="planningLogHeading"><h2 id="planningLogHeading">Werklogboek en rapportage</h2><p id="planningLogSummary" class="small-muted">Geen actieve werkbon.</p><div id="planningLoggedShots"></div><button type="button" id="planningMailReport">Afronden &amp; Mail rapportage</button></section>
+ <section class="plan-day-logs" aria-labelledby="planningLogHeading"><h2 id="planningLogHeading">Werkbonmetingen &amp; voortgang</h2><p id="planningLogSummary" class="small-muted">Geen actieve werkbon.</p><div id="planningLoggedShots"></div></section>
 </section>
 <dialog id="planningImportDialog" class="plan-import-dialog" aria-labelledby="planningImportHeading">
  <h2 id="planningImportHeading">Werkbon controleren en toewijzen</h2>
@@ -513,17 +531,29 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <label>Bron/toestel<input name="bron_of_toestel" maxlength="260"></label>
   <label>Procedurecode<input name="procedure_code" maxlength="70"></label>
   <label>Revisie<input name="revisie" maxlength="20"></label>
+  <label>Materiaal op bon<select name="materiaal"><option value="">Nog in te vullen</option><option value="Fe">Staal</option><option value="RVS300">RVS 300</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Ti">Titanium</option></select></label>
+  <label>Materiaalomschrijving<input name="materiaal_omschrijving" maxlength="260" placeholder="Letterlijke aanduiding op bon"></label>
+  <label>Wanddikte op bon (mm)<input name="wanddikte_mm" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Bron-filmafstand op bon (mm)<input name="sfd_mm" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Filmtype<select name="film"><option value="">Nog in te vullen</option><option>D4</option><option>D5</option><option>D7</option></select></label>
+  <label>Doelzwarting op bon<input name="doelzwarting" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Activiteit (Ci) op bon<input name="activiteit_ci" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Spanning (kV) op bon<input name="kv" inputmode="decimal" placeholder="Nog in te vullen"></label>
+  <label>Stroom (mA) op bon<input name="ma" inputmode="decimal" placeholder="Nog in te vullen"></label>
   <label>Overige gegevens / opmerkingen<textarea name="opmerkingen" rows="3" maxlength="2000"></textarea></label>
   <label>Onderzoeker toewijzen<select name="assigned_to" id="planningAssignee"><option value="">Nog niet toegewezen · Concept</option></select></label>
-  <p class="small-muted plan-form-note">Planning voert geen geometrie, techniek, wanddikte, SFD of activiteit in. Die kiest de onderzoeker op het rekenscherm.</p>
+  <p class="small-muted plan-form-note">Alle bonwaarden zijn voorstellen. Onbekende gegevens blijven “Nog in te vullen”. De onderzoeker controleert en wijzigt de technische waarden vóór Berekenen. Geometrie en opnametechniek kiest uitsluitend de onderzoeker.</p>
   <div class="plan-import-actions"><button type="submit" id="planningSaveBon">Werkbon / Concept opslaan</button><button id="planningCancel" type="button">Annuleren</button></div>
  </form>
 </dialog>
 <dialog id="planningResearchDialog" class="plan-import-dialog plan-research-dialog" aria-labelledby="planningResearchHeading">
  <h2 id="planningResearchHeading">Start onderzoek · Werkbon</h2>
- <p id="planningResearchBonSummary" class="small-muted">Vul de vijf onderzoekersgegevens zelf in. Er wordt niets geraden.</p>
+ <p id="planningResearchBonSummary" class="small-muted">Gevonden bonwaarden zijn voorstellen. Controleer ze vóór onderzoek; ontbrekende waarden worden niet geraden.</p>
  <form id="planningResearchForm" class="plan-bon-form">
-  <label>Bronsoort<select name="modality" id="planningResearchModality"><option value="gamma">Gamma</option><option value="xray">X-ray</option></select></label>
+  <label>Materiaal<select name="material" required><option value="">Nog in te vullen · kies zelf</option><option value="Fe">Staal</option><option value="RVS300">RVS 300</option><option value="Al">Aluminium</option><option value="Cu">Koper</option><option value="Ti">Titanium</option></select></label>
+  <label>Filmtype<select name="film" required><option value="">Nog in te vullen · kies zelf</option><option>D4</option><option>D5</option><option>D7</option></select></label>
+  <label>Doelzwarting<input name="density" type="text" inputmode="decimal" required placeholder="Nog in te vullen"></label>
+  <label>Bronsoort<select name="modality" id="planningResearchModality" required><option value="">Nog in te vullen · kies zelf</option><option value="gamma">Gamma</option><option value="xray">X-ray</option></select></label>
   <label id="planningResearchIsotopeWrap">Isotoop<select name="isotope"><option value="">Zelf kiezen</option><option>Se-75</option><option>Ir-192</option></select></label>
   <label>1. Geometrie<select name="geometry" required><option value="">Kies zelf</option><option value="plate">Plaat / Las</option><option value="pipe">Buis / Pijp</option></select></label>
   <label>2. Techniek<select name="technique" required><option value="">Kies zelf</option><option value="sw">SWSI</option><option value="dwsi">DWSI</option><option value="dwdi">DWDI</option></select></label>
@@ -532,7 +562,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <label id="planningResearchCiWrap">5. Activiteit (Ci)<input name="ci" type="text" inputmode="decimal" placeholder="Actuele activiteit"></label>
   <label id="planningResearchKvWrap" hidden>5. Spanning (kV)<input name="kv" type="text" inputmode="decimal" placeholder="kV"></label>
   <label id="planningResearchMaWrap" hidden>5. Stroom (mA)<input name="ma" type="text" inputmode="decimal" placeholder="mA"></label>
-  <p class="small-muted plan-form-note">Bij X-ray moet je bovendien zelf een exact ondersteund toestelmodel kiezen in Rekenen. De bestaande IQI-, curve- en veiligheidsvalidaties blijven leidend.</p>
+  <p class="small-muted plan-form-note">Bonwaarden zijn niet automatisch geverifieerd. Kies zelf geometrie/techniek, controleer actuele waarden en het exact ondersteunde toestelmodel. De originele IQI-, curve- en veiligheidsvalidaties blijven leidend.</p>
   <p id="planningResearchError" role="alert" class="plan-research-error" hidden></p>
   <div class="plan-import-actions"><button id="planningResearchConfirm" type="submit">Start onderzoek</button><button id="planningResearchCancel" type="button">Annuleren</button></div>
  </form>
@@ -662,7 +692,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
  </div>
  <div id="privateNaslagUpload" class="panel ref-panel" hidden>
   <h2>Beheerder · privénaslag beheren</h2>
-  <p>Alleen jouw expliciet geactiveerde beheerder-account heeft toegang. De originele WEBP-bestanden worden rechtstreeks naar een private Supabase-bucket geüpload.</p>
+  <p>Alleen jouw expliciet geactiveerde beheerder-account heeft toegang. De originele WEBP-bestanden worden rechtstreeks naar beveiligde, private bedrijfsopslag geüpload.</p>
   <form id="privateNaslagUploadForm">
    <label for="privateNaslagFiles">Oorspronkelijke grafiek- en schetsbestanden (.webp)</label>
    <input type="file" id="privateNaslagFiles" accept="image/webp,.webp" multiple>
@@ -725,7 +755,7 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
   <div class="section-heading"><p class="overline">FYSIEKE FILMTESTEN · LOKAAL</p>
     <h1>Praktijkmetingen</h1>
     <p class="subtitle">Registreer werkelijk gemaakte filmopnames en gemeten filmzwarting, apart van theoretische onderzoeksberekeningen.</p></div>
-  <section id="planningRecordsCard" class="plan-records-card"><h2>Werkbonrapportage</h2><p id="planningRecordsSummary">Kies een werkbon bij Planning.</p><button id="planningRecordsMail" type="button">Afronden &amp; Mail rapportage</button></section>
+  <section id="planningRecordsCard" class="plan-records-card"><h2>Gekoppelde werkbonmetingen</h2><p id="planningRecordsSummary">Kies een werkbon bij Planning.</p></section>
   <div class="panel ft-panel" id="fieldTestsPanel">
     <h2>Densitometerregister</h2>
     <p class="small-muted"><strong>Dit zijn alleen jouw eigen meetregistraties.</strong> Alle records blijven lokaal in deze browser. Er worden geen meetgegevens aan GitHub, Cloudflare of Gemini verzonden. Exporteren is nodig voor een back-up of overdracht naar een ander toestel.</p>
@@ -1010,10 +1040,55 @@ catch{document.documentElement.classList.add('ndt-entry-loading')}
 })();
 </script>
 <script type="module" src="./app.mjs?v=419"></script>
-<script type="module" src="./mobile-shell.mjs?v=2"></script>
+<script type="module" src="./mobile-shell.mjs?v=3"></script>
 <script type="module" src="./field-tests.mjs?v=394"></script>
 <script type="module" src="./ai-expert.mjs?v=392"></script>
-<script type="module" src="./planning-app.mjs?v=2"></script>
+
+<dialog id="planningServiceRecordDialog" class="plan-service-dialog" aria-labelledby="serviceRecordTitle">
+ <form id="planningServiceRecordForm">
+  <h2 id="serviceRecordTitle">Service Record bij werkbon</h2>
+  <p id="serviceRecordContext">Gebruik het lege, oorspronkelijke Service Record rev.26-7 als achtergrond. Bestaande ingevulde PDF's zijn niet toegestaan.</p>
+  <label>Leeg Service Record PDF-sjabloon (A4 liggend) <input id="serviceRecordTemplate" type="file" accept="application/pdf,.pdf" required></label>
+  <div class="plan-service-fields">
+   <label>Naam inspecteur *<input name="inspector" maxlength="60" required></label>
+   <label>Office<input name="office" maxlength="45" placeholder="Bijv. Eindhoven"></label>
+   <label>Service location<input name="serviceLocation" maxlength="65" placeholder="Locatie / vestiging"></label>
+   <label>ND-nummer<input name="nd" maxlength="35"></label>
+   <label>Report no.<input name="reportNo" maxlength="140"></label>
+   <label>Servicecode<input name="serviceCode" maxlength="16" placeholder="Bijv. N03"></label>
+   <label>Description<input name="description" maxlength="100" placeholder="Activiteit volgens werkbon"></label>
+   <label>Overnight / Offshore<input name="overnight" maxlength="30"></label>
+   <label>STD uren<input name="stdHours" inputmode="decimal" placeholder="Zelf controleren"></label>
+   <label>OVT L uren<input name="ovtLHours" inputmode="decimal"></label>
+   <label>OVT H uren<input name="ovtHHours" inputmode="decimal"></label>
+   <label>Break uren<input name="breakHours" inputmode="decimal"></label>
+   <label>Films, Weld Rates & Specials<input name="filmDescription" maxlength="95" placeholder="Filmformaat én categorie"></label>
+   <label>Verbruikte films (#)<input name="filmCount" inputmode="numeric" placeholder="Werkelijke hoeveelheid"></label>
+   <label>Inspected Items<input name="inspectedItems" maxlength="95"></label>
+   <label>PO no. / remarks<input name="rowRemarks" maxlength="100"></label>
+   <label>Retour vertrek (na)<input name="afterStart" type="time"></label>
+   <label>Retour aankomst (na)<input name="afterEnd" type="time"></label>
+   <label>Reisopmerkingen<input name="travelRemarks" maxlength="95"></label>
+   <label>KM<input name="km" inputmode="decimal"></label>
+   <label>General remarks<input name="generalRemarks" maxlength="170"></label>
+   <label>Datum handtekening<input name="signatureDate" placeholder="dd-mm-jj" maxlength="12"></label>
+  </div>
+  <p id="serviceRecordShots" class="small-muted"></p>
+  <p class="small-muted">Tijden komen uit de werkbon en lokale ritregistratie. Opnames worden geteld, maar nooit als filmverbruik aangenomen. Uren, filmhoeveelheid en KM moeten worden bevestigd.</p>
+  <label for="serviceRecordSignature">Handtekening voor akkoord klant * (tekenen op scherm)</label>
+  <canvas id="serviceRecordSignature" width="680" height="160" aria-label="Tekenveld klant" role="img"></canvas>
+  <div class="plan-service-actions">
+   <button id="serviceRecordClearSignature" type="button">Handtekening wissen</button>
+   <button id="serviceRecordGenerate" type="submit">PDF invullen en opslaan</button>
+   <button id="serviceRecordSend" type="button" disabled>PDF direct naar werkmail</button>
+   <button id="serviceRecordClose" type="button">Sluiten</button>
+  </div>
+  <p id="serviceRecordStatus" role="status" aria-live="polite">Download de ingevulde PDF. Automatisch verzenden naar werkmail is nog niet geconfigureerd.</p>
+ </form>
+</dialog>
+
+<script type="module" src="./planning-app.mjs?v=6"></script>
+<script type="module" src="./planning-invite.mjs?v=1"></script>
 <script type="module" src="./ui-polish.mjs?v=395"></script>
 <script type="module" src="./compact-layout.mjs?v=418"></script>
 <script type="module" src="./rt-material-ui.mjs?v=419"></script>

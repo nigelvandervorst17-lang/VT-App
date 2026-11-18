@@ -116,3 +116,52 @@ button:disabled{cursor:not-allowed}
 @media(max-width:420px){.plan-row{padding:10px 8px;gap:9px}.plan-heading h1{font-size:23px}}
 
 .plan-active-row #planningCalculate{background:#1275b4;border-color:#78c3f2}
+
+.plan-team select,.plan-offline-panel input{min-height:46px;border:1px solid #6187a2;background:#1c435a;color:#fff;border-radius:9px;padding:9px 12px;font-size:13px;max-width:100%;flex:1 1 190px}
+.plan-team form{display:flex;gap:8px;flex-wrap:wrap}
+.plan-offline-panel{padding:14px;margin:12px 0;border:1px solid #426580;border-radius:13px;background:#112e43}
+.plan-offline-panel[hidden]{display:none!important}
+.plan-offline-panel h2{font-size:15px;margin:0 0 8px}
+.plan-offline-panel p{font-size:11px;line-height:1.6}
+.plan-offline-panel form{display:flex;gap:9px;flex-wrap:wrap}
+.plan-offline-panel button,.plan-team form button{min-height:44px;padding:8px 12px;background:#126ca7;border:1px solid #64acd1;color:#fff;border-radius:9px;font-weight:780}
+.plan-missing{outline:2px solid #e6b76b!important;outline-offset:2px!important;background:#3b3428!important}
+.plan-proposed{outline:2px solid #5dabc6!important;outline-offset:2px!important}
+.plan-research-preview{padding:11px 12px;background:#234158;border:1px solid #577c98;border-radius:11px;font-size:12px;line-height:1.6;margin:9px 0}
+.plan-import-dialog label:has(input:not([required]):placeholder-shown) input{border-style:dashed}
+.plan-field-state{font-size:10px;color:#efc989;font-weight:800;display:block;margin-top:5px}
+.plan-status-pending{font-size:11px;color:#ffdaa0;font-weight:780}
+.plan-usage-note{font-size:11px;color:#a9cadb}
+
+/* Hide planner-only controls for field workers even if display:grid is set on the form. */
+#planningProcedureForm[hidden],#planningTeam[hidden],#planningAdd[hidden],#planningDraftFilter[hidden],#planningOfflinePanel[hidden]{display:none!important}
+.ndt-invite-feedback{font-size:12px;background:#1e4c67;border:1px solid #4a88a5;padding:12px;margin:9px 17px;color:#e7faff;border-radius:10px}
+.ndt-invite-feedback[data-error="true"]{background:#5b2c31;border-color:#b57673;color:#ffe8e4}
+#planningTeamStatus a,#planningTeamStatus button{display:inline-flex;align-items:center;min-height:40px;margin:8px 6px 3px 0;padding:9px 12px;text-decoration:none;background:#175d82;color:#fff;border:1px solid #82b1cb;border-radius:9px;font-size:12px;font-weight:780}
+
+.plan-shot-detail{background:#132f44;border:1px solid #436983;border-radius:10px;padding:9px 12px;margin:7px 0}
+.plan-shot-detail summary{font-size:12px;font-weight:800;line-height:1.5;color:#eaf6ff;cursor:pointer;min-height:34px}
+.plan-shot-field{font-size:11px;line-height:1.5;color:#c8dfed;white-space:normal;overflow-wrap:anywhere;margin:5px 0}
+.plan-shot-researcher{font-size:11px;font-weight:800;color:#a8d5ea;margin:7px 0}
+.plan-shot-not-approved{font-size:10px;font-weight:800;color:#ffe0b3;border-top:1px solid #42677f;padding:8px 0 0}
+
+/* Route chooser with field-confirmed arrival. */
+.plan-route-options{border:1px solid #477a96;background:#102d42;border-radius:9px;padding:6px 10px;max-width:100%}
+.plan-route-options summary{cursor:pointer;font-size:12px;font-weight:800;color:#a9e0ff;min-height:28px;display:flex;align-items:center}
+.plan-route-choices{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:7px}
+.plan-route-choice{font-size:12px;font-weight:750;min-height:38px;padding:10px;background:#194966;border:1px solid #558daf;border-radius:9px;color:#f2fbff;text-decoration:none}
+.plan-route-choices .plan-arrival{background:#1b715d}
+.plan-travel-status,.plan-travel-footnote{display:block;width:100%;line-height:1.45;font-size:11px;color:#d4e6ef}
+
+/* Service Record: blank template + on-device signature, no secret files cached. */
+.plan-service-dialog{border:1px solid #507c9a;background:#102d43;color:#f0f8ff;max-width:780px;width:calc(100vw - 18px);max-height:92dvh;overflow:auto;border-radius:16px;padding:16px}
+.plan-service-dialog::backdrop{background:#031222cc}
+.plan-service-dialog h2{margin:0 0 9px;font-size:20px}
+.plan-service-dialog p{line-height:1.45;font-size:12px}
+.plan-service-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.plan-service-dialog label{font-size:12px;font-weight:700;display:block;margin:8px 0}
+.plan-service-dialog input{margin-top:4px;min-height:42px;display:block;width:100%;min-width:0;border:1px solid #5985a0;background:#17394f;color:#fff;border-radius:8px;padding:9px;box-sizing:border-box}
+#serviceRecordSignature{display:block;width:100%;height:150px;touch-action:none;border:1px solid #8caaaf;background:#fff;border-radius:8px}
+.plan-service-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.plan-service-actions button{padding:11px;border-radius:9px;background:#1a638b;color:#fff;border:1px solid #6ea8c7;min-height:42px}
+@media(max-width:640px){.plan-service-fields{grid-template-columns:minmax(0,1fr)}.plan-service-dialog{padding:10px}}

@@ -12,7 +12,7 @@ test('main has the first-use login, trial and encrypted offline entry',()=>{
  for(const id of ['ndtEntryGate','ndtEntryEmail','ndtEntryPassword','ndtEntrySubmit',
   'ndtEntryTrial','ndtEntryOffline','ndtAccountButton','ndtConnStatus'])
   assert.match(html,new RegExp('id="'+id+'"'),id);
- assert.match(html,/Start gratis proefversie \(50 berekeningen\)/);
+ assert.match(html,/Start demomodus \(50 berekeningen\)/);
  assert.match(ui,/ndt-ui-trial-choice-v1/);
  assert.match(ui,/ndt-offline-cache-ready-v1/);
  assert.match(ui,/ndt-offline-workspace-v1/);
@@ -59,7 +59,7 @@ test('offline encrypted storage is not reimplemented or bypassed in the main UI'
  assert.match(cache,/AES-GCM/);
  assert.match(cache,/250000/);
  assert.match(ui,/indexedDB\.deleteDatabase/);
- assert.match(html,/Offline Bunker-modus/);
+ assert.match(html,/Offline Bunker openen/);
  assert.doesNotMatch(ui,/sessionStorage\.setItem\([^,]+,[^)]*passphrase/);
  assert.doesNotMatch(ui,/localStorage\.setItem\([^,]+,[^)]*passphrase/);
 });
@@ -139,7 +139,8 @@ test('registration directly below login uses the existing Supabase Auth client',
  const signup=html.indexOf('id="ndtEntryRegister"');
  const trial=html.indexOf('id="ndtEntryTrial"');
  assert.ok(login>=0&&signup>login&&trial>signup);
- assert.match(html,/id="ndtEntryRegister" class="secondary" type="button">Nieuw account aanmaken<\/button>/);
+ assert.match(html,/id="ndtEntryRegister" class="secondary" type="button" hidden>Account registreren<\/button>/);
+ assert.match(html,/id="ndtEntryRegisterLink"/);
  assert.ok(ui.includes('await supabase.auth.signUp({email:values.email,password:values.password})'));
  assert.ok(ui.includes('signUp:({email,password})=>api().signUp(email,password)'));
  assert.ok(ui.includes('await api().signIn(values.email,values.password)'));
