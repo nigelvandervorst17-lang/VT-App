@@ -39,13 +39,31 @@ test('All five proposed ratios remain distinct gamma and X-ray only-research hyp
  for(const [key,[g,x]] of Object.entries(target)){
   assert.equal(PROPOSED_MATERIAL_FACTORS[key].gamma,g);
   assert.equal(PROPOSED_MATERIAL_FACTORS[key].xray,x);
-  const actualGamma=compareMaterialEquivalence({material:key,mode:'gamma',wallMm:10});
+  const actualGamma=compareMaterialEquivalence({material:key,mode:'gamma',isotope:'Ir-192',wallMm:10});
   const actualXray=compareMaterialEquivalence({material:key,mode:'xray',wallMm:10});
   assert.equal(actualGamma.equivalentSteelMm,10*g);
   assert.equal(actualXray.equivalentSteelMm,10*x);
   assert.equal(actualXray.appliedToExposureEngine,false);
   assert.equal(actualXray.validatedForExposure,false);
  }
+});
+test('RVS300 gamma factor is isotope-specific in motor and preview, research-only',()=>{
+ for(const [isotope,factor] of [['Se-75',1.06],['Ir-192',1.02]]){
+  const actual=materialSteelEquivalent({material:'RVS300',mode:'gamma',isotope,thicknessMm:10});
+  const preview=compareMaterialEquivalence({material:'RVS300',mode:'gamma',isotope,wallMm:10});
+  const gamma=calculateGamma({isotope,film:'D4',density:2,thicknessMm:10,
+   distanceMm:800,activityCi:40,material:'RVS300'},curves);
+  assert.equal(actual.factor,factor);
+  assert.equal(actual.steelEquivalentMm,10*factor);
+  assert.equal(actual.researchOnly,true);
+  assert.equal(preview.proposedFactor,factor);
+  assert.equal(preview.equivalentSteelMm,10*factor);
+  assert.equal(preview.validatedForExposure,false);
+  assert.equal(gamma.ok,true);
+  assert.equal(gamma.materialFactor,factor);
+  assert.match(gamma.status,/material_factor_research_unverified/);
+ }
+ assert.equal(materialSteelEquivalent({material:'RVS300',mode:'gamma',isotope:'Co-60',thicknessMm:10}).ok,false);
 });
 test('Custom factor only previews within 0 < f <=10 and actual data thickness range',()=>{
  const trial=compareMaterialEquivalence({material:'custom',mode:'gamma',wallMm:10,customFactor:0.85});
@@ -114,7 +132,7 @@ test('Reference curve datasets and film response remain unchanged',()=>{
 test('Material tile ratios automatically drive equivalent thickness in research engine',()=>{
  for(const mode of ['gamma','xray']){
   for(const [mat,config] of Object.entries(PROPOSED_MATERIAL_FACTORS)){
-   const result=materialSteelEquivalent({material:mat,thicknessMm:20,mode});
+   const result=materialSteelEquivalent({material:mat,thicknessMm:20,mode,isotope:'Ir-192'});
    assert.equal(result.ok,true,mat+'/'+mode);
    assert.equal(result.steelEquivalentMm,20*config[mode]);
    if(mat!=='Fe'){
