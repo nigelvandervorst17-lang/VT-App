@@ -4,6 +4,7 @@
  */
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY} from './supabase-rest.mjs';
 import {DEFAULT_SUPABASE_PROJECT} from './project-config.mjs';
+import {businessEmailDomain} from '../../company-domain.mjs';
 import {openOfflineCache} from './offline-cache.mjs';
 import {MATERIAL_RESEARCH_FACTORS,equivalentSteelPreview,gammaDecayPreview,isoFMinResearch} from './research-physics-preview.mjs';
 import {mountResearchWorkbench} from './workbench-ui.mjs';
@@ -94,6 +95,7 @@ $('authForm').addEventListener('submit',async e=>{
 $('signUpBtn').addEventListener('click',async()=>{
  try{
   const email=selected('email'),password=selected('password');
+  if(!businessEmailDomain(email))throw Error('Registratie vereist een zakelijk e-mailadres.');
   if(password.length<8)throw Error('Gebruik een wachtwoord van minimaal 8 tekens');
   await authorize(()=>state.api.signUp(email,password));
   output('authMessage','Controleer je e-mail. Na bevestiging kun je inloggen. Accountrollen worden uitsluitend in de database toegekend.');
@@ -159,6 +161,7 @@ $('companySelect').addEventListener('change',async e=>{
 $('registerCompanyForm').addEventListener('submit',async e=>{
  e.preventDefault();try{
   if(!atOnline())throw Error('Log eerst online in');
+  if(!businessEmailDomain(state.user?.email))throw Error('Een nieuwe bedrijfsomgeving vereist een bevestigd zakelijk e-mailadres.');
   const result=await state.api.rpc('register_company',{
    p_name:selected('companyName'),p_admin_name:selected('adminName')});
   const company=Array.isArray(result)?result[0]:result;

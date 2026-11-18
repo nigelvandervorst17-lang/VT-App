@@ -5,6 +5,7 @@
  */
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY,SESSION_KEY} from './research/company-suite/supabase-rest.mjs';
 import {DEFAULT_SUPABASE_PROJECT} from './research/company-suite/project-config.mjs';
+import {businessEmailDomain} from './company-domain.mjs';
 import {trialCounter,TRIAL_MAX} from './research/company-suite/trial-50.mjs';
 
 const $=id=>document.getElementById(id);
@@ -51,6 +52,8 @@ function showMain(mode){
  state.mode=mode;
  document.body.classList.toggle('ndt-verified-session',mode==='signed-in');
  document.body.classList.toggle('ndt-demo-session',mode==='trial');
+ const safety=$('ndtResearchCompactDisclaimer');
+ if(safety)safety.textContent=mode==='signed-in'?'Veiligheidsinformatie · Niet vrijgegeven voor werkelijke RT-belichtingen. Controleer procedure, actuele brongegevens, IQI en veiligheidsmaatregelen.':'ONDERZOEKSVERSIE · Niet vrijgegeven voor werkelijke RT-belichtingen. Controleer procedure, actuele brongegevens, IQI en veiligheidsmaatregelen.';
  $('ndtEntryGate').hidden=true;
  document.documentElement.classList.remove('ndt-entry-loading');
  document.body.classList.remove('ndt-entry-active');
@@ -185,6 +188,7 @@ function initAuth(){
   passwordInput.setAttribute('aria-invalid',String(!password||password.length<6));
   if(missing)return 'Vul een e-mailadres en wachtwoord van minimaal 6 tekens in.';
   if(malformed)return 'Vul een geldig e-mailadres in.';
+  if(registering&&!businessEmailDomain(email))return 'Gebruik een zakelijk e-mailadres (geen Gmail, Hotmail of vergelijkbaar).';
   return '';
  };
  const lockEntry=(busy,button)=>{
