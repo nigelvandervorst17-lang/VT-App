@@ -244,10 +244,11 @@ function routeAction(bon){
 }
 
 
-let serviceBonId=null,serviceSigned=false;
+let serviceBonId=null,serviceSigned=false,lastGeneratedServicePdf=null;
 function openServiceRecord(bon){
  if(!state.user?.id||!['researcher','planning'].includes(state.role))return notice('Meld je aan om een Service Record te maken.',true);
- serviceBonId=bon.id;serviceSigned=false;
+ serviceBonId=bon.id;serviceSigned=false;lastGeneratedServicePdf=null;
+ $('serviceRecordSend').disabled=true;
  const dlg=$('planningServiceRecordDialog'),form=$('planningServiceRecordForm');
  form.reset();$('serviceRecordContext').textContent='Service Record: '+bonTitle(bon)+' · kies het lege rev.26-7 PDF-sjabloon.';
  const n=state.opnames.filter(x=>x.bon_id===bon.id).length;
@@ -281,6 +282,17 @@ function initServiceRecord(){
   ctx.clearRect(0,0,canvas.width,canvas.height);serviceSigned=false;
  });
  $('serviceRecordClose').addEventListener('click',()=>dlg.close());
+ $('serviceRecordSend').addEventListener('click',async()=>{
+  const send=$('serviceRecordSend');if(send.disabled)return;
+  send.disabled=true;
+  try{
+   const bon=state.bons.find(x=>x.id===serviceBonId);
+   if(!bon||!lastGeneratedServicePdf||!state.client)throw Error('Maak eerst een PDF bij de geldige werkbon.');
+   const receipt=await state.client.sendServiceRecord(bon,lastGeneratedServicePdf);
+   $('serviceRecordStatus').textContent='Service Record verzonden via de server naar de ingestelde werkmail. Referentie: '+(receipt.message_id||'bevestigd');
+  }catch(error){$('serviceRecordStatus').textContent='Werkmail niet verstuurd: '+errorText(error);}
+  finally{send.disabled=false;}
+ });
  form.addEventListener('submit',async e=>{
   e.preventDefault();
   const submit=$('serviceRecordGenerate');if(submit.disabled)return;
@@ -301,6 +313,8 @@ function initServiceRecord(){
    const record=makeServiceRecord({bon,opnames:state.opnames,travel,fields});
    submit.disabled=true;$('serviceRecordStatus').textContent='Service Record lokaal samenstellen…';
    const bytes=await generateServiceRecordPdf(template,record,canvas.toDataURL('image/png'));
+   lastGeneratedServicePdf=bytes;
+   $('serviceRecordSend').disabled=!state.client||!navigator.onLine;
    const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
    const a=elem('a');a.href=url;
    a.download='Service_Record_'+idLabel(bon).replace(/[^A-Za-z0-9_-]/g,'_')+'.pdf';

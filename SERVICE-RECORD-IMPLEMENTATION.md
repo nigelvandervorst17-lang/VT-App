@@ -17,3 +17,13 @@ Source-of-truth: workbon supplies client, order number, date and work start/end.
 - Persist travel and customer signature with owner/assigned researcher access, audit and retention; current travel is scoped to browser session.
 - Send PDFs from an authenticated server function using a verified recipient / server-held mail provider keys; never from browser secrets. Add idempotency, error handling and delivery status.
 - Confirm matching PDF coordinates via print comparison and have a service administrator approve columns/formulas; do not treat research calculations as RT release.
+
+## Direct-to-workmail Edge Function (server-only)
+Deployment is NOT automatic. Configure verified sender and recipient using server-side secrets:
+- `RESEND_API_KEY` (provider API key)
+- `SERVICE_RECORD_WORK_EMAIL` (actual work mailbox, to be confirmed)
+- `SERVICE_RECORD_FROM_EMAIL` (verified sending domain)
+- `SERVICE_RECORD_ALLOWED_ORIGIN` (exact app origin)
+Supabase also injects `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` for the deployed function.
+
+The function checks the user JWT, planning role, researcher assignment, PDF header and file size. It computes a hash-based provider idempotency key, and delivers only to a **server-configured** recipient. Never configure email secrets in client-side JS. A successful response only means the provider accepted the send; mailbox delivery may still fail asynchronously. Before release, test failure/retry behavior, sender DNS, email domain authentication, consent, retention, audit trail and private template storage.

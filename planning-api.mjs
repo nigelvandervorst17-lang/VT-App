@@ -171,7 +171,29 @@ export function makePlanningAPI(options={}){
   const ext=bon.original_path.split('.').at(-1)||'bin';
   return {blob,filename:'Werkbon-'+(bon.data?.bonnummer||bon.id).replace(/[^a-z0-9-]/gi,'_')+'.'+ext};
  }
+
+ async function sendServiceRecord(bon,pdfBytes){
+  await requireAuth();
+  if(!bon?.id||!(pdfBytes instanceof Uint8Array)||pdfBytes.length<100||pdfBytes.length>4200000)
+   throw Error('Geen geldige Service Record-PDF (maximaal 4,2 MB).');
+  if(role==='researcher'&&bon.assigned_to!==sessionUser.id)
+   throw Error('Deze werkbon is niet aan jou toegewezen.');
+  await api.user();const jwt=api.token();
+  if(!jwt)throw Error('Online aanmelden is vereist om de PDF te versturen.');
+  // Base64 chunking; PDF remains in memory and recipient is configured server-side.
+  const slices=[];for(let i=0;i<pdfBytes.length;i+=0x8000)
+   slices.push(String.fromCharCode(...pdfBytes.subarray(i,i+0x8000)));
+  const base64=btoa(slices.join(''));
+  const response=await fetcher(root+'/functions/v1/send-service-record',{
+   method:'POST',headers:{apikey:key,Authorization:'Bearer '+jwt,'Content-Type':'application/json'},
+   body:JSON.stringify({bon_id:bon.id,pdf_base64:base64})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result.sent!==true)
+   throw Error(result.error||'Werkmail niet verstuurd. Controleer de serverconfiguratie.');
+  return result;
+ }
  return {authenticate,list,addResearcher,createInvite,acceptInvite,saveBon,setPlannerStatus,
-  changeResearchStatus,addOpname,uploadOriginal,downloadOriginal,
+  changeResearchStatus,addOpname,uploadOriginal,downloadOriginal,sendServiceRecord,
   get user(){return sessionUser},get role(){return role},clear(){sessionUser=null;role=null}};
 }
