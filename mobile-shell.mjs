@@ -189,7 +189,7 @@ function initAuth(){
   passwordInput.setAttribute('aria-invalid',String(!password||password.length<6));
   if(missing)return 'Vul een e-mailadres en wachtwoord van minimaal 6 tekens in.';
   if(malformed)return 'Vul een geldig e-mailadres in.';
-  if(registering&&!businessEmailDomain(email))return 'Gebruik een zakelijk e-mailadres (geen Gmail, Hotmail of vergelijkbaar).';
+  if(registering)return 'Nieuwe bedrijfsregistraties zijn uitgeschakeld in de testversie.';
   return '';
  };
  const lockEntry=(busy,button)=>{

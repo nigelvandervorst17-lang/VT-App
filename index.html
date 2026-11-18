@@ -168,8 +168,13 @@
 try{if(!localStorage.getItem('ndt-ui-trial-choice-v1')&&!localStorage.getItem('ndt-supabase-session-v1')&&!sessionStorage.getItem('ndt-supabase-session-v1'))document.documentElement.classList.add('ndt-entry-loading')}
 catch{document.documentElement.classList.add('ndt-entry-loading')}
 </script>
+<style id="test-preview-banner-style">
+#ndtTestPreviewBanner{position:sticky;top:0;z-index:99999;background:#173b5b;color:#fff;border-bottom:2px solid #64b8e6;padding:9px 14px;font:700 13px/1.4 system-ui,sans-serif;text-align:center}
+#ndtTestPreviewBanner small{display:block;font-weight:400;font-size:11px}
+</style>
 </head>
 <body>
+<div id="ndtTestPreviewBanner" role="status">TESTVERSIE · PR #24 · Niet voor productie<small>Gebruik fictieve klantgegevens. Geen echte werkmail of productie-registraties. RT-berekeningen niet gebruiken als veiligheidsvrijgave.</small></div>
 <div class="app-shell">
 <header class="top-header">
   <div class="brand"><img class="ndt-brand-banner" src="./brand/ndt-banner-512.webp" alt="NDT Radiography Pro" width="512" height="171" fetchpriority="high" decoding="async"></div>

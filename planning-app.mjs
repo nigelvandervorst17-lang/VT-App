@@ -283,6 +283,7 @@ function initServiceRecord(){
  });
  $('serviceRecordClose').addEventListener('click',()=>dlg.close());
  $('serviceRecordSend').addEventListener('click',async()=>{
+  $('serviceRecordStatus').textContent='Testversie: e-mailverzending uitgeschakeld.';return;
   const send=$('serviceRecordSend');if(send.disabled)return;
   send.disabled=true;
   try{
@@ -314,7 +315,7 @@ function initServiceRecord(){
    submit.disabled=true;$('serviceRecordStatus').textContent='Service Record lokaal samenstellen…';
    const bytes=await generateServiceRecordPdf(template,record,canvas.toDataURL('image/png'));
    lastGeneratedServicePdf=bytes;
-   $('serviceRecordSend').disabled=!state.client||!navigator.onLine;
+   $('serviceRecordSend').disabled=true; // Test branch: email disabled.
    const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
    const a=elem('a');a.href=url;
    a.download='Service_Record_'+idLabel(bon).replace(/[^A-Za-z0-9_-]/g,'_')+'.pdf';
