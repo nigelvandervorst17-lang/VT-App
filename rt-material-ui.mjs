@@ -29,7 +29,7 @@ function current(){
  const mode=gammaMode()?'gamma':'xray';
  const material=selectedMaterial==='custom'?'custom':selectedMaterial;
  return compareMaterialEquivalence({
-  material,mode,wallMm:selectedThickness(),
+  material,mode,isotope:document.querySelector('input[name="isotope"]:checked')?.value||'Se-75',wallMm:selectedThickness(),
   customFactor:number($('rtMaterialCustomFactor')?.value)
  });
 }
