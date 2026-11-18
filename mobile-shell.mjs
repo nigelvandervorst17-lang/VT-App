@@ -6,6 +6,7 @@
 import {createSupabaseConnection,PUBLIC_CONFIG_KEY,SESSION_KEY} from './research/company-suite/supabase-rest.mjs';
 import {DEFAULT_SUPABASE_PROJECT} from './research/company-suite/project-config.mjs';
 import {businessEmailDomain} from './company-domain.mjs';
+import {installRtFieldExtras} from './rt-field-extras.mjs';
 import {trialCounter,TRIAL_MAX} from './research/company-suite/trial-50.mjs';
 
 const $=id=>document.getElementById(id);
@@ -426,7 +427,7 @@ function initCalc(){
  },true);
  // Place the selector beside the relevant top input, not below all fields.
  $('rtCompactActivity')?.closest('.rt-compact-field')?.after($('ndtChooseAsset'));
- makeIqiCompact();compactLongWarnings();moveAiConfig();
+ makeIqiCompact();compactLongWarnings();moveAiConfig();installRtFieldExtras();
  $('ndtSaveToLog').addEventListener('click',async()=>{
   const save=$('ndtSaveToLog');
   if($('saveResult')?.disabled)return;

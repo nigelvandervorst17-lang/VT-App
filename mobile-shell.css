@@ -156,3 +156,16 @@ body.ndt-entry-active #ndtResearchSafetyStrip{display:none!important}
  .rt-compact-calculator .rt-compact-field select,
  .rt-compact-calculator #rtCompactDistance{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;grid-column:1/-1!important}
 }
+
+/* Non-blocking RT field helpers, unrelated to actual exposure calculations. */
+.ndt-activity-conversion{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:5px 0}
+.ndt-activity-conversion button{background:#245f80;border:1px solid #69a9d4;border-radius:8px;color:#fff;padding:6px 10px;font-size:12px;min-height:38px}
+.ndt-activity-conversion output{font-size:12px;font-weight:750;color:#cce7fa}
+.ndt-exposure-timer{border:1px solid #447794;background:#0d3149;border-radius:13px;padding:10px;margin:12px 0;display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.ndt-exposure-timer strong{font-size:12px;width:100%}
+.ndt-exposure-timer output{font-variant-numeric:tabular-nums;font-size:24px;font-weight:800}
+.ndt-exposure-timer div{display:flex;flex-wrap:wrap;gap:6px}
+.ndt-exposure-timer button{background:#245d7b;border:1px solid #75a4c8;border-radius:9px;color:#fff;min-height:40px;padding:7px 11px}
+.ndt-exposure-timer button:disabled{opacity:.55}
+.ndt-exposure-timer small,.ndt-film-advice{font-size:11px;color:#d2e4ed;line-height:1.5}
+.ndt-film-advice a{color:#90d9ff;font-weight:800}
