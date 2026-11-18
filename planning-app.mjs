@@ -4,6 +4,7 @@
  * No new exposure calculations, IQI acceptance, material factors or safety shortcuts.
  */
 import {makePlanningAPI} from './planning-api.mjs';
+import {navigationLinks,getTravel,markDeparture,markArrival,travelMinutes} from './planning-travel.mjs';
 import {buildPlanningTeamInvite} from './planning-team-invite.mjs';
 import {unlockWorkbonCache,WORKBON_OFFLINE_USER,syncWorkbonOutbox} from './workbon-offline-sync.mjs';
 import {demoWorkbonnen,PROCEDURE_SEEDS,proceduresForStore,findProcedure,
@@ -203,6 +204,43 @@ function originalAction(bon){
   }catch(e){notice('Originele bon: '+errorText(e),true);}
  },'plan-original');
 }
+
+function routeAction(bon){
+ const data=bonData(bon),urls=navigationLinks(data.adres);
+ const holder=elem('details','plan-route-options');holder.append(elem('summary','','📍 Route naar klant'));
+ const inner=elem('div','plan-route-choices'),userId=state.user?.id,store=sessionStorage;
+ const current=()=>getTravel(store,userId,bon.id),recap=elem('small','plan-travel-status','');
+ function refresh(){
+  const t=current(),minutes=travelMinutes(t);
+  recap.textContent=t?.arrived_at?'Reistijd: '+minutes+' minuten (aankomst bevestigd)':
+   t?.departed_at?'Vertrek genoteerd · aankomst nog bevestigen':
+   'Vertrek wordt vastgelegd bij het openen van een route';
+ }
+ for(const [name,url] of [['Google Maps',urls.googleMaps],['Waze',urls.waze],['Flitsmeister',urls.flitsmeister]]){
+  const link=elem('a','plan-route-choice',name);link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+  link.addEventListener('click',()=>{
+   if(activeRole('researcher')&&userId){
+    try{markDeparture(store,userId,bon.id);refresh();}catch(e){notice('Vertrek niet genoteerd: '+errorText(e),true);}
+   }
+   if(name==='Flitsmeister'){
+    if(navigator.clipboard?.writeText)void navigator.clipboard.writeText(data.adres)
+     .then(()=>notice('Klantadres gekopieerd; plak het in Flitsmeister.'))
+     .catch(()=>notice('Voer het klantadres handmatig in Flitsmeister in.'));
+    else notice('Voer het klantadres handmatig in Flitsmeister in.');
+   }
+  });inner.append(link);
+ }
+ if(activeRole('researcher')&&userId){
+  inner.append(action('Aankomst bevestigen',()=>{
+   try{markArrival(store,userId,bon.id);refresh();notice('Aankomst op dit toestel vastgelegd.');}
+   catch(e){notice(errorText(e),true);}
+  },'plan-arrival'));
+  refresh();inner.append(recap);
+  inner.append(elem('small','plan-travel-footnote','Reistijd staat voorlopig alleen op dit toestel; de navigatie-app bevestigt aankomst niet automatisch.'));
+ }
+ holder.append(inner);return holder;
+}
+
 function renderCard(bon){
  const data=bonData(bon),row=elem('article','plan-row');
  const times=elem('div','plan-hours',timeText(bon));
@@ -215,11 +253,7 @@ function renderCard(bon){
   elem('small','','Opdracht- / Bonnummer: '+idLabel(bon)+' · Order: '+(data.ordernummer||'—')));
  content.append(open);
  const actions=elem('div','plan-card-actions');
- if(data.adres){
-  const link=elem('a','plan-map','📍 Route');
-  link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(data.adres);
-  link.target='_blank';link.rel='noopener noreferrer';actions.append(link);
- }
+ if(data.adres)actions.append(routeAction(bon));
  if(bon.original_path)actions.append(originalAction(bon));
  if(activeRole('planning')){
   const assigned=state.members.find(m=>m.user_id===bon.assigned_to);

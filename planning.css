@@ -144,3 +144,11 @@ button:disabled{cursor:not-allowed}
 .plan-shot-field{font-size:11px;line-height:1.5;color:#c8dfed;white-space:normal;overflow-wrap:anywhere;margin:5px 0}
 .plan-shot-researcher{font-size:11px;font-weight:800;color:#a8d5ea;margin:7px 0}
 .plan-shot-not-approved{font-size:10px;font-weight:800;color:#ffe0b3;border-top:1px solid #42677f;padding:8px 0 0}
+
+/* Route chooser with field-confirmed arrival. */
+.plan-route-options{border:1px solid #477a96;background:#102d42;border-radius:9px;padding:6px 10px;max-width:100%}
+.plan-route-options summary{cursor:pointer;font-size:12px;font-weight:800;color:#a9e0ff;min-height:28px;display:flex;align-items:center}
+.plan-route-choices{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:7px}
+.plan-route-choice{font-size:12px;font-weight:750;min-height:38px;padding:10px;background:#194966;border:1px solid #558daf;border-radius:9px;color:#f2fbff;text-decoration:none}
+.plan-route-choices .plan-arrival{background:#1b715d}
+.plan-travel-status,.plan-travel-footnote{display:block;width:100%;line-height:1.45;font-size:11px;color:#d4e6ef}
