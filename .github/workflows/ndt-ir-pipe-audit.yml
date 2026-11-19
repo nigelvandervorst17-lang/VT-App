@@ -1,0 +1,36 @@
+name: Read-only Se-75 Ir-192 pipe and film-density audit
+on:
+  pull_request:
+    paths:
+      - 'research/gamma-ir-pipe-density-audit.test.mjs'
+      - '.github/workflows/ndt-ir-pipe-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rt-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run actual unchanged gamma, film, geometry and nine point regression tests
+        run: |
+          node --test research/gamma-ir-pipe-density-audit.test.mjs research/gamma-nine-point-review.test.mjs
+          node --check rt-core.mjs
+          node --check rt-curves.mjs
+          node --check film-response.mjs
+          node --check workflow-shape.mjs
+      - name: Ensure investigation cannot alter any engineering source or safety file
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "$GITHUB_BASE_REF"
+          forbidden="$(git diff --name-only "origin/$GITHUB_BASE_REF"...HEAD --             app.mjs rt-core.mjs film-response.mjs rt-curves.mjs rt-curves.json             material-equivalence.mjs iqi.mjs rt-procedure.mjs workflow-shape.mjs             compact-layout.mjs research/material-factor-data.mjs)"
+          if [ -n "$forbidden" ]; then
+            printf 'Unsafe calculator changes: %s\n' "$forbidden" >&2
+            exit 1
+          fi
