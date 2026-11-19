@@ -1,4 +1,4 @@
-import {PROPOSED_MATERIAL_FACTORS} from './material-factor-data.mjs';
+import {PROPOSED_MATERIAL_FACTORS,proposedMaterialFactor} from './material-factor-data.mjs';
 export {PROPOSED_MATERIAL_FACTORS};
 /**
  * Visual-only research comparisons for the main NDT calculator.
@@ -12,7 +12,7 @@ export const D25_RESEARCH_FACTORS=Object.freeze({D4:1.4278,D5:1.3085});
 export const NOT_APPROVED='NIET GEVALIDEERD — alleen onderzoeksvergelijking, geen RT-belichtingsinstructie';
 
 export function compareMaterialEquivalence({
- material='Fe',mode='gamma',wallMm,customFactor=null
+ material='Fe',mode='gamma',wallMm,customFactor=null,isotope='Se-75'
 }={}){
  if(!Number.isFinite(wallMm)||wallMm<=0||wallMm>100||
     !['gamma','xray'].includes(mode))
@@ -25,8 +25,9 @@ export function compareMaterialEquivalence({
  }else{
   const entry=PROPOSED_MATERIAL_FACTORS[material];
   if(!entry)return {ok:false,error:'MATERIAL_UNSUPPORTED'};
-  ratio=entry[mode];label=entry.name;
+  ratio=proposedMaterialFactor(material,mode,isotope);label=entry.name;
  }
+ if(!Number.isFinite(ratio))return {ok:false,error:'ISOTOPE_OR_MATERIAL_UNSUPPORTED'};
  const equivalentSteelMm=wallMm*ratio;
  if(!Number.isFinite(equivalentSteelMm)||equivalentSteelMm<=0||equivalentSteelMm>100)
   return {ok:false,error:'EQUIVALENT_OUTSIDE_DATA_RANGE'};

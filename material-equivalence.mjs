@@ -1,4 +1,4 @@
-import {PROPOSED_MATERIAL_FACTORS} from './research/material-factor-data.mjs';
+import {proposedMaterialFactor} from './research/material-factor-data.mjs';
 /**
  * Steel-equivalent research conversions.
  * Non-steel factors come from the existing material tiles and are intentionally
@@ -19,8 +19,7 @@ export function materialSteelEquivalent({material='Fe',thicknessMm,mode='gamma',
   return {ok:true,steelEquivalentMm:thicknessMm,factor:1,
     source:'Staal (Fe) · rechtstreeks referentiemateriaal',researchOnly:false};
  if(!['gamma','xray'].includes(mode))return {ok:false,error:'material',reason:'invalid_mode'};
- const predefined=PROPOSED_MATERIAL_FACTORS[material];
- const factor=material==='Other'?customFactor:predefined?.[mode];
+ const factor=material==='Other'?customFactor:proposedMaterialFactor(material,mode,isotope);
  if(!Number.isFinite(factor)||factor<=0||factor>10)
   return {ok:false,error:'material',reason:'requires_validated_material_equivalence',material,mode,isotope,kv};
  const steelEquivalentMm=thicknessMm*factor;
