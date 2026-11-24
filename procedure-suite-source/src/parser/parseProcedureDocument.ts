@@ -113,7 +113,7 @@ async function extractPdf(bytes:ArrayBuffer):Promise<string>{
  // pdfjs-dist is loaded only for PDFs. Vite ?url bundles a same-version worker.
  const [pdfjs,worker] = await Promise.all([import('pdfjs-dist'),import('pdfjs-dist/build/pdf.worker.min.mjs?url')]);
  pdfjs.GlobalWorkerOptions.workerSrc=worker.default;
- const task=pdfjs.getDocument({data:new Uint8Array(bytes),isEvalSupported:false});
+ const task=pdfjs.getDocument({data:new Uint8Array(bytes)});
  try{
   const pdf=await task.promise;
   if(pdf.numPages>MAX_PAGES)throw new Error(`PDF heeft meer dan ${MAX_PAGES} pagina's`);

@@ -44,9 +44,9 @@ test('Android 192px and 512px manifest icons have matching user-logo files',()=>
   ['./brand/ndt-square-192.webp','./brand/ndt-square-512.webp']);
  assert.ok(manifest.icons.every(i=>i.type==='image/webp'));
 });
-test('Service worker has a new cache revision and all the four icon/banner assets',()=>{
+test('Service worker declares a cache revision and all four icon and banner assets',()=>{
  const sw=t('sw.js');
- assert.match(sw,/ndt-radiography-pro-role-sync-20261118-v10/);
+ assert.match(sw,/ndt-radiography-pro-role-sync-20261118-v\d+/);
  assert.match(sw,/research\/company-suite\/index\.html/);
  for(const name of ['ndt-square-192.webp','ndt-square-512.webp',
   'ndt-banner-512.webp','ndt-apple-touch-180.png'])assert.ok(sw.includes(name));

@@ -1,5 +1,5 @@
 /* Basic RT PRO 3.8.2 BETA — network first; COMET references and resilient install */
-const CACHE='ndt-radiography-pro-role-sync-20261118-v10';
+const CACHE='ndt-radiography-pro-role-sync-20261118-v11';
 const BLOCKED_PRIVATE_IMAGES=new Set(['smart-225b.webp','smart-225-d7.webp','smart-200pc-d7.webp','smart-160-d7.webp','smart-200-d7.webp','smart-200pc-new-d7.webp','smart-225-yxlon-d7.webp','smart-300hp-d7.webp','smart-300pc-d7.webp','weld-details.webp']);
 const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css','./mobile-shell.css','./mobile-shell.mjs','./planning.css','./planning-app.mjs','./planning-api.mjs','./planning-data.mjs','./planning-invite.mjs','./planning-team-invite.mjs','./workbon-offline-sync.mjs','./workbon-reader.mjs','./app.mjs','./field-tests.mjs','./ui-polish.mjs','./compact-layout.mjs','./workflow-shape.mjs','./reference-recovery.mjs','./rt-enhancements.mjs','./rt-enhancements.css','./locales/nl.json','./locales/en.json','./locales/de.json',
  './research/company-suite/index.html','./research/company-suite/styles.css','./research/company-suite/mobile-company.css',
@@ -12,6 +12,9 @@ const ASSETS=['./','./index.html','./se75.html','./se75-quick.mjs','./styles.css
  './research/gamma-nine-point-review.mjs','./research/xray-tube-profiles.mjs',
  './research/xray-reference-points.json',
 './rt-material-ui.mjs','./research/live-material-preview.mjs','./research/material-factor-data.mjs',
+'./ndt-pro-theme.css','./ndt-procedures-button.css','./rt-field-extras.mjs','./company-domain.mjs',
+'./planning-travel.mjs','./service-record-data.mjs','./service-record-pdf.mjs','./service-record-pdf-loader.mjs',
+'./procedure-runtime/planning/filmPlanning.js',
 './ai-config.mjs','./ai-expert.mjs','./rt-core.mjs','./material-equivalence.mjs','./film-response.mjs','./iqi.mjs','./iqi-quick.mjs','./rt-procedure.mjs','./procedure-ui.mjs',
 './reference-tools.mjs','./reference-data.mjs','./private-naslag.mjs','./rt-curves.mjs','./rt-curves.json',
 './xray-extra-curves.mjs','./xray-extra-curves.json','./pipe-schedules.json',

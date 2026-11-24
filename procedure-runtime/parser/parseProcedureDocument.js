@@ -137,7 +137,7 @@ async function extractPdf(bytes) {
     // pdfjs-dist is loaded only for PDFs. Vite ?url bundles a same-version worker.
     const [pdfjs, worker] = await Promise.all([import('https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.mjs'), Promise.resolve({ default: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.worker.min.mjs' })]);
     pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-    const task = pdfjs.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false });
+    const task = pdfjs.getDocument({ data: new Uint8Array(bytes) });
     try {
         const pdf = await task.promise;
         if (pdf.numPages > MAX_PAGES)
