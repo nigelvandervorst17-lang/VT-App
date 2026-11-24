@@ -1,13 +1,14 @@
 /* Research-only offline shell. No offline Supabase authorization or released exposures. */
-const CACHE='ndt-company-suite-shell-v5';
+const CACHE='ndt-company-suite-shell-v6';
 const SHELL=['./','./index.html','./styles.css','./mobile-company.css','./company-app.mjs',
  './supabase-rest.mjs','./admin-workflows.mjs','./project-config.mjs','./offline-cache.mjs','./research-physics-preview.mjs',
  './manifest.webmanifest',
  './workbench-ui.mjs','./trial-50.mjs','./field-calculators.mjs',
- '../xray-core.mjs','../gamma-nine-point-review.mjs',
+ '../xray-core.mjs','../gamma-nine-point-review.mjs','../material-factor-data.mjs',
  '../../rt-core.mjs','../../rt-curves.mjs','../../film-response.mjs',
  '../../material-equivalence.mjs','../../xray-extra-curves.mjs',
- '../../iqi.mjs','../../procedure-runtime/planning/filmPlanning.js'];
+ '../../iqi.mjs','../../company-domain.mjs','../../procedure-runtime/planning/filmPlanning.js',
+ '../../brand/ndt-square-192.webp','../../brand/ndt-banner-512.webp','../../brand/ndt-apple-touch-180.png'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));
 });
@@ -30,8 +31,8 @@ self.addEventListener('fetch',event=>{
   return p.pathname===url.pathname;
  });
  if(!isAppFile)return;
- event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(res=>{
-  if(res.ok){const clone=res.clone();caches.open(CACHE).then(c=>c.put(req,clone)).catch(()=>{});}
-  return res;
- })));
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE);
+  return await cache.match(req,{ignoreSearch:true})||fetch(req);
+ })());
 });
