@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {PROCEDURE_SEEDS,WORKBON_FIELDS,demoWorkbonnen,proceduresForStore,
  findProcedure,parseBonAnswer,procedurePrefill,NO_RT_RELEASE,buildReport,reportMailto} from './planning-data.mjs';
 import {planningRecord,dispatchStatus,makePlanningAPI} from './planning-api.mjs';
+import {PUBLIC_CONFIG_KEY,SESSION_KEY} from './research/company-suite/supabase-rest.mjs';
 const src=path=>readFileSync(new URL('./'+path,import.meta.url),'utf8');
 const html=src('index.html'),ui=src('planning-app.mjs'),reader=src('workbon-reader.mjs');
 const apiSource=src('planning-api.mjs');
@@ -67,6 +68,36 @@ test('central API: planner creates concepts, assignments and lists remote rows',
  await client.saveBon({values:{bonnummer:'12',klant:'A',datum:'2026-11-17'},assignedTo:'researcher-1'});
  assert.equal(created.at(-1).row.status,'Ingepland');
  assert.equal(created.at(-1).row.assigned_to,'researcher-1');
+});
+test('planner loads workbons when companies grants access to selected columns only',async()=>{
+ const user={id:'planner-1',email:'planner@example.com'};
+ const session={access_token:'test-token',refresh_token:'test-refresh',expires_at:Date.now()/1000+3600};
+ const responses={
+  '/auth/v1/user':user,
+  '/rest/v1/planning_members':[{user_id:user.id,role:'planning'}],
+  '/rest/v1/planning_workbonnen':[{id:'bon-1'}],
+  '/rest/v1/planning_opnames':[],
+  '/rest/v1/company_members':[{user_id:user.id,company_id:'company-1',active:true,role:'admin'}]
+ };
+ const client=makePlanningAPI({environment:{
+  navigator:{onLine:true},
+  localStorage:{getItem:key=>key===SESSION_KEY?JSON.stringify(session):
+   key===PUBLIC_CONFIG_KEY?JSON.stringify({url:'https://test.supabase.co',key:'sb_publishable_test_key_only'}):null},
+  fetch:async input=>{
+   const {pathname,searchParams}=new URL(input);
+   if(pathname==='/rest/v1/companies'){
+    if(searchParams.get('select')!=='id,name'){
+     return Response.json({message:'permission denied for table companies'},{status:403});
+    }
+    return Response.json([{id:'company-1',name:'Testbedrijf'}]);
+   }
+   assert.ok(Object.hasOwn(responses,pathname),pathname);
+   return Response.json(responses[pathname]);
+  }
+ }});
+ const snapshot=await client.list();
+ assert.deepEqual(snapshot.bons,[{id:'bon-1'}]);
+ assert.deepEqual(snapshot.companyAdminOptions,[{id:'company-1',name:'Testbedrijf'}]);
 });
 test('central API: researcher cannot create workbon or save to unassigned bon',async()=>{
  const user={id:'researcher-1',email:'tech@example.com'};

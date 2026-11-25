@@ -17,7 +17,7 @@ const $=id=>document.getElementById(id);
 const state={client:null,role:null,user:null,bons:[],opnames:[],members:[],companyAdminOptions:[],offlineCache:null,offlineUserId:null,
  filter:'today',search:'',activeId:null,setupBonId:null,setupReady:false,
  selectedId:null,editingId:null,pendingFile:null,pendingText:'',readGeneration:0,
- processing:false,loading:false,procedureList:proceduresForStore([])};
+ processing:false,loading:false,loadFailed:false,procedureList:proceduresForStore([])};
 const $text=(id,value)=>{if($(id))$(id).textContent=String(value??'');};
 const elem=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text??'');return n;};
 const errorText=e=>String(e?.message||e);
@@ -41,6 +41,7 @@ const localToday=()=>localISODate();
 function clearUserData({keepEncryptedCache=false}={}){
  state.client=null;state.role=null;state.user=null;state.bons=[];state.opnames=[];
  state.members=[];state.companyAdminOptions=[];state.activeId=null;state.setupBonId=null;state.setupReady=false;
+ state.loadFailed=false;
  if(!keepEncryptedCache){state.offlineCache?.close();state.offlineCache=null;}
  window.dispatchEvent(new CustomEvent('ndt-planning-role-ready',{detail:{role:null,label:''}}));
  render();window.dispatchEvent(new Event('ndt-active-workbon-changed'));
@@ -109,9 +110,11 @@ async function refreshPlanning(){
  if(state.loading)return;
  state.loading=true;
  const oldId=state.user?.id;
+ let verified=false;
  try{
   const client=state.client||makePlanningAPI();
   const auth=await client.authenticate();
+  verified=true;
   // An in-memory offline cache is never reused for a different authenticated ID.
   if(state.offlineCache&&state.offlineCache.userId!==auth.user.id){
    state.offlineCache.close();state.offlineCache=null;
@@ -121,6 +124,7 @@ async function refreshPlanning(){
    state.activeId=null;state.setupBonId=null;state.setupReady=false;
   }
   state.client=client;state.role=snapshot.role;state.user=snapshot.user;
+  state.loadFailed=false;
   state.bons=snapshot.bons;state.opnames=snapshot.opnames;state.members=snapshot.members;
   state.companyAdminOptions=snapshot.companyAdminOptions||[];
   if(state.role==='researcher'){
@@ -143,8 +147,12 @@ async function refreshPlanning(){
   const connectionFailure=!navigator.onLine||/network|netwerk|fetch|verbinding|timeout|load failed/i.test(errorText(e));
   if(connectionFailure&&state.offlineCache&&await showOfflineSnapshot())return;
   clearUserData();
-  // Trial users can inspect the two sample orders but cannot publish private data.
-  if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial'){
+  if(verified){
+   state.loadFailed=true;
+   console.warn('Gedeelde Planning laden mislukt',e);
+   notice('Werkbonnen konden niet worden opgehaald. Tik op Ververs planning om het opnieuw te proberen.',true);
+  }else if(localStorage.getItem('ndt-ui-trial-choice-v1')==='trial'){
+   // Trial users can inspect the two sample orders but cannot publish private data.
    state.role='trial';state.bons=demoWorkbonnen().map(b=>({...b,data:b}));
    notice('Proefweergave · twee voorbeeldbonnen. Log in voor gedeelde werkbonnen en rollen.');
   }else notice('Gedeelde Planning: '+errorText(e),true);
@@ -174,7 +182,8 @@ function renderMembership(){
  $('planningProcedureForm').hidden=!planning;
  $('planningOfflinePanel').hidden=!(activeRole('researcher')||(!navigator.onLine&&Boolean(localStorage.getItem(WORKBON_OFFLINE_USER))));
  $text('planningRole',planning?'Planning · bonnen aanmaken/toewijzen':
-  activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':'Voorbeeldplanning');
+  activeRole('researcher')?'Onderzoeker · toegewezen werkbonnen':
+  state.loadFailed?'Werkbonnen niet geladen':'Voorbeeldplanning');
  const list=state.members.filter(m=>m.role==='researcher');
  const companies=$('planningInviteCompany');
  if(companies&&planning){
@@ -380,7 +389,7 @@ function renderAgenda(){
   button.classList.toggle('active',on);button.setAttribute('aria-pressed',String(on));
  });
  if(!matches.length){
-  list.append(elem('p','plan-empty',state.role?'Geen werkbonnen in dit filter.':'Log in om je gedeelde werkbonnen te zien.'));
+  if(!state.loadFailed)list.append(elem('p','plan-empty',state.role?'Geen werkbonnen in dit filter.':'Log in om je gedeelde werkbonnen te zien.'));
   return;
  }
  let lastDay=null;

@@ -61,7 +61,7 @@ export function makePlanningAPI(options={}){
    api.select('planning_opnames',{order:'created_at.desc'}),
    role==='planning'?api.select('planning_members'):[],
    role==='planning'?api.select('company_members',{filters:{user_id:sessionUser.id}}):[],
-   role==='planning'?api.select('companies'):[]
+   role==='planning'?api.select('companies',{columns:'id,name'}):[]
   ]);
   const admins=(ownCompanyMemberships||[]).filter(m=>m.user_id===sessionUser.id&&m.active&&m.role==='admin');
   return {user:sessionUser,role,bons:bons||[],opnames:opnames||[],members:members||[],
